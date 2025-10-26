@@ -52,6 +52,21 @@ Hello, world!
 
 ---
 
+## Tagging Policy
+
+This repository is versioned via the stable tag to provide a consistent reference point for NixLine workflows.
+
+To update the tag after any change:
+
+```bash
+git push origin main
+git tag -d stable
+git push origin :refs/tags/stable
+git tag -a stable -m "Update stable tag after baseline changes"
+git push origin stable
+```
+Always verify CI passes before re-tagging stable!
+
 ## Notes
 
 This is **not** the production baseline; it is meant for workflow verification.
