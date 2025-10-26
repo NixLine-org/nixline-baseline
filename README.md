@@ -1,18 +1,19 @@
-# NixLine Baseline (Demo)
+# NixLine Baseline
 
 The **NixLine Baseline** defines the foundational Nix expressions and policies used by all repositories in the [NixLine-org](https://github.com/NixLine-org) organization.  
-This **demo version** provides minimal functionality to verify that the NixLine reusable GitHub workflows operate correctly in continuous integration environments.
+It provides the shared Nix logic, governance rules and automation logic that all NixLine consumer repositories rely on.
 
 ---
 
 ## Purpose
 
-NixLine workflows (such as CI, SBOM generation, dependency updates and policy checks) expect a *baseline flake* that exposes at least two Nix applications:
+NixLine workflows (such as CI, SBOM generation, dependency updates and policy checks) depend on a *baseline flake* that exposes at least two Nix applications:
 
 - `#sync` — performs baseline setup or synchronization tasks.
 - `#check` — validates repository configuration or compliance.
 
-In this demo, both commands simply run the `hello` binary from Nixpkgs to confirm the pipeline executes end-to-end.
+These serve as entry points for the reusable workflows in the `.github` repository.  
+When run in a consumer repository, they apply or verify policies consistently across the organization.
 
 ---
 
@@ -35,9 +36,7 @@ nix run 'github:NixLine-org/nixline-baseline?ref=main'#sync
 nix run 'github:NixLine-org/nixline-baseline?ref=stable'#check
 ```
 
-OR
-
-### Run locally (from this directory)
+Or run locally from a cloned copy:
 
 ```bash
 nix run .#sync
@@ -54,7 +53,7 @@ Hello, world!
 
 ## Tagging Policy
 
-This repository is versioned via the stable tag to provide a consistent reference point for NixLine workflows.
+This repository is versioned via the `stable` tag to provide a consistent reference point for NixLine workflows.
 
 To update the tag after any change:
 
@@ -65,12 +64,25 @@ git push origin :refs/tags/stable
 git tag -a stable -m "Update stable tag after baseline changes"
 git push origin stable
 ```
-Always verify CI passes before re-tagging stable!
 
-## Notes
+Always verify CI passes before re-tagging `stable`.
 
-This is **not** the production baseline; it is meant for workflow verification.
+---
 
-- Future versions will include:
-  - Policy packs (CODEOWNERS, LICENSE, SECURITY.md, pre-commit, SBOM, etc.)
-  - Nix modules and automation for org-wide governance
+## Importance of the Baseline
+
+This repository serves as the **official baseline** for NixLine.  
+It defines how organizational workflows interpret and apply shared policy, serving as the root of consistency and traceability for all consumer repositories.
+
+When another organization forks NixLine, this repository is where they establish **their own lineage path** — defining what policies, governance and automation rules will apply across their environment.  
+By maintaining and versioning this baseline, each organization can evolve its own standards while still inheriting the reproducible and declarative structure that NixLine provides.
+
+---
+
+## Future Development
+
+Future versions will extend the baseline with:
+
+- Policy packs (CODEOWNERS, LICENSE, SECURITY.md, pre-commit, SBOM, etc.)
+- Nix modules and automation for scalable governance
+- Enhanced validation and synchronization logic for multi-repo environments
