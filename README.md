@@ -221,6 +221,24 @@ git add LICENSE SECURITY.md .editorconfig .github/
 git commit -m "add NixLine policies"
 ```
 
+**Customize packs with command line arguments:**
+```bash
+# Include only specific packs
+nix run github:NixLine-org/nixline-baseline#sync -- --packs editorconfig,license,codeowners
+
+# Exclude specific packs from defaults
+nix run github:NixLine-org/nixline-baseline#sync -- --exclude security,dependabot
+
+# Check only specific packs
+nix run github:NixLine-org/nixline-baseline#check -- --packs editorconfig,license
+```
+
+**Or use environment variable (fallback):**
+```bash
+# Environment variable approach
+NIXLINE_PACKS="editorconfig,license,dependabot" nix run github:NixLine-org/nixline-baseline#sync
+```
+
 **CI setup for direct consumption:**
 ```yaml
 # .github/workflows/ci.yml
@@ -231,7 +249,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v24
+      - uses: cachix/install-nix-action@v31
       - name: Verify policies are in sync
         run: nix run github:NixLine-org/nixline-baseline#check
 ```
