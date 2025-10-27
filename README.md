@@ -146,14 +146,20 @@ This copies files from the baseline's `templates/consumer/` directory into your 
 
 **Customize enabled packs:**
 
-Edit `flake.nix` to select which packs to enable:
+Edit the `persistentPacks` list in your consumer repository's `flake.nix`:
 
 ```nix
+# Select which packs to enable
 persistentPacks = [
-  "editorconfig" "license" "security"
-  "codeowners" "dependabot"
+  "editorconfig"   # Code formatting standards
+  "license"        # Repository license
+  "security"       # Security policy
+  "codeowners"     # Code ownership rules
+  "dependabot"     # Dependabot configuration
 ];
 ```
+
+This list controls which policy files are materialized into your repository when running `nix run .#sync`. The consumer template includes this configuration by default. See [`templates/consumer/flake.nix`](./templates/consumer/flake.nix) for the full implementation.
 
 **Sync persistent policies:**
 
