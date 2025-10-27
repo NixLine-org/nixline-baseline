@@ -123,15 +123,23 @@ nix run github:NixLine-org/nixline-baseline#fetch-license -- Apache-2.0 --holder
 
 ### Quick Start for Consumer Repos
 
-**1. Initialize from template:**
+Initialize a new consumer repository from the baseline template:
 
 ```bash
 nix flake init -t github:NixLine-org/nixline-baseline
 ```
 
-This creates a `flake.nix` that references the baseline as an input.
+This copies files from the baseline's `templates/consumer/` directory into your current directory, giving you a ready-to-use consumer repository.
 
-**2. Customize enabled packs:**
+**What you get:**
+
+- `flake.nix` - Consumer flake that references the baseline as an input and exposes sync/check apps
+- `.github/workflows/policy-sync.yml` - Automated weekly policy sync workflow
+- `.pre-commit-config.yaml` - Pre-commit hooks configuration
+- `.gitignore` - Standard ignores for Nix projects
+- `flake.lock` - Pinned dependencies
+
+**Customize enabled packs:**
 
 Edit `flake.nix` to select which packs to enable:
 
@@ -142,18 +150,26 @@ persistentPacks = [
 ];
 ```
 
-**3. Sync persistent policies (commit these):**
+**Sync persistent policies:**
+
+Materialize policy files and commit them to your repository:
 
 ```bash
 nix run .#sync
 git add LICENSE SECURITY.md .editorconfig .github/CODEOWNERS .github/dependabot.yml
-git commit -m "feat: add NixLine policies"
+git commit -m "add NixLine policies"
 ```
 
-**4. Run pure apps (no file materialization):**
+**Available apps:**
 
 ```bash
-# Generate SBOM
+# Check policies match baseline
+nix run .#check
+
+# Sync policies from baseline
+nix run .#sync
+
+# Generate SBOM (CycloneDX + SPDX)
 nix run .#sbom
 
 # Update flake.lock and create PR
@@ -161,10 +177,9 @@ nix run .#flake-update
 
 # Install pre-commit hooks
 nix run .#setup-hooks
-
-# Check policies match baseline
-nix run .#check
 ```
+
+The policy sync workflow runs automatically weekly on Sunday at 2 PM UTC, checking for baseline updates and committing any changes.
 
 ---
 
