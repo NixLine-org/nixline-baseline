@@ -14,6 +14,7 @@ It provides the shared Nix logic, governance rules and automation logic that all
 - [Policy Packs](#policy-packs)
 - [Migrating Existing Policies](#migrating-existing-policies)
 - [Understanding Pack Propagation](#understanding-pack-propagation)
+- [Recommended Implementation](#recommended-implementation)
 - [Customization Checklist](#customization-checklist)
 - [Tagging Policy](#tagging-policy)
 - [NixLine vs Traditional Policy Distribution](#nixline-vs-traditional-policy-distribution)
@@ -547,6 +548,40 @@ If your organization requires review before policy changes are applied, configur
 # Changes will be pushed to a branch instead and require PR
 # Configure this in your repository settings
 ```
+
+---
+
+## Recommended Implementation
+
+### Solving the "Hundreds of Repos" Problem
+
+Large organizations often manage hundreds or thousands of repositories that need consistent policies. When a security policy changes, a new license is adopted or coding standards are updated, that change must propagate to every repository in the organization.
+
+The traditional governance approach requires creating individual pull requests to each repository, having them reviewed by repository owners and manually merging them. For an organization with 500 repositories, a single policy change creates 500 separate pull requests that each require human attention. This creates massive operational overhead and delays policy adoption across the organization.
+
+Organizations face a core tension when implementing governance at scale between maintaining review processes and avoiding operational bottlenecks.
+
+### Core Tension
+
+**Option A: Automated Sync**
+The automated policy sync workflow runs weekly and commits changes directly to the main branch. This eliminates the manual overhead of creating hundreds of pull requests across repositories when baseline policies change. However, it bypasses the review process entirely, which some organizations require for governance.
+
+**Option B: Manual Sync**
+Users run sync commands locally and create pull requests manually for review. This maintains the review process and audit trail that many organizations need. However, it recreates the original bottleneck problem where policy updates require manual intervention across potentially hundreds of repositories.
+
+### The Hybrid Solution
+
+The recommended approach combines automation with governance controls using GitHub's branch protection features. Configure branch protection rules that require pull requests even for automated workflows.
+
+When baseline repository changes are reviewed and approved, they should be free to propagate and sync to external repositories without additional review. Auto-merging should be enabled as long as CI build tests pass.
+
+The automated workflow creates pull requests instead of committing directly to main. Code owners can auto-approve policy-only changes while maintaining an audit trail. Auto-merge eliminates manual work while GitHub's branch protection provides the governance controls organizations need.
+
+This approach solves the policy cascade bottleneck by handling the "hundreds of repos" problem through automation, while branch protection provides review gates where needed. When a single policy change in the baseline needs to flow out to hundreds of consumer repositories, automation eliminates the manual overhead while maintaining governance controls.
+
+### Pure Apps in CI
+
+Pure Nix apps like SBOM generation and dependency updates can be run in CI workflows. Their generated reports and artifacts can be preserved as workflow artifacts or used to create pull requests, providing the benefits of automation without requiring file materialization in the repository.
 
 ---
 
