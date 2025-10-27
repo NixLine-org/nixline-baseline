@@ -74,7 +74,7 @@ Always verify CI passes before re-tagging `stable`.
 This repository serves as the **official baseline** for NixLine.  
 It defines how organizational workflows interpret and apply shared policy, serving as the root of consistency and traceability for all consumer repositories.
 
-When another organization forks NixLine, this repository is where they establish **their own lineage path** — defining what policies, governance and automation rules will apply across their environment.  
+When another organization forks NixLine, this repository is where they establish **their own governance baseline** — defining what policies, governance and automation rules will apply across their environment.  
 By maintaining and versioning this baseline, each organization can evolve its own standards while still inheriting the reproducible and declarative structure that NixLine provides.
 
 ---

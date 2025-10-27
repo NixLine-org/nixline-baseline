@@ -3,14 +3,18 @@
 let
   # Import all pack modules
   packModules = {
-    precommit = import ../packs/precommit.nix { inherit pkgs lib; };
+    # Persistent packs (committed to consumer repos)
     editorconfig = import ../packs/editorconfig.nix { inherit pkgs lib; };
-    codeowners = import ../packs/codeowners.nix { inherit pkgs lib; };
-    security = import ../packs/security.nix { inherit pkgs lib; };
     license = import ../packs/license.nix { inherit pkgs lib; };
-    sbom = import ../packs/sbom.nix { inherit pkgs lib; };
+    security = import ../packs/security.nix { inherit pkgs lib; };
+    codeowners = import ../packs/codeowners.nix { inherit pkgs lib; };
+    precommit = import ../packs/precommit.nix { inherit pkgs lib; };
     dependabot = import ../packs/dependabot.nix { inherit pkgs lib; };
+
+    # Ephemeral packs (CI only, not committed)
     flake-update = import ../packs/flake-update.nix { inherit pkgs lib; };
+
+    # Note: sbom is now a pure app in consumer flakes (no pack file)
   };
 
   # Parse comma-separated pack list from environment
