@@ -21,8 +21,8 @@ let
 
   # EDIT THIS: Supported versions table
   supportedVersions = [
-    { version = "latest"; supported = true; }
-    { version = "< latest"; supported = false; }
+    { version = "1.x.x"; supported = true; }
+    { version = "< 1.0"; supported = false; }
   ];
 
   # Generate version table
