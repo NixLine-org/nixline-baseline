@@ -153,16 +153,17 @@
                   echo "[-] Missing: ${path}"
                   FAILED=1
                 else
-                  cat > /tmp/nixline-expected-${builtins.hashString "sha256" path} << 'NIXLINE_EOF'
+                  EXPECTED=$(mktemp)
+                  cat > "$EXPECTED" << 'NIXLINE_EOF'
                   ${content}
                   NIXLINE_EOF
-                  if diff -q "${path}" /tmp/nixline-expected-${builtins.hashString "sha256" path} > /dev/null; then
+                  if diff -q "${path}" "$EXPECTED" > /dev/null; then
                     echo "[+] ${path}"
                   else
                     echo "[-] Out of sync: ${path}"
                     FAILED=1
                   fi
-                  rm /tmp/nixline-expected-${builtins.hashString "sha256" path}
+                  rm "$EXPECTED"
                 fi
               '') persistentFiles)}
 
