@@ -55,6 +55,7 @@
           checkApp = import ./apps/check.nix { inherit pkgs lib helpers packsLib; };
           importPolicyApp = import ./apps/import-policy.nix { inherit pkgs lib; };
           fetchLicenseApp = import ./apps/fetch-license.nix { inherit pkgs lib; };
+          createPackApp = import ./apps/create-pack.nix { inherit pkgs lib; };
         in
         {
           sync = {
@@ -89,6 +90,15 @@
             program = "${fetchLicenseApp}/bin/nixline-fetch-license";
             meta = {
               description = "Fetch license text from SPDX and generate license pack";
+              license = lib.licenses.asl20;
+            };
+          };
+
+          create-pack = {
+            type = "app";
+            program = "${createPackApp}/bin/nixline-create-pack";
+            meta = {
+              description = "Create a new policy pack with template structure";
               license = lib.licenses.asl20;
             };
           };

@@ -140,6 +140,9 @@ nix run github:NixLine-org/nixline-baseline#import-policy -- --auto
 
 # Fetch license from SPDX
 nix run github:NixLine-org/nixline-baseline#fetch-license -- Apache-2.0 --holder "ACME Corp"
+
+# Create a new pack
+nix run github:NixLine-org/nixline-baseline#create-pack flake8
 ```
 
 ### Quick Start for Consumer Repos
@@ -182,15 +185,23 @@ persistentPacks = [
 
 This list controls which policy files are materialized into your repository when running `nix run .#sync`. The consumer template includes this configuration by default. See [`templates/consumer/flake.nix`](./templates/consumer/flake.nix) for the full implementation.
 
-**Sync persistent policies:**
+**First-time setup:**
 
-Materialize policy files and commit them to your repository:
+After initializing a consumer repository, you must sync the policy files:
 
 ```bash
+# Materialize policy files from baseline
 nix run .#sync
+
+# Verify policies are in sync
+nix run .#check
+
+# Commit the materialized policy files
 git add LICENSE SECURITY.md .editorconfig .github/CODEOWNERS .github/dependabot.yml
 git commit -m "add NixLine policies"
 ```
+
+**Important:** CI will fail until you run `nix run .#sync` and commit the policy files. This is expected behavior for new consumer repositories.
 
 **Available apps:**
 
@@ -240,6 +251,62 @@ These run as Nix apps directly from the consumer flake:
 | `sbom` | Generate CycloneDX + SPDX SBOMs | `nix run .#sbom` |
 | `flake-update` | Update flake.lock and create PR | `nix run .#flake-update` |
 | `setup-hooks` | Install pre-commit hooks | `nix run .#setup-hooks` |
+
+### Creating New Packs
+
+To add custom policies (like flake8 configuration), use the pack creation app:
+
+```bash
+# Create a new pack with template
+nix run .#create-pack flake8
+
+# List example pack ideas
+nix run .#create-pack -- --list-examples
+```
+
+This generates `packs/flake8.nix` with a template structure. Edit the file to define your configuration:
+
+```nix
+{ pkgs, lib }:
+
+{
+  files = {
+    ".flake8" = ''
+      [flake8]
+      max-line-length = 88
+      extend-ignore = E203, W503
+      exclude = .git,__pycache__,build,dist
+    '';
+  };
+
+  checks = [];
+}
+```
+
+**Add to consumer repository:**
+
+Edit your consumer's `flake.nix` to include the new pack:
+
+```nix
+persistentPacks = [
+  "editorconfig"
+  "license"
+  "security"
+  "codeowners"
+  "dependabot"
+  "flake8"        # Add your new pack
+];
+```
+
+**Materialize the new policy:**
+
+```bash
+nix run .#sync    # Materializes .flake8 file
+git add .flake8
+git commit -m "add flake8 configuration"
+```
+
+The pack will now be included in automated policy sync across all consumer repositories that enable it.
 
 ---
 
