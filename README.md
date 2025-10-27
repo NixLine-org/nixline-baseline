@@ -43,48 +43,66 @@ Consumer repositories reference the baseline as a flake input, pulling policy up
 
 ---
 
+## Consumption Patterns
+
+NixLine supports **two consumption patterns** for consumer repositories:
+
+### 1. Template-Based (Recommended for Organizations)
+
+Consumer repositories use the baseline template which includes a `flake.nix` that references the baseline as an input:
+
+```bash
+# Initialize from template
+nix flake init -t github:NixLine-org/nixline-baseline
+
+# Run apps locally (baseline referenced as input)
+nix run .#sync
+nix run .#check
+```
+
+**Benefits:** Full Nix flake integration, local development, customizable pack selection per repo.
+
+### 2. Direct Consumption (Recommended for Simple Projects)
+
+Consumer repositories call baseline apps directly without a local flake:
+
+```bash
+# Run apps directly from baseline
+nix run github:NixLine-org/nixline-baseline#sync
+nix run github:NixLine-org/nixline-baseline#check
+```
+
+**Benefits:** No local flake.nix needed, simpler setup, always uses latest baseline.
+
+The [nixline-demo1](https://github.com/NixLine-org/nixline-demo1) repository demonstrates the **direct consumption** pattern.
+
+---
+
 ## Architecture
+
+### Template-Based Pattern
 
 ```mermaid
 graph LR
     subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;Baseline Repository (nixline-baseline)&nbsp;&nbsp;&nbsp;&nbsp;"]
         B1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes lib.packs & apps&nbsp;&nbsp;"]
         B2["&nbsp;&nbsp;packs/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Policy Definitions&nbsp;&nbsp;"]
-        B3["&nbsp;&nbsp;apps/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;sync, check,&nbsp;&nbsp;<br/>&nbsp;&nbsp;import-policy,&nbsp;&nbsp;<br/>&nbsp;&nbsp;fetch-license&nbsp;&nbsp;"]
-        B4["&nbsp;&nbsp;templates/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Consumer Template&nbsp;&nbsp;<br/>&nbsp;&nbsp;+ policy-sync.yml&nbsp;&nbsp;"]
+        B3["&nbsp;&nbsp;apps/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;sync, check, etc.&nbsp;&nbsp;"]
+        B4["&nbsp;&nbsp;templates/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Consumer Template&nbsp;&nbsp;"]
         B1 --> B2
         B1 --> B3
         B1 --> B4
     end
 
-    subgraph consumer["&nbsp;&nbsp;&nbsp;&nbsp;Consumer Repository&nbsp;&nbsp;&nbsp;&nbsp;"]
+    subgraph consumer["&nbsp;&nbsp;&nbsp;&nbsp;Consumer Repository (Template-Based)&nbsp;&nbsp;&nbsp;&nbsp;"]
         C1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;References baseline&nbsp;&nbsp;<br/>&nbsp;&nbsp;as input&nbsp;&nbsp;"]
-        C2["&nbsp;&nbsp;Persistent Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;LICENSE,&nbsp;&nbsp;<br/>&nbsp;&nbsp;SECURITY.md,&nbsp;&nbsp;<br/>&nbsp;&nbsp;etc.&nbsp;&nbsp;"]
-        C3["&nbsp;&nbsp;Pure Apps&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;sbom,&nbsp;&nbsp;<br/>&nbsp;&nbsp;flake-update,&nbsp;&nbsp;<br/>&nbsp;&nbsp;setup-hooks&nbsp;&nbsp;"]
-        C4["&nbsp;&nbsp;policy-sync.yml&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Automated&nbsp;&nbsp;<br/>&nbsp;&nbsp;weekly sync&nbsp;&nbsp;"]
-    end
-
-    subgraph actions["&nbsp;&nbsp;&nbsp;&nbsp;GitHub Actions (.github repo)&nbsp;&nbsp;&nbsp;&nbsp;"]
-        G1["&nbsp;&nbsp;Reusable Workflows&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;nixline-policy-sync.yml&nbsp;&nbsp;"]
-        G2["&nbsp;&nbsp;Auto-commits&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;policy changes&nbsp;&nbsp;"]
-    end
-
-    subgraph types["&nbsp;&nbsp;&nbsp;&nbsp;Policy Types&nbsp;&nbsp;&nbsp;&nbsp;"]
-        P1["&nbsp;&nbsp;Persistent&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Committed & Visible&nbsp;&nbsp;"]
-        P2["&nbsp;&nbsp;Pure Apps&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;No Files&nbsp;&nbsp;"]
-        P3["&nbsp;&nbsp;Automated&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Instant Sync&nbsp;&nbsp;"]
+        C2["&nbsp;&nbsp;Policy Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;LICENSE, SECURITY.md, etc.&nbsp;&nbsp;"]
+        C4["&nbsp;&nbsp;.github/workflows/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;policy-sync.yml&nbsp;&nbsp;"]
     end
 
     B1 -.->|"&nbsp;flake input&nbsp;"| C1
     C1 -->|"&nbsp;nix run .#sync&nbsp;"| C2
-    C1 -->|"&nbsp;nix run .#app&nbsp;"| C3
-    C4 -->|"&nbsp;cron: Sunday 2PM&nbsp;"| C1
-    C4 -.->|"&nbsp;calls workflow&nbsp;"| G1
-    G1 -->|"&nbsp;runs nix run .#sync&nbsp;"| C1
-    G1 -->|"&nbsp;git push&nbsp;"| C2
-    C2 -.-> P1
-    C3 -.-> P2
-    C4 -.-> P3
+    C4 -->|"&nbsp;nix run .#check&nbsp;"| C1
 
     style B1 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
     style B2 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
@@ -92,13 +110,36 @@ graph LR
     style B4 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
     style C1 fill:#2196F3,color:#000000,stroke:#333,stroke-width:2px
     style C2 fill:#FF9800,color:#000000,stroke:#333,stroke-width:2px
-    style C3 fill:#9C27B0,color:#FFFFFF,stroke:#333,stroke-width:2px
     style C4 fill:#FFD700,color:#000000,stroke:#333,stroke-width:2px
-    style G1 fill:#E91E63,color:#FFFFFF,stroke:#333,stroke-width:2px
-    style G2 fill:#E91E63,color:#FFFFFF,stroke:#333,stroke-width:2px
-    style P1 fill:#607D8B,color:#FFFFFF,stroke:#333,stroke-width:2px
-    style P2 fill:#607D8B,color:#FFFFFF,stroke:#333,stroke-width:2px
-    style P3 fill:#607D8B,color:#FFFFFF,stroke:#333,stroke-width:2px
+```
+
+### Direct Consumption Pattern
+
+```mermaid
+graph LR
+    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;Baseline Repository (nixline-baseline)&nbsp;&nbsp;&nbsp;&nbsp;"]
+        B1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes lib.packs & apps&nbsp;&nbsp;"]
+        B2["&nbsp;&nbsp;packs/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Policy Definitions&nbsp;&nbsp;"]
+        B3["&nbsp;&nbsp;apps/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;sync, check, etc.&nbsp;&nbsp;"]
+        B1 --> B2
+        B1 --> B3
+    end
+
+    subgraph consumer["&nbsp;&nbsp;&nbsp;&nbsp;Consumer Repository (Direct)&nbsp;&nbsp;&nbsp;&nbsp;"]
+        C2["&nbsp;&nbsp;Policy Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;LICENSE, SECURITY.md, etc.&nbsp;&nbsp;"]
+        C4["&nbsp;&nbsp;.github/workflows/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;ci.yml&nbsp;&nbsp;"]
+        C5["&nbsp;&nbsp;Project Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;No flake.nix needed&nbsp;&nbsp;"]
+    end
+
+    B3 -->|"&nbsp;nix run github:org/baseline#sync&nbsp;"| C2
+    C4 -->|"&nbsp;nix run github:org/baseline#check&nbsp;"| B3
+
+    style B1 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B2 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B3 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style C2 fill:#FF9800,color:#000000,stroke:#333,stroke-width:2px
+    style C4 fill:#FFD700,color:#000000,stroke:#333,stroke-width:2px
+    style C5 fill:#9C27B0,color:#FFFFFF,stroke:#333,stroke-width:2px
 ```
 
 ### Repository Types
@@ -126,8 +167,9 @@ graph LR
 
 ### Baseline Apps
 
-The baseline exposes four apps for setup and migration:
+The baseline exposes apps for setup and migration. These can be run two ways:
 
+**Direct consumption:**
 ```bash
 # Materialize persistent policies
 nix run github:NixLine-org/nixline-baseline#sync
@@ -145,11 +187,63 @@ nix run github:NixLine-org/nixline-baseline#fetch-license -- Apache-2.0 --holder
 nix run github:NixLine-org/nixline-baseline#create-pack flake8
 ```
 
+**Template-based (after `nix flake init -t`):**
+```bash
+# Materialize persistent policies
+nix run .#sync
+
+# Validate policies match baseline
+nix run .#check
+
+# Additional pure apps available
+nix run .#sbom
+nix run .#flake-update
+nix run .#setup-hooks
+```
+
 ### Quick Start for Consumer Repos
 
-Initialize a new consumer repository from the baseline template:
+Choose one of two consumption patterns:
+
+#### Option 1: Direct Consumption (Simple)
+
+For simple projects that don't need local flake customization:
 
 ```bash
+# Just sync policies directly
+nix run github:NixLine-org/nixline-baseline#sync
+
+# Verify policies are in sync
+nix run github:NixLine-org/nixline-baseline#check
+
+# Commit the materialized policy files
+git add LICENSE SECURITY.md .editorconfig .github/
+git commit -m "add NixLine policies"
+```
+
+**CI setup for direct consumption:**
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on: [push, pull_request]
+jobs:
+  policy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v24
+      - name: Verify policies are in sync
+        run: nix run github:NixLine-org/nixline-baseline#check
+```
+
+See [nixline-demo1](https://github.com/NixLine-org/nixline-demo1) for a complete example.
+
+#### Option 2: Template-Based (Full Featured)
+
+For organizations that need local flake customization and additional apps:
+
+```bash
+# Initialize from template
 nix flake init -t github:NixLine-org/nixline-baseline
 ```
 
@@ -242,27 +336,30 @@ These packs materialize files that should be committed for visibility and GitHub
 
 ### Pure Apps (No File Materialization)
 
-These run as Nix apps directly from the consumer flake:
+These run as Nix apps. Usage depends on consumption pattern:
 
-| App | Purpose | Usage |
-|-----|---------|-------|
-| `sync` | Materialize persistent policies | `nix run .#sync` |
-| `check` | Validate policies match baseline | `nix run .#check` |
-| `sbom` | Generate CycloneDX + SPDX SBOMs | `nix run .#sbom` |
-| `flake-update` | Update flake.lock and create PR | `nix run .#flake-update` |
-| `setup-hooks` | Install pre-commit hooks | `nix run .#setup-hooks` |
-| `create-pack` | Create new policy pack template | `nix run .#create-pack <name>` |
+| App | Purpose | Direct Consumption | Template-Based |
+|-----|---------|-------------------|----------------|
+| `sync` | Materialize persistent policies | `nix run github:ORG/nixline-baseline#sync` | `nix run .#sync` |
+| `check` | Validate policies match baseline | `nix run github:ORG/nixline-baseline#check` | `nix run .#check` |
+| `sbom` | Generate CycloneDX + SPDX SBOMs | `nix run github:ORG/nixline-baseline#sbom` | `nix run .#sbom` |
+| `flake-update` | Update flake.lock and create PR | `nix run github:ORG/nixline-baseline#flake-update` | `nix run .#flake-update` |
+| `setup-hooks` | Install pre-commit hooks | `nix run github:ORG/nixline-baseline#setup-hooks` | `nix run .#setup-hooks` |
+| `create-pack` | Create new policy pack template | `nix run github:ORG/nixline-baseline#create-pack <name>` | `nix run .#create-pack <name>` |
 
 ### Creating New Packs
 
 To add custom policies (like flake8 configuration), use the pack creation app:
 
 ```bash
-# Create a new pack with template
+# Create a new pack with template (direct consumption)
+nix run github:NixLine-org/nixline-baseline#create-pack flake8
+
+# Or if using template-based approach
 nix run .#create-pack flake8
 
 # List example pack ideas
-nix run .#create-pack -- --list-examples
+nix run github:NixLine-org/nixline-baseline#create-pack -- --list-examples
 ```
 
 This generates `packs/flake8.nix` with a template structure. Edit the file to define your configuration:
@@ -302,7 +399,12 @@ persistentPacks = [
 **Materialize the new policy:**
 
 ```bash
+# Direct consumption
+nix run github:YOUR-ORG/nixline-baseline#sync
+
+# Or template-based
 nix run .#sync    # Materializes .flake8 file
+
 git add .flake8
 git commit -m "add flake8 configuration"
 ```
@@ -399,9 +501,11 @@ jobs:
 **How automated sync works:**
 
 1. **Weekly cron** triggers the reusable workflow
-2. **Workflow runs** `nix run .#check` to validate policies
-3. **If out of sync**, runs `nix run .#sync` to update files
+2. **Workflow runs** sync/check commands to validate policies
+3. **If out of sync**, materializes updated policy files
 4. **Auto-commits and pushes** changes directly to main branch
+
+Note: Workflows use the consumption pattern configured for that repository (template-based or direct).
 
 This provides instant policy materialization without PR bottlenecks. Organizations that require review can use branch protection rules to enforce PR workflows.
 
