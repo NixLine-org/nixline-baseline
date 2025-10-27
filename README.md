@@ -38,7 +38,7 @@ NixLine uses a **hybrid architecture** with two types of governance:
 Files like `LICENSE`, `SECURITY.md`, `.editorconfig` are materialized and committed to consumer repos for visibility and GitHub integration.
 
 ### 2. Pure Nix Apps (No Files)
-Apps like SBOM generation, flake updates and pre-commit setup run via `nix run .#app` with no file materialization.
+Apps like pack creation and policy import tools run via `nix run .#app` with no file materialization.
 
 Consumer repositories reference the baseline as a flake input, pulling policy updates instantly without pull requests.
 
@@ -160,7 +160,7 @@ graph LR
    - Your actual projects
    - Reference baseline as a flake input
    - Run `nix run .#sync` to materialize persistent policies
-   - Run `nix run .#sbom` for pure apps
+   - Run utility apps for pack creation and policy import
 
 ---
 
@@ -196,10 +196,10 @@ nix run .#sync
 # Validate policies match baseline
 nix run .#check
 
-# Additional pure apps available
-nix run .#sbom
-nix run .#flake-update
-nix run .#setup-hooks
+# Additional utility apps available
+nix run .#create-pack <name>
+nix run .#import-policy -- --auto
+nix run .#fetch-license -- Apache-2.0 --holder "My Company"
 ```
 
 ### Quick Start for Consumer Repos
@@ -325,14 +325,14 @@ nix run .#check
 # Sync policies from baseline
 nix run .#sync
 
-# Generate SBOM (CycloneDX + SPDX)
-nix run .#sbom
+# Create new policy pack
+nix run .#create-pack <name>
 
-# Update flake.lock and create PR
-nix run .#flake-update
+# Import existing policies
+nix run .#import-policy -- --auto
 
-# Install pre-commit hooks
-nix run .#setup-hooks
+# Fetch license from SPDX
+nix run .#fetch-license -- Apache-2.0 --holder "My Company"
 ```
 
 The policy sync workflow runs automatically weekly on Sunday at 2 PM UTC, checking for baseline updates and committing any changes.
@@ -361,10 +361,9 @@ These run as Nix apps. Usage depends on consumption pattern:
 |-----|---------|-------------------|----------------|
 | `sync` | Materialize persistent policies | `nix run github:ORG/nixline-baseline#sync` | `nix run .#sync` |
 | `check` | Validate policies match baseline | `nix run github:ORG/nixline-baseline#check` | `nix run .#check` |
-| `sbom` | Generate CycloneDX + SPDX SBOMs | `nix run github:ORG/nixline-baseline#sbom` | `nix run .#sbom` |
-| `flake-update` | Update flake.lock and create PR | `nix run github:ORG/nixline-baseline#flake-update` | `nix run .#flake-update` |
-| `setup-hooks` | Install pre-commit hooks | `nix run github:ORG/nixline-baseline#setup-hooks` | `nix run .#setup-hooks` |
 | `create-pack` | Create new policy pack template | `nix run github:ORG/nixline-baseline#create-pack <name>` | `nix run .#create-pack <name>` |
+| `import-policy` | Import existing policy files | `nix run github:ORG/nixline-baseline#import-policy` | `nix run .#import-policy` |
+| `fetch-license` | Fetch license from SPDX | `nix run github:ORG/nixline-baseline#fetch-license` | `nix run .#fetch-license` |
 
 ### Creating New Packs
 
@@ -581,7 +580,7 @@ This approach solves the policy cascade bottleneck by handling the "hundreds of 
 
 ### Pure Apps in CI
 
-Pure Nix apps like SBOM generation and dependency updates can be run in CI workflows. Their generated reports and artifacts can be preserved as workflow artifacts or used to create pull requests, providing the benefits of automation without requiring file materialization in the repository.
+Pure Nix apps for pack creation and policy management can be run in CI workflows for automated governance tasks without requiring file materialization in the repository.
 
 ---
 

@@ -4,9 +4,15 @@
   Materializes policy files from the baseline into the current repository.
 
   Usage:
-    nix run .#sync
-    nix run .#sync -- --packs editorconfig,license,codeowners
-    nix run .#sync -- --exclude security,dependabot
+    Direct Consumption (Recommended):
+      nix run github:ORG/nixline-baseline#sync
+      nix run github:ORG/nixline-baseline#sync -- --packs editorconfig,license,codeowners
+      nix run github:ORG/nixline-baseline#sync -- --exclude security,dependabot
+
+    Template-Based Consumption:
+      nix run .#sync
+      nix run .#sync -- --packs editorconfig,license,codeowners
+      nix run .#sync -- --exclude security,dependabot
 
   Options:
     --packs <list>   Comma-separated list of packs to materialize

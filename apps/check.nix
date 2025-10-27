@@ -4,9 +4,15 @@
   Validates that policy files in the current repository match the baseline.
 
   Usage:
-    nix run .#check
-    nix run .#check -- --packs editorconfig,license,codeowners
-    nix run .#check -- --exclude security,dependabot
+    Direct Consumption (Recommended):
+      nix run github:ORG/nixline-baseline#check
+      nix run github:ORG/nixline-baseline#check -- --packs editorconfig,license,codeowners
+      nix run github:ORG/nixline-baseline#check -- --exclude security,dependabot
+
+    Template-Based Consumption:
+      nix run .#check
+      nix run .#check -- --packs editorconfig,license,codeowners
+      nix run .#check -- --exclude security,dependabot
 
   Options:
     --packs <list>   Comma-separated list of packs to check
