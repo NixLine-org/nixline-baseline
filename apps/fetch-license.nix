@@ -9,7 +9,7 @@ pkgs.writeShellApplication {
     set -euo pipefail
 
     show_usage() {
-      cat << EOF
+      cat << 'USAGE_EOF'
 ╔════════════════════════════════════════════════════════════╗
 ║              NixLine License Fetcher                       ║
 ╚════════════════════════════════════════════════════════════╝
@@ -38,11 +38,11 @@ Examples:
 
 Output:
   Generated pack file is written to packs/license.nix
-EOF
+USAGE_EOF
     }
 
     list_common_licenses() {
-      cat << EOF
+      cat << 'LIST_EOF'
 Common SPDX License Identifiers:
 
   Apache-2.0          Apache License 2.0
@@ -59,7 +59,7 @@ Common SPDX License Identifiers:
   Unlicense           The Unlicense
 
 For full list, see: https://spdx.org/licenses/
-EOF
+LIST_EOF
     }
 
     # Parse arguments
@@ -106,7 +106,7 @@ EOF
     echo "Year:    $COPYRIGHT_YEAR"
     echo ""
 
-    # Fetch license from GitHub's license API
+    # Fetch license from SPDX
     LICENSE_URL="https://raw.githubusercontent.com/spdx/license-list-data/main/text/$LICENSE_ID.txt"
 
     echo "Fetching license text..."
@@ -119,22 +119,23 @@ EOF
     echo "✓ License text retrieved"
     echo ""
 
-    # Escape single quotes for Nix
-    LICENSE_TEXT=$(echo "$LICENSE_TEXT" | sed "s/''/'\\\\''''/g")
-
     # Generate pack file
     mkdir -p packs
 
-    cat > packs/license.nix << EOF
+    {
+      cat << 'PACK_HEADER'
 { pkgs, lib }:
 
 #
 # LICENSE PACK
 #
-# Generated using: nixline-fetch-license $LICENSE_ID
-# License: $LICENSE_ID
-# Copyright Holder: $COPYRIGHT_HOLDER
-# Copyright Year: $COPYRIGHT_YEAR
+PACK_HEADER
+
+      echo "# Generated using: nixline-fetch-license $LICENSE_ID"
+      echo "# License: $LICENSE_ID"
+      echo "# Copyright Holder: $COPYRIGHT_HOLDER"
+      echo "# Copyright Year: $COPYRIGHT_YEAR"
+      cat << 'PACK_HEADER2'
 #
 # To regenerate or change license:
 #   nix run .#fetch-license <SPDX-ID> --holder "Your Org" --year YYYY
@@ -146,17 +147,23 @@ EOF
 
 let
   # EDIT THIS: Your organization's copyright info
-  copyrightHolder = "$COPYRIGHT_HOLDER";
-  copyrightYear = "$COPYRIGHT_YEAR";
-  spdxId = "$LICENSE_ID";
+PACK_HEADER2
 
-  # License text from SPDX
-  licenseText = ''
-$LICENSE_TEXT
-  '';
+      echo "  copyrightHolder = \"$COPYRIGHT_HOLDER\";"
+      echo "  copyrightYear = \"$COPYRIGHT_YEAR\";"
+      echo "  spdxId = \"$LICENSE_ID\";"
+      echo ""
+      echo "  # License text from SPDX"
+      echo "  licenseText = ''''"
+      echo "$LICENSE_TEXT"
+      echo "  '''';"
+      echo ""
+      echo "  # Copyright notice"
+      cat << 'COPYRIGHT_LINE'
+  copyrightNotice = "\n\nCopyright $${copyrightYear} $${copyrightHolder}";
+COPYRIGHT_LINE
 
-  # Copyright notice
-  copyrightNotice = "\\\\n\\\\nCopyright \\\${copyrightYear} \\\${copyrightHolder}";
+      cat << 'PACK_FOOTER'
 in
 
 {
@@ -166,7 +173,8 @@ in
 
   checks = [];
 }
-EOF
+PACK_FOOTER
+    } > packs/license.nix
 
     echo "✓ Generated packs/license.nix"
     echo ""
