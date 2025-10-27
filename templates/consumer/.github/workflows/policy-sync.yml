@@ -1,0 +1,13 @@
+name: Policy Sync
+
+on:
+  # Run weekly on Sunday at 2 PM UTC
+  schedule:
+    - cron: '0 14 * * 0'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  sync:
+    uses: NixLine-org/.github/.github/workflows/nixline-policy-sync.yml@stable
