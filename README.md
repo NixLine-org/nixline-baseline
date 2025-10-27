@@ -310,7 +310,7 @@ This is the key difference from traditional policy distribution systems that use
 
 ### Automated Policy Sync
 
-Consumer repositories can enable automated policy synchronization using the `policy-sync.yml` workflow from the `.github` repository:
+Consumer repositories can enable automated policy synchronization using the `policy-sync.yml` workflow from the [`.github` repository](https://github.com/NixLine-org/.github):
 
 ```yaml
 # .github/workflows/policy-sync.yml (included in consumer template)
@@ -366,7 +366,7 @@ When you fork this baseline for your organization, follow this checklist to cust
 
 ### Before You Start
 
-- [ ] Fork both `.github` and `nixline-baseline` repositories to your organization
+- [ ] Fork both [`.github`](https://github.com/NixLine-org/.github) and [`nixline-baseline`](https://github.com/NixLine-org/nixline-baseline) repositories to your organization
 - [ ] Clone your forked `nixline-baseline` locally
 - [ ] Have your organization details ready (name, copyright holder, security contact)
 
