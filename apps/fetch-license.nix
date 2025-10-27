@@ -4,7 +4,7 @@
   Fetches license text from SPDX and generates a license pack.
 
   Usage:
-    nix run .#fetch-license -- <license-id> [--holder "Name"] [--year YYYY]
+    nix run .#fetch-license -- <license-id> --year YYYY [--holder "Name"]
     nix run .#fetch-license -- --list
 
   This utility downloads the official license text from the SPDX repository
@@ -32,13 +32,13 @@ pkgs.writeShellApplication {
 Fetch license text from SPDX and generate license pack.
 
 Usage:
-  nixline-fetch-license <license-id> [--holder "Name"] [--year YYYY]
+  nixline-fetch-license <license-id> --year YYYY [--holder "Name"]
   nixline-fetch-license --list
 
 Options:
   <license-id>     SPDX license identifier (e.g., Apache-2.0, MIT, GPL-3.0)
+  --year YYYY      Copyright year (required)
   --holder NAME    Copyright holder name (default: "ACME Corp")
-  --year YYYY      Copyright year (default: current year)
   --list           List common SPDX license identifiers
 
 Examples:
@@ -80,7 +80,7 @@ LIST_EOF
     # Parse arguments
     LICENSE_ID=""
     COPYRIGHT_HOLDER="ACME Corp"
-    COPYRIGHT_YEAR=$(date +%Y)
+    COPYRIGHT_YEAR=""
 
     while [[ $# -gt 0 ]]; do
       case $1 in
@@ -109,6 +109,12 @@ LIST_EOF
 
     if [[ -z "$LICENSE_ID" ]]; then
       show_usage
+      exit 1
+    fi
+
+    if [[ -z "$COPYRIGHT_YEAR" ]]; then
+      echo "Error: --year is required" >&2
+      echo "Example: nixline-fetch-license Apache-2.0 --holder \"ACME Corp\" --year 2025" >&2
       exit 1
     fi
 
