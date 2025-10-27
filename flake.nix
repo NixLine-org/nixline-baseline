@@ -60,21 +60,37 @@
           sync = {
             type = "app";
             program = "${syncApp}/bin/nixline-sync";
+            meta = {
+              description = "Materialize policy files from baseline into current repository";
+              license = lib.licenses.asl20;
+            };
           };
 
           check = {
             type = "app";
             program = "${checkApp}/bin/nixline-check";
+            meta = {
+              description = "Validate that policy files match baseline";
+              license = lib.licenses.asl20;
+            };
           };
 
           import-policy = {
             type = "app";
             program = "${importPolicyApp}/bin/nixline-import-policy";
+            meta = {
+              description = "Import existing policy files into pack format";
+              license = lib.licenses.asl20;
+            };
           };
 
           fetch-license = {
             type = "app";
             program = "${fetchLicenseApp}/bin/nixline-fetch-license";
+            meta = {
+              description = "Fetch license text from SPDX and generate license pack";
+              license = lib.licenses.asl20;
+            };
           };
         }
       );
