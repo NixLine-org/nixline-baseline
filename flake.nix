@@ -19,9 +19,11 @@
           path = ./templates/consumer;
           description = "NixLine consumer repository template with flake inputs";
         };
+        default = {
+          path = ./templates/consumer;
+          description = "NixLine consumer repository template with flake inputs";
+        };
       };
-
-      defaultTemplate = self.templates.consumer;
 
       # Expose packs as importable outputs for consumer repos
       lib = forAllSystems (system:
