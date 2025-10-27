@@ -1,0 +1,15 @@
+# Pre-commit configuration
+# After syncing NixLine policies, run: nix run .#setup-hooks
+#
+# Customize this file for your project's needs.
+# See https://pre-commit.com for more hooks.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
