@@ -46,8 +46,8 @@ pkgs.writeShellApplication {
               echo "[-] ${packName}: Missing ${path}"
               failed=1
             elif ! diff -q "${path}" <(cat << 'NIXLINE_EOF'
-            ${content}
-            NIXLINE_EOF
+${content}
+NIXLINE_EOF
             ) >/dev/null 2>&1; then
               echo "[-] ${packName}: Out of sync ${path}"
               failed=1
