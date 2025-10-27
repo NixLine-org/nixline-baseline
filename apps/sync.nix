@@ -29,7 +29,7 @@ pkgs.writeShellApplication {
     echo ""
 
     # Get requested packs from environment (default: persistent packs only)
-    NIXLINE_PACKS="''${NIXLINE_PACKS:-editorconfig,codeowners,security,license,dependabot}"
+    NIXLINE_PACKS="''${NIXLINE_PACKS:-editorconfig,codeowners,security,license,precommit,dependabot}"
 
     echo "Packs: $NIXLINE_PACKS"
     echo ""
