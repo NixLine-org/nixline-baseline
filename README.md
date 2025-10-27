@@ -16,7 +16,7 @@ It provides the shared Nix logic, governance rules and automation logic that all
 - [Understanding Pack Propagation](#understanding-pack-propagation)
 - [Customization Checklist](#customization-checklist)
 - [Tagging Policy](#tagging-policy)
-- [NixLine vs Traditional Policy Distribution](#nixline-vs-traditional-lineage-systems)
+- [NixLine vs Traditional Policy Distribution](#nixline-vs-traditional-policy-distribution)
 - [Importance of the Baseline](#importance-of-the-baseline)
 
 ---
@@ -530,7 +530,7 @@ Always verify CI passes before re-tagging `stable`.
 
 ## NixLine vs Traditional Policy Distribution
 
-Traditional policy distribution systems use automated pull requests to distribute policy updates. When a baseline changes, the system creates PRs in every consumer repository, requiring manual review and merge.
+Traditional policy distribution systems use automated pull requests to propagate policy updates across repositories. When a baseline changes, the system creates PRs in every consumer repository, requiring manual review and merge.
 
 | Feature | Traditional (PR-based) | NixLine (Flake-based) |
 |---------|------------------------|------------------------|
