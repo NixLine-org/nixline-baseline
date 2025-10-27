@@ -3,6 +3,22 @@
 The **NixLine Baseline** defines the foundational Nix expressions and policies used by all repositories in the [NixLine-org](https://github.com/NixLine-org) organization.
 It provides the shared Nix logic, governance rules and automation logic that all NixLine consumer repositories rely on.
 
+## Table of Contents
+
+- [What is NixLine?](#what-is-nixline)
+- [Purpose](#purpose)
+- [Architecture](#architecture)
+- [Usage](#usage)
+  - [Baseline Apps](#baseline-apps)
+  - [Quick Start for Consumer Repos](#quick-start-for-consumer-repos)
+- [Policy Packs](#policy-packs)
+- [Migrating Existing Policies](#migrating-existing-policies)
+- [Understanding Pack Propagation](#understanding-pack-propagation)
+- [Customization Checklist](#customization-checklist)
+- [Tagging Policy](#tagging-policy)
+- [NixLine vs Traditional Policy Distribution](#nixline-vs-traditional-lineage-systems)
+- [Importance of the Baseline](#importance-of-the-baseline)
+
 ---
 
 ## What is NixLine?
