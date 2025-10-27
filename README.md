@@ -144,9 +144,14 @@ This copies files from the baseline's `templates/consumer/` directory into your 
 - `.gitignore` - Standard ignores for Nix projects
 - `flake.lock` - Pinned dependencies
 
+**Important:** The consumer repository's `flake.nix` is different from the baseline repository's `flake.nix`:
+
+- **Baseline `flake.nix`** (this repo) - Exposes the packs library and utility apps for all consumers
+- **Consumer `flake.nix`** (from template) - Configures which packs to use and implements sync/check for that specific repo
+
 **Customize enabled packs:**
 
-Edit the `persistentPacks` list in your consumer repository's `flake.nix`:
+Edit the `persistentPacks` list in your consumer repository's `flake.nix` (not the baseline):
 
 ```nix
 # Select which packs to enable
