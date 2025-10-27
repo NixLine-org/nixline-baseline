@@ -86,7 +86,6 @@ Common Pack Examples:
 - precommit      Pre-commit hooks (.pre-commit-config.yaml)
 
 Each pack should define files to materialize and optionally checks to run.
-For examples, see: https://github.com/cisagov/lineage
 EXAMPLES_EOF
     }
 

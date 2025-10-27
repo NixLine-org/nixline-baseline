@@ -251,6 +251,7 @@ These run as Nix apps directly from the consumer flake:
 | `sbom` | Generate CycloneDX + SPDX SBOMs | `nix run .#sbom` |
 | `flake-update` | Update flake.lock and create PR | `nix run .#flake-update` |
 | `setup-hooks` | Install pre-commit hooks | `nix run .#setup-hooks` |
+| `create-pack` | Create new policy pack template | `nix run .#create-pack <name>` |
 
 ### Creating New Packs
 
