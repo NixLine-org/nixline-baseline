@@ -1,0 +1,9 @@
+# NixLine ephemeral files (generated in CI, do not commit)
+.github/workflows/flake-update.yml
+
+# SBOM output (generated artifacts, not source)
+sbom-output/
+
+# Nix build results
+result
+result-*
