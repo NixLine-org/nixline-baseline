@@ -40,8 +40,8 @@ pkgs.writeShellApplication {
           if echo "$NIXLINE_PACKS" | grep -qw "${packName}"; then
             mkdir -p "$(dirname "${path}")"
             cat > "${path}" << 'NIXLINE_EOF'
-            ${content}
-            NIXLINE_EOF
+${content}
+NIXLINE_EOF
             echo "[+] ${packName}: ${path}"
           fi
         '') pack.files);
