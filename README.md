@@ -30,54 +30,59 @@ Consumer repositories reference the baseline as a flake input, pulling policy up
 ## Architecture
 
 ```mermaid
-graph TB
-    subgraph "Baseline Repository (nixline-baseline)"
-        B1[flake.nix<br/>Exposes lib.packs & apps]
-        B2[packs/<br/>Policy Definitions]
-        B3[apps/<br/>sync, check, import-policy, fetch-license]
-        B4[templates/<br/>Consumer Template + policy-sync.yml]
+graph LR
+    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;Baseline Repository (nixline-baseline)&nbsp;&nbsp;&nbsp;&nbsp;"]
+        B1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes lib.packs & apps&nbsp;&nbsp;"]
+        B2["&nbsp;&nbsp;packs/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Policy Definitions&nbsp;&nbsp;"]
+        B3["&nbsp;&nbsp;apps/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;sync, check,&nbsp;&nbsp;<br/>&nbsp;&nbsp;import-policy,&nbsp;&nbsp;<br/>&nbsp;&nbsp;fetch-license&nbsp;&nbsp;"]
+        B4["&nbsp;&nbsp;templates/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Consumer Template&nbsp;&nbsp;<br/>&nbsp;&nbsp;+ policy-sync.yml&nbsp;&nbsp;"]
         B1 --> B2
         B1 --> B3
         B1 --> B4
     end
 
-    subgraph "Consumer Repository"
-        C1[flake.nix<br/>References baseline as input]
-        C2[Persistent Files<br/>LICENSE, SECURITY.md, etc.]
-        C3[Pure Apps<br/>sbom, flake-update, setup-hooks]
-        C4[policy-sync.yml<br/>Automated weekly sync]
-
-        C1 -.->|flake input| B1
-        C1 -->|nix run .#sync| C2
-        C1 -->|nix run .#app| C3
-        C4 -->|cron: Sunday 2PM| C1
-        C4 -->|auto-commits to main| C2
+    subgraph consumer["&nbsp;&nbsp;&nbsp;&nbsp;Consumer Repository&nbsp;&nbsp;&nbsp;&nbsp;"]
+        C1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;References baseline&nbsp;&nbsp;<br/>&nbsp;&nbsp;as input&nbsp;&nbsp;"]
+        C2["&nbsp;&nbsp;Persistent Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;LICENSE,&nbsp;&nbsp;<br/>&nbsp;&nbsp;SECURITY.md,&nbsp;&nbsp;<br/>&nbsp;&nbsp;etc.&nbsp;&nbsp;"]
+        C3["&nbsp;&nbsp;Pure Apps&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;sbom,&nbsp;&nbsp;<br/>&nbsp;&nbsp;flake-update,&nbsp;&nbsp;<br/>&nbsp;&nbsp;setup-hooks&nbsp;&nbsp;"]
+        C4["&nbsp;&nbsp;policy-sync.yml&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Automated&nbsp;&nbsp;<br/>&nbsp;&nbsp;weekly sync&nbsp;&nbsp;"]
     end
 
-    subgraph "GitHub Actions (.github repo)"
-        G1[Reusable Workflows<br/>nixline-policy-sync.yml]
-        G2[Auto-commits policy changes]
+    subgraph actions["&nbsp;&nbsp;&nbsp;&nbsp;GitHub Actions (.github repo)&nbsp;&nbsp;&nbsp;&nbsp;"]
+        G1["&nbsp;&nbsp;Reusable Workflows&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;nixline-policy-sync.yml&nbsp;&nbsp;"]
+        G2["&nbsp;&nbsp;Auto-commits&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;policy changes&nbsp;&nbsp;"]
     end
 
-    C4 -.->|calls workflow| G1
-    G1 -->|runs nix run .#sync| C1
-    G1 -->|git push| C2
-
-    subgraph "Policy Types"
-        P1[Persistent<br/>Committed & Visible]
-        P2[Pure Apps<br/>No Files]
-        P3[Automated<br/>Instant Sync]
+    subgraph types["&nbsp;&nbsp;&nbsp;&nbsp;Policy Types&nbsp;&nbsp;&nbsp;&nbsp;"]
+        P1["&nbsp;&nbsp;Persistent&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Committed & Visible&nbsp;&nbsp;"]
+        P2["&nbsp;&nbsp;Pure Apps&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;No Files&nbsp;&nbsp;"]
+        P3["&nbsp;&nbsp;Automated&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Instant Sync&nbsp;&nbsp;"]
     end
 
+    B1 -.->|"&nbsp;flake input&nbsp;"| C1
+    C1 -->|"&nbsp;nix run .#sync&nbsp;"| C2
+    C1 -->|"&nbsp;nix run .#app&nbsp;"| C3
+    C4 -->|"&nbsp;cron: Sunday 2PM&nbsp;"| C1
+    C4 -.->|"&nbsp;calls workflow&nbsp;"| G1
+    G1 -->|"&nbsp;runs nix run .#sync&nbsp;"| C1
+    G1 -->|"&nbsp;git push&nbsp;"| C2
     C2 -.-> P1
     C3 -.-> P2
     C4 -.-> P3
 
-    style B1 fill:#4CAF50
-    style C1 fill:#2196F3
-    style C2 fill:#FF9800
-    style C3 fill:#9C27B0
-    style C4 fill:#FFD700
+    style B1 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B2 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B3 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B4 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style C1 fill:#2196F3,color:#000000,stroke:#333,stroke-width:2px
+    style C2 fill:#FF9800,color:#000000,stroke:#333,stroke-width:2px
+    style C3 fill:#9C27B0,color:#FFFFFF,stroke:#333,stroke-width:2px
+    style C4 fill:#FFD700,color:#000000,stroke:#333,stroke-width:2px
+    style G1 fill:#E91E63,color:#FFFFFF,stroke:#333,stroke-width:2px
+    style G2 fill:#E91E63,color:#FFFFFF,stroke:#333,stroke-width:2px
+    style P1 fill:#607D8B,color:#FFFFFF,stroke:#333,stroke-width:2px
+    style P2 fill:#607D8B,color:#FFFFFF,stroke:#333,stroke-width:2px
+    style P3 fill:#607D8B,color:#FFFFFF,stroke:#333,stroke-width:2px
 ```
 
 ### Repository Types
