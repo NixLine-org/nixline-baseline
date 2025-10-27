@@ -1,5 +1,20 @@
 { pkgs, lib, helpers, packsLib }:
 
+/*
+  Materializes policy files from the baseline into the current repository.
+
+  Usage:
+    nix run .#sync
+
+  Environment Variables:
+    NIXLINE_PACKS - Comma-separated list of packs to materialize
+                    Default: editorconfig,codeowners,security,license,dependabot
+
+  This app writes policy files to disk, creating directories as needed. It is
+  automatically called by the policy-sync workflow when check detects out-of-sync
+  files. Changes are then auto-committed to the repository.
+*/
+
 pkgs.writeShellApplication {
   name = "nixline-sync";
 

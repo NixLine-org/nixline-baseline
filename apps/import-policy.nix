@@ -1,5 +1,21 @@
 { pkgs, lib }:
 
+/*
+  Imports existing policy files from a consumer repository into pack format.
+
+  Usage:
+    nix run .#import-policy -- --file <path>
+    nix run .#import-policy -- --auto
+
+  This utility helps baseline maintainers convert existing policy files into
+  NixLine packs. It recognizes common policy files (LICENSE, SECURITY.md,
+  .editorconfig, CODEOWNERS, dependabot.yml) and generates corresponding pack
+  files in packs/ directory.
+
+  Use --auto to scan and import all recognized files in the current directory,
+  or --file to import a specific file with optional --pack name override.
+*/
+
 pkgs.writeShellApplication {
   name = "nixline-import-policy";
 

@@ -1,5 +1,20 @@
 { pkgs, lib }:
 
+/*
+  Fetches license text from SPDX and generates a license pack.
+
+  Usage:
+    nix run .#fetch-license -- <license-id> [--holder "Name"] [--year YYYY]
+    nix run .#fetch-license -- --list
+
+  This utility downloads the official license text from the SPDX repository
+  and generates a license pack with copyright information. The generated pack
+  can be customized by editing copyrightHolder and copyrightYear variables.
+
+  Supports all SPDX license identifiers (Apache-2.0, MIT, GPL-3.0-only, etc).
+  Use --list to see common licenses or visit https://spdx.org/licenses/
+*/
+
 pkgs.writeShellApplication {
   name = "nixline-fetch-license";
 

@@ -1,5 +1,22 @@
 { pkgs, lib, helpers, packsLib }:
 
+/*
+  Validates that policy files in the current repository match the baseline.
+
+  Usage:
+    nix run .#check
+
+  Environment Variables:
+    NIXLINE_PACKS - Comma-separated list of packs to check
+                    Default: editorconfig,codeowners,security,license,dependabot
+
+  Exit Codes:
+    0 - All policy files are in sync with baseline
+    1 - One or more policy files are missing or out of sync
+
+  This app is used by the policy-sync workflow to determine if sync is needed.
+*/
+
 pkgs.writeShellApplication {
   name = "nixline-check";
 
