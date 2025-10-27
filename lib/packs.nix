@@ -8,13 +8,12 @@ let
     license = import ../packs/license.nix { inherit pkgs lib; };
     security = import ../packs/security.nix { inherit pkgs lib; };
     codeowners = import ../packs/codeowners.nix { inherit pkgs lib; };
-    precommit = import ../packs/precommit.nix { inherit pkgs lib; };
     dependabot = import ../packs/dependabot.nix { inherit pkgs lib; };
 
-    # Ephemeral packs (CI only, not committed)
-    flake-update = import ../packs/flake-update.nix { inherit pkgs lib; };
-
-    # Note: sbom is now a pure app in consumer flakes (no pack file)
+    # Pure apps in consumer flakes (no pack files):
+    # - sbom: nix run .#sbom
+    # - flake-update: nix run .#flake-update
+    # - setup-hooks: nix run .#setup-hooks
   };
 
   # Parse comma-separated pack list from environment
