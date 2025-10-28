@@ -4,12 +4,12 @@ let
   # Import all pack modules
   packModules = {
     # Persistent packs (committed to consumer repos)
-    editorconfig = import ../packs/editorconfig.nix { inherit pkgs lib; };
-    license = import ../packs/license.nix { inherit pkgs lib; };
-    security = import ../packs/security.nix { inherit pkgs lib; };
-    codeowners = import ../packs/codeowners.nix { inherit pkgs lib; };
-    precommit = import ../packs/precommit.nix { inherit pkgs lib; };
-    dependabot = import ../packs/dependabot.nix { inherit pkgs lib; };
+    editorconfig = import ../packs/editorconfig-parameterized.nix { inherit pkgs lib; };
+    license = import ../packs/license-parameterized.nix { inherit pkgs lib; };
+    security = import ../packs/security-parameterized.nix { inherit pkgs lib; };
+    codeowners = import ../packs/codeowners-parameterized.nix { inherit pkgs lib; };
+    precommit = import ../packs/precommit-parameterized.nix { inherit pkgs lib; };
+    dependabot = import ../packs/dependabot-parameterized.nix { inherit pkgs lib; };
 
     # Pure apps in consumer flakes (no pack files):
     # - sbom: nix run .#sbom

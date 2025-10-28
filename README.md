@@ -12,6 +12,7 @@ It provides the shared Nix logic, governance rules and automation logic that all
   - [Baseline Apps](#baseline-apps)
   - [Quick Start for Consumer Repos](#quick-start-for-consumer-repos)
 - [Policy Packs](#policy-packs)
+- [Configuration File Reference](#configuration-file-reference)
 - [Migrating Existing Policies](#migrating-existing-policies)
 - [Understanding Pack Propagation](#understanding-pack-propagation)
 - [Recommended Implementation](#recommended-implementation)
