@@ -1014,12 +1014,23 @@ The `nixline-policy-sync-pr.yml` reusable workflow implements the hybrid solutio
 
 ```yaml
 # .github/workflows/policy-sync.yml
+name: Policy Sync
+on:
+  schedule:
+    - cron: '0 14 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   sync:
-    uses: NixLine-org/.github/.github/workflows/nixline-policy-sync-pr.yml@stable
+    uses: YOUR-ORG/.github/.github/workflows/nixline-policy-sync-pr.yml@stable
     with:
       consumption_pattern: direct
-      baseline_repo: NixLine-org/nixline-baseline
+      baseline_repo: YOUR-ORG/nixline-baseline
       baseline_ref: stable
       create_pr: true
       auto_approve: true
