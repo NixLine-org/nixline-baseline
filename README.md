@@ -1008,6 +1008,38 @@ The automated workflow creates pull requests instead of committing directly to m
 
 This approach solves the policy cascade bottleneck by handling the "hundreds of repos" problem through automation, while branch protection provides review gates where needed. When a single policy change in the baseline needs to flow out to hundreds of consumer repositories, automation eliminates the manual overhead while maintaining governance controls.
 
+### Auto-Approved PR Workflow
+
+The `nixline-policy-sync-pr.yml` reusable workflow implements the hybrid solution by creating pull requests for policy updates with optional auto-approval:
+
+```yaml
+# .github/workflows/policy-sync.yml
+jobs:
+  sync:
+    uses: NixLine-org/.github/.github/workflows/nixline-policy-sync-pr.yml@stable
+    with:
+      consumption_pattern: direct
+      baseline_repo: NixLine-org/nixline-baseline
+      baseline_ref: stable
+      create_pr: true
+      auto_approve: true
+```
+
+**Key Features:**
+- Creates PRs instead of direct commits for audit trails
+- Supports auto-approval with `auto_approve: true`
+- Works with all consumption patterns (direct, configuration-driven, template-based)
+- Integrates with GitHub's auto-merge when checks pass
+- Provides detailed PR descriptions with change summaries
+
+**Enterprise Setup:**
+1. Enable branch protection requiring PR reviews
+2. Configure auto-merge in repository settings
+3. Set up auto-approval workflow for policy sync PRs
+4. CI checks validate policy changes before merge
+
+This pattern is demonstrated in [nixline-demo3](https://github.com/NixLine-org/nixline-demo3) which showcases pure upstream consumption with zero maintenance overhead.
+
 ### Pure Apps in CI
 
 Pure Nix apps for pack creation and policy management can be run in CI workflows for automated governance tasks without requiring file materialization in the repository.
