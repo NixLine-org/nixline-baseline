@@ -1038,6 +1038,25 @@ jobs:
 3. Set up auto-approval workflow for policy sync PRs
 4. CI checks validate policy changes before merge
 
+**Required Auto-Approval Workflow:**
+```yaml
+# .github/workflows/auto-approve.yml
+name: Auto Approve Policy Updates
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  auto-approve:
+    uses: YOUR-ORG/.github/.github/workflows/nixline-auto-approve.yml@stable
+    with:
+      pr_title_pattern: "Policy Sync"
+      actor_filter: "github-actions[bot]"
+      merge_method: "squash"
+      enable_auto_merge: true
+      require_checks: true
+```
+
 This pattern is demonstrated in [nixline-demo3](https://github.com/NixLine-org/nixline-demo3) which showcases pure upstream consumption with zero maintenance overhead.
 
 ### Pure Apps in CI
