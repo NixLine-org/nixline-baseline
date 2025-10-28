@@ -46,7 +46,7 @@ Consumer repositories reference the baseline as a flake input, pulling policy up
 
 ## Consumption Patterns
 
-NixLine supports **two consumption patterns** for consumer repositories:
+NixLine supports **three consumption patterns** for consumer repositories:
 
 ### 1. Template-Based (Recommended for Organizations)
 
@@ -63,9 +63,24 @@ nix run .#check
 
 **Benefits:** Full Nix flake integration, local development, customizable pack selection per repo.
 
-### 2. Direct Consumption (Recommended for Simple Projects)
+### 2. Configuration-Driven (Recommended for Organizations)
 
-Consumer repositories call baseline apps directly without a local flake:
+Consumer repositories use `.nixline.toml` configuration files for customization without forking:
+
+```bash
+# Run apps with configuration support
+nix run github:NixLine-org/nixline-baseline#sync
+nix run github:NixLine-org/nixline-baseline#sync -- --config .nixline.toml
+nix run github:NixLine-org/nixline-baseline#sync -- --override org.name=MyCompany
+```
+
+**Benefits:** Full customization without baseline forking, organization-specific branding, selective pack adoption.
+
+The [nixline-demo2](https://github.com/NixLine-org/nixline-demo2) repository demonstrates the **configuration-driven** pattern.
+
+### 3. Direct Consumption (Recommended for Simple Projects)
+
+Consumer repositories call baseline apps directly without customization:
 
 ```bash
 # Run apps directly from baseline
@@ -73,7 +88,7 @@ nix run github:NixLine-org/nixline-baseline#sync
 nix run github:NixLine-org/nixline-baseline#check
 ```
 
-**Benefits:** No local flake.nix needed, simpler setup, always uses latest baseline.
+**Benefits:** No local flake.nix needed, simplest setup, always uses latest baseline.
 
 The [nixline-demo1](https://github.com/NixLine-org/nixline-demo1) repository demonstrates the **direct consumption** pattern.
 
@@ -112,6 +127,41 @@ graph LR
     style C1 fill:#2196F3,color:#000000,stroke:#333,stroke-width:2px
     style C2 fill:#FF9800,color:#000000,stroke:#333,stroke-width:2px
     style C4 fill:#FFD700,color:#000000,stroke:#333,stroke-width:2px
+```
+
+### Configuration-Driven Pattern
+
+```mermaid
+graph LR
+    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;Baseline Repository (nixline-baseline)&nbsp;&nbsp;&nbsp;&nbsp;"]
+        B1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes parameterized packs&nbsp;&nbsp;"]
+        B2["&nbsp;&nbsp;packs/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Parameterized Definitions&nbsp;&nbsp;"]
+        B3["&nbsp;&nbsp;apps/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;sync --config, --override&nbsp;&nbsp;"]
+        B4["&nbsp;&nbsp;lib/config.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;TOML Configuration Parser&nbsp;&nbsp;"]
+        B1 --> B2
+        B1 --> B3
+        B1 --> B4
+    end
+
+    subgraph consumer["&nbsp;&nbsp;&nbsp;&nbsp;Consumer Repository (Config-Driven)&nbsp;&nbsp;&nbsp;&nbsp;"]
+        C1["&nbsp;&nbsp;.nixline.toml&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Organization Config&nbsp;&nbsp;"]
+        C2["&nbsp;&nbsp;Policy Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Customized for Org&nbsp;&nbsp;"]
+        C4["&nbsp;&nbsp;.github/workflows/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;ci.yml&nbsp;&nbsp;"]
+        C5["&nbsp;&nbsp;Project Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;No baseline fork needed&nbsp;&nbsp;"]
+    end
+
+    C1 -.->|"&nbsp;config input&nbsp;"| B3
+    B3 -->|"&nbsp;nix run github:org/baseline#sync&nbsp;"| C2
+    C4 -->|"&nbsp;nix run github:org/baseline#check&nbsp;"| B3
+
+    style B1 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B2 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B3 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B4 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style C1 fill:#E91E63,color:#FFFFFF,stroke:#333,stroke-width:2px
+    style C2 fill:#FF9800,color:#000000,stroke:#333,stroke-width:2px
+    style C4 fill:#FFD700,color:#000000,stroke:#333,stroke-width:2px
+    style C5 fill:#9C27B0,color:#FFFFFF,stroke:#333,stroke-width:2px
 ```
 
 ### Direct Consumption Pattern
@@ -174,6 +224,11 @@ The baseline exposes apps for setup and migration. These can be run two ways:
 ```bash
 # Materialize persistent policies
 nix run github:NixLine-org/nixline-baseline#sync
+
+# Configuration-driven consumption
+nix run github:NixLine-org/nixline-baseline#sync -- --config .nixline.toml
+nix run github:NixLine-org/nixline-baseline#sync -- --override org.name=MyCompany
+nix run github:NixLine-org/nixline-baseline#sync -- --dry-run
 
 # Validate policies match baseline
 nix run github:NixLine-org/nixline-baseline#check
@@ -257,7 +312,61 @@ jobs:
 
 See [nixline-demo1](https://github.com/NixLine-org/nixline-demo1) for a complete example.
 
-#### Option 2: Template-Based (Full Featured)
+#### Option 2: Configuration-Driven (Organization Customization)
+
+For organizations that want full customization without forking the baseline:
+
+**Create configuration file:**
+```toml
+# .nixline.toml
+[organization]
+name = "MyCompany"
+security_email = "security@mycompany.com"
+default_team = "@MyCompany/maintainers"
+
+[packs]
+enabled = ["editorconfig", "codeowners", "security", "license"]
+
+[packs.codeowners]
+rules = [
+  { pattern = "*", owners = ["@MyCompany/maintainers"] },
+  { pattern = "*.py", owners = ["@MyCompany/python-team"] }
+]
+
+[packs.editorconfig]
+indent_size = 4
+line_length = 100
+```
+
+**Sync with configuration:**
+```bash
+# Use configuration file
+nix run github:NixLine-org/nixline-baseline#sync
+
+# Preview changes
+nix run github:NixLine-org/nixline-baseline#sync -- --dry-run
+
+# Override specific values
+nix run github:NixLine-org/nixline-baseline#sync -- --override org.name=AnotherCompany
+
+# Use custom config file
+nix run github:NixLine-org/nixline-baseline#sync -- --config my-config.toml
+```
+
+**Generated files will include:**
+- Organization branding (MyCompany in CODEOWNERS, security email in SECURITY.md)
+- Custom pack selection (only specified packs materialized)
+- Pack-specific customization (custom indentation, team ownership rules)
+
+**Benefits:**
+- No baseline forking required
+- Organization-specific customization
+- Instant updates from upstream baseline
+- Configuration-driven policy inheritance
+
+See [nixline-demo2](https://github.com/NixLine-org/nixline-demo2) for a complete example.
+
+#### Option 3: Template-Based (Full Featured)
 
 For organizations that need local flake customization and additional apps:
 
@@ -428,6 +537,130 @@ git commit -m "add flake8 configuration"
 ```
 
 The pack will now be included in automated policy sync across all consumer repositories that enable it.
+
+---
+
+## Configuration File Reference
+
+### .nixline.toml Structure
+
+NixLine supports configuration-driven customization via `.nixline.toml` files. This enables organization-specific branding and policy customization without forking the baseline.
+
+Configuration parsing is handled by [`lib/config.nix`](./lib/config.nix) which supports TOML loading, parameter validation and CLI override integration.
+
+```toml
+[baseline]
+repo = "github:NixLine-org/nixline-baseline"
+ref = "stable"
+
+[organization]
+name = "MyCompany"
+security_email = "security@mycompany.com"
+default_team = "@MyCompany/maintainers"
+
+[packs]
+enabled = ["editorconfig", "codeowners", "security", "license", "precommit"]
+
+[packs.editorconfig]
+indent_size = 4
+line_length = 100
+charset = "utf-8"
+end_of_line = "lf"
+
+[packs.editorconfig.languages]
+python = { indent_size = 4, max_line_length = 88 }
+javascript = { indent_size = 2 }
+
+[packs.codeowners]
+rules = [
+  { pattern = "*", owners = ["@MyCompany/maintainers"] },
+  { pattern = "*.py", owners = ["@MyCompany/python-team"] },
+  { pattern = "*.js", owners = ["@MyCompany/frontend-team"] },
+  { pattern = "docs/**", owners = ["@MyCompany/docs-team"] }
+]
+
+[packs.security]
+response_time = "within 24 hours"
+disclosure_policy = "coordinated"
+supported_versions = [
+  { version = "2.x.x", supported = true },
+  { version = "1.x.x", supported = false }
+]
+
+[packs.license]
+type = "MIT"
+holder = "MyCompany, Inc."
+year = "2024"
+
+[packs.precommit]
+hooks = ["trailing-whitespace", "black", "flake8", "prettier"]
+python_version = "3.11"
+black_line_length = 88
+```
+
+### Configuration Sections
+
+#### `[baseline]`
+- `repo`: GitHub repository URL for the baseline
+- `ref`: Git reference to use (stable, main, or specific tag)
+
+#### `[organization]`
+- `name`: Organization name used in CODEOWNERS and documentation
+- `security_email`: Contact email for security vulnerabilities
+- `default_team`: Default team for code ownership
+
+#### `[packs]`
+- `enabled`: Array of pack names to materialize
+
+#### Pack-Specific Sections
+
+Each pack can have its own configuration section:
+
+**`[packs.editorconfig]`**
+- `indent_size`: Default indentation size
+- `line_length`: Maximum line length
+- `charset`: Character encoding
+- `end_of_line`: Line ending style
+- `languages`: Language-specific overrides
+
+**`[packs.codeowners]`**
+- `rules`: Array of ownership rules with pattern and owners
+
+**`[packs.security]`**
+- `response_time`: Expected response time for vulnerabilities
+- `disclosure_policy`: Disclosure approach (coordinated, immediate)
+- `supported_versions`: Version support matrix
+
+**`[packs.license]`**
+- `type`: License type (MIT, Apache-2.0, etc.)
+- `holder`: Copyright holder
+- `year`: Copyright year
+
+**`[packs.precommit]`**
+- `hooks`: Array of pre-commit hooks to enable
+- `python_version`: Python version for Python hooks
+- `black_line_length`: Line length for Black formatter
+
+### CLI Options
+
+Override configuration values at runtime:
+
+```bash
+# Override organization settings
+nix run .#sync -- --override org.name=AnotherCompany
+nix run .#sync -- --override org.security_email=sec@other.com
+
+# Use custom config file
+nix run .#sync -- --config production.toml
+
+# Preview changes without applying
+nix run .#sync -- --dry-run
+
+# Combine options
+nix run .#sync -- --config .nixline.toml --override org.name=TestCorp --dry-run
+```
+
+See [`examples/nixline.toml`](./examples/nixline.toml) for a complete configuration example.
 
 ---
 
