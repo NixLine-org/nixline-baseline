@@ -4,8 +4,13 @@
   Imports existing policy files from a consumer repository into pack format.
 
   Usage:
-    nix run .#import-policy -- --file <path>
-    nix run .#import-policy -- --auto
+    Direct Consumption:
+      nix run github:ORG/nixline-baseline#import-policy -- --file <path>
+      nix run github:ORG/nixline-baseline#import-policy -- --auto
+
+    Template-Based Consumption:
+      nix run .#import-policy -- --file <path>
+      nix run .#import-policy -- --auto
 
   This utility helps baseline maintainers convert existing policy files into
   NixLine packs. It recognizes common policy files (LICENSE, SECURITY.md,

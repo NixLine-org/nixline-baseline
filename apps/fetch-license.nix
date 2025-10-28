@@ -4,8 +4,13 @@
   Fetches license text from SPDX and generates a license pack.
 
   Usage:
-    nix run .#fetch-license -- <license-id> --year YYYY [--holder "Name"]
-    nix run .#fetch-license -- --list
+    Direct Consumption:
+      nix run github:ORG/nixline-baseline#fetch-license -- <license-id> --year YYYY [--holder "Name"]
+      nix run github:ORG/nixline-baseline#fetch-license -- --list
+
+    Template-Based Consumption:
+      nix run .#fetch-license -- <license-id> --year YYYY [--holder "Name"]
+      nix run .#fetch-license -- --list
 
   This utility downloads the official license text from the SPDX repository
   and generates a license pack with copyright information. The generated pack

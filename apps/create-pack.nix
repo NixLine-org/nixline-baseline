@@ -4,8 +4,13 @@
   Creates a new policy pack with a template structure.
 
   Usage:
-    nix run .#create-pack -- <pack-name>
-    nix run .#create-pack -- --list-examples
+    Direct Consumption:
+      nix run github:ORG/nixline-baseline#create-pack -- <pack-name>
+      nix run github:ORG/nixline-baseline#create-pack -- --list-examples
+
+    Template-Based Consumption:
+      nix run .#create-pack -- <pack-name>
+      nix run .#create-pack -- --list-examples
 
   This utility generates a new pack file in packs/ directory with a basic template
   that includes files section and checks section. Users can then customize the
