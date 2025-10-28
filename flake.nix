@@ -57,6 +57,7 @@
           importPolicyApp = import ./apps/import-policy.nix { inherit pkgs lib; };
           fetchLicenseApp = import ./apps/fetch-license.nix { inherit pkgs lib; };
           createPackApp = import ./apps/create-pack.nix { inherit pkgs lib; };
+          listLicensesApp = import ./apps/list-licenses.nix { inherit pkgs; };
         in
         {
           sync = {
@@ -91,6 +92,15 @@
             program = "${fetchLicenseApp}/bin/nixline-fetch-license";
             meta = {
               description = "Fetch license text from SPDX and generate license pack";
+              license = lib.licenses.asl20;
+            };
+          };
+
+          list-licenses = {
+            type = "app";
+            program = "${listLicensesApp}/bin/list-licenses";
+            meta = {
+              description = "List supported license types and configuration examples";
               license = lib.licenses.asl20;
             };
           };

@@ -29,8 +29,17 @@ let
   licenseType = packConfig.type or "Apache-2.0";
   copyrightHolder = packConfig.holder or "${orgName} Contributors";
   copyrightYear = toString (packConfig.year or 2024);
+  fetchFromSource = packConfig.fetch_from_source or true;
+  customLicenseFile = packConfig.custom_license_file or null;
 
-  # License texts for common licenses
+  # Common SPDX license identifiers supported
+  supportedLicenses = [
+    "Apache-2.0" "MIT" "GPL-2.0" "GPL-3.0" "LGPL-2.1" "LGPL-3.0"
+    "BSD-2-Clause" "BSD-3-Clause" "ISC" "MPL-2.0" "CC0-1.0"
+    "Unlicense" "AGPL-3.0" "EPL-2.0" "EUPL-1.2"
+  ];
+
+  # License texts for common licenses (fallback)
   apacheLicenseText = ''
 Apache License
                            Version 2.0, January 2004
@@ -232,11 +241,69 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
   '';
 
-  # Select license text based on type
+  bsd3LicenseText = ''
+BSD 3-Clause License
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  '';
+
+  # Get hardcoded license text as fallback
+  getHardcodedLicense = license:
+    if license == "MIT" then mitLicenseText
+    else if license == "Apache-2.0" then apacheLicenseText
+    else if license == "BSD-3-Clause" then bsd3LicenseText
+    else apacheLicenseText; # Ultimate fallback
+
+  # Multi-layer license text resolution: custom file -> SPDX -> hardcoded -> default
   licenseText =
-    if licenseType == "MIT" then mitLicenseText
-    else if licenseType == "Apache-2.0" then apacheLicenseText
-    else apacheLicenseText; # Default to Apache 2.0
+    if customLicenseFile != null then
+      # Use custom license file if specified
+      if builtins.pathExists customLicenseFile then
+        builtins.readFile customLicenseFile
+      else
+        throw "Custom license file ${customLicenseFile} does not exist"
+    else if fetchFromSource then
+      # Try to fetch from SPDX, fall back to hardcoded on failure
+      let
+        spdxUrl = "https://raw.githubusercontent.com/spdx/license-list-data/main/text/${licenseType}.txt";
+        fetchScript = pkgs.writeShellScript "fetch-license" ''
+          if ${pkgs.curl}/bin/curl -s -f "${spdxUrl}" 2>/dev/null; then
+            exit 0
+          else
+            echo "Warning: Failed to fetch ${licenseType} from SPDX, using fallback" >&2
+            cat <<'EOF'
+${getHardcodedLicense licenseType}
+EOF
+          fi
+        '';
+      in
+        builtins.readFile (pkgs.runCommand "license-${licenseType}" {} ''
+          ${fetchScript} > $out
+        '')
+    else getHardcodedLicense licenseType;
 
   # Generate copyright notice based on license type
   copyrightNotice =
