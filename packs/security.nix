@@ -14,7 +14,10 @@
 
 let
   # EDIT THIS: Your organization's security contact
-  securityEmail = "security@example.com";
+  # Can be overridden via NIXLINE_ORG_EMAIL environment variable
+  securityEmail = if builtins.getEnv "NIXLINE_ORG_EMAIL" != ""
+                  then builtins.getEnv "NIXLINE_ORG_EMAIL"
+                  else "security@example.com";
 
   # EDIT THIS: Expected response time
   responseTime = "promptly";  # e.g., "within 24 hours", "within 2 business days"

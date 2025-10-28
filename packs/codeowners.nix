@@ -16,7 +16,10 @@
 
 let
   # EDIT THIS: Your GitHub organization name
-  org = "NixLine-org";
+  # Can be overridden via NIXLINE_ORG_NAME environment variable
+  org = if builtins.getEnv "NIXLINE_ORG_NAME" != ""
+        then builtins.getEnv "NIXLINE_ORG_NAME"
+        else "NixLine-org";
 
   # EDIT THIS: Define your ownership rules
   # Each rule has a pattern and a list of owner teams
