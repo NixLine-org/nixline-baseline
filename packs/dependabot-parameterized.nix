@@ -14,6 +14,7 @@
 # commit_message_prefix = "deps:"
 # ecosystems = ["github-actions", "npm", "pip"]
 # reviewers = ["@MyOrg/deps-reviewers"]
+# custom_file = "path/to/custom-dependabot.yml"  # Use custom Dependabot file
 #
 # See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 #
@@ -21,6 +22,7 @@
 let
   # Pack-specific configuration with defaults
   packConfig = config.packs.dependabot or {};
+  customFile = packConfig.custom_file or null;
 
   # Dependabot configuration
   schedule = packConfig.schedule or "weekly";
@@ -72,17 +74,30 @@ let
 
   updatesYaml = lib.concatStringsSep "\n\n" (map formatUpdate updates);
 
+  # Generate content - either from custom file or generated config
+  dependabotContent =
+    if customFile != null then
+      if builtins.pathExists customFile then
+        builtins.readFile customFile
+      else
+        throw "Custom Dependabot file ${customFile} does not exist"
+    else
+      updatesYaml;
+
 in
 {
   files = {
-    ".github/dependabot.yml" = ''
+    ".github/dependabot.yml" =
+      if customFile != null then
+        dependabotContent
+      else ''
       # Dependabot configuration - Generated from nixline-baseline
       # To customize, edit .nixline.toml [packs.dependabot] section
 
       version: 2
 
       updates:
-      ${updatesYaml}
+      ${dependabotContent}
     '';
   };
 

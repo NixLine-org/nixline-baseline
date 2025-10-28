@@ -1,62 +1,24 @@
 { pkgs, lib, helpers, packsLib }:
 
 /*
-  Enhanced sync app with .nixline.toml configuration support.
+  Enhanced sync app with proper configuration passing to parameterized packs.
 
-  Materializes policy files from the baseline into the current repository.
-
-  Usage:
-    Direct Consumption (Recommended):
-      nix run github:ORG/nixline-baseline#sync
-      nix run github:ORG/nixline-baseline#sync -- --packs editorconfig,license,codeowners
-      nix run github:ORG/nixline-baseline#sync -- --exclude security,dependabot
-      nix run github:ORG/nixline-baseline#sync -- --config .nixline.toml
-      nix run github:ORG/nixline-baseline#sync -- --override org.name=MyCompany
-
-    Template-Based Consumption:
-      nix run .#sync
-      nix run .#sync -- --packs editorconfig,license,codeowners
-      nix run .#sync -- --exclude security,dependabot
-
-  Options:
-    --packs <list>       Comma-separated list of packs to materialize
-    --exclude <list>     Comma-separated list of packs to exclude
-    --config <file>      Load configuration from TOML file (default: .nixline.toml)
-    --override <key=val> Override configuration values (org.name=MyCompany)
-    --dry-run           Show what would be done without making changes
-    --help              Show this help message
-
-  Environment Variables:
-    NIXLINE_PACKS - Comma-separated list of packs to materialize (fallback)
-                    Default: editorconfig,codeowners,security,license,precommit,dependabot
-
-  Configuration File (.nixline.toml):
-    [organization]
-    name = "MyCompany"
-    security_email = "security@mycompany.com"
-    default_team = "@MyCompany/maintainers"
-
-    [packs]
-    enabled = ["editorconfig", "codeowners", "license"]
-
-    [packs.codeowners]
-    rules = [
-      { pattern = "*", owners = ["@MyCompany/maintainers"] }
-    ]
-
-  This app writes policy files to disk, creating directories as needed. It is
-  automatically called by the policy-sync workflow when check detects out-of-sync
-  files. Changes are then auto-committed to the repository.
+  This implementation follows nix.dev best practices:
+  - Separates configuration (JSON) from logic (Nix expressions)
+  - Uses nix eval for runtime configuration passing
+  - Maintains reproducibility through explicit dependencies
 */
 
-let
-  # Import configuration library
-  configLib = import ../lib/config.nix { inherit pkgs lib; };
-
-in pkgs.writeShellApplication {
+pkgs.writeShellApplication {
   name = "nixline-sync";
 
-  runtimeInputs = [ pkgs.coreutils pkgs.gnused pkgs.remarshal ];
+  runtimeInputs = with pkgs; [
+    coreutils
+    gnused
+    remarshal
+    jq
+    nix  # Required for nix eval
+  ];
 
   text = ''
     set -euo pipefail
@@ -67,7 +29,7 @@ in pkgs.writeShellApplication {
 ║                    NixLine Sync (Enhanced)                ║
 ╚════════════════════════════════════════════════════════════╝
 
-Materialize policy files from the baseline into the current repository.
+Materialize policy files from the baseline with configuration support.
 
 Usage:
   nixline-sync [OPTIONS]
@@ -82,34 +44,14 @@ Options:
 
 Examples:
   nixline-sync
-  nixline-sync --packs editorconfig,license,codeowners
-  nixline-sync --exclude security,dependabot
   nixline-sync --config my-config.toml
-  nixline-sync --override org.name=MyCompany --override org.security_email=sec@myco.com
+  nixline-sync --packs editorconfig,license --override org.name=TestCorp
   nixline-sync --dry-run
 
-Configuration File (.nixline.toml):
-  [organization]
-  name = "MyCompany"
-  security_email = "security@mycompany.com"
-  default_team = "@MyCompany/maintainers"
-
-  [packs]
-  enabled = ["editorconfig", "codeowners", "license"]
-
-  [packs.codeowners]
-  rules = [
-    { pattern = "*", owners = ["@MyCompany/maintainers"] },
-    { pattern = "*.py", owners = ["@MyCompany/python-team"] }
-  ]
-
-Environment Variables:
-  NIXLINE_PACKS - Comma-separated list of packs (fallback if no --packs given)
-                  Default: editorconfig,codeowners,security,license,precommit,dependabot
 USAGE_EOF
     }
 
-    # Default pack list
+    # Default configuration
     DEFAULT_PACKS="editorconfig,codeowners,security,license,precommit,dependabot"
 
     # Parse command line arguments
@@ -178,7 +120,8 @@ USAGE_EOF
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
 
-    # Load configuration if file exists
+    # Load and parse configuration
+    CONFIG_JSON="{}"
     ORG_NAME="NixLine-org"
     ORG_EMAIL="security@example.com"
     ORG_TEAM="@NixLine-org/maintainers"
@@ -186,27 +129,14 @@ USAGE_EOF
     if [[ -f "$CONFIG_FILE" ]]; then
       echo "Loading configuration from: $CONFIG_FILE"
 
-      # Parse TOML to extract organization settings
-      # Note: This is a simplified implementation. In the real implementation,
-      # we would use the Nix-based configuration parsing from config.nix
-      if command -v remarshal >/dev/null 2>&1; then
-        CONFIG_JSON=$(remarshal -if toml -of json < "$CONFIG_FILE" 2>/dev/null || echo "{}")
+      # Parse TOML to JSON
+      CONFIG_JSON=$(remarshal -if toml -of json < "$CONFIG_FILE" 2>/dev/null || echo "{}")
 
-        # Extract organization values using basic JSON parsing
-        if command -v jq >/dev/null 2>&1; then
-          ORG_NAME=$(echo "$CONFIG_JSON" | jq -r '.organization.name // "NixLine-org"' 2>/dev/null || echo "NixLine-org")
-          ORG_EMAIL=$(echo "$CONFIG_JSON" | jq -r '.organization.security_email // "security@example.com"' 2>/dev/null || echo "security@example.com")
-          ORG_TEAM=$(echo "$CONFIG_JSON" | jq -r '.organization.default_team // "@NixLine-org/maintainers"' 2>/dev/null || echo "@NixLine-org/maintainers")
+      # Extract organization settings
+      ORG_NAME=$(echo "$CONFIG_JSON" | jq -r '.organization.name // "NixLine-org"')
+      ORG_EMAIL=$(echo "$CONFIG_JSON" | jq -r '.organization.email // .organization.security_email // "security@example.com"')
+      ORG_TEAM=$(echo "$CONFIG_JSON" | jq -r '.organization.default_team // "@NixLine-org/maintainers"')
 
-          # Get pack list from config if not overridden by CLI
-          if [[ -z "$PACKS_ARG" && -z "$EXCLUDE_ARG" ]]; then
-            CONFIG_PACKS=$(echo "$CONFIG_JSON" | jq -r '.packs.enabled[]?' 2>/dev/null | tr '\n' ',' | sed 's/,$//')
-            if [[ -n "$CONFIG_PACKS" ]]; then
-              NIXLINE_PACKS="$CONFIG_PACKS"
-            fi
-          fi
-        fi
-      fi
       echo "Organization: $ORG_NAME"
       echo "Security Email: $ORG_EMAIL"
       echo "Default Team: $ORG_TEAM"
@@ -226,7 +156,7 @@ USAGE_EOF
           ORG_NAME="$value"
           echo "Override: Organization name = $ORG_NAME"
           ;;
-        org.security_email|organization.security_email)
+        org.security_email|organization.security_email|org.email|organization.email)
           ORG_EMAIL="$value"
           echo "Override: Security email = $ORG_EMAIL"
           ;;
@@ -241,18 +171,21 @@ USAGE_EOF
     done
 
     # Determine final pack list
+    NIXLINE_PACKS="$DEFAULT_PACKS"
+
     if [[ -n "$PACKS_ARG" ]]; then
-      # Use explicit --packs argument
       NIXLINE_PACKS="$PACKS_ARG"
     elif [[ -n "$EXCLUDE_ARG" ]]; then
-      # Start with defaults and exclude specified packs
-      NIXLINE_PACKS="''${NIXLINE_PACKS:-$DEFAULT_PACKS}"
-      for exclude in ''${EXCLUDE_ARG//,/ }; do
-        NIXLINE_PACKS="$(echo "$NIXLINE_PACKS" | sed "s/\b$exclude\b//g" | sed 's/,,*/,/g' | sed 's/^,\|,$//g')"
+      # Apply exclusions
+      for exclude in $(echo "$EXCLUDE_ARG" | tr ',' ' '); do
+        NIXLINE_PACKS=$(echo "$NIXLINE_PACKS" | sed "s/\\b$exclude\\b,\\?//g" | sed 's/,,/,/g' | sed 's/^,\\|,$//g')
       done
     else
-      # Use environment variable, config file, or default
-      NIXLINE_PACKS="''${NIXLINE_PACKS:-$DEFAULT_PACKS}"
+      # Check for config file pack list
+      CONFIG_PACKS=$(echo "$CONFIG_JSON" | jq -r '.packs.enabled[]?' 2>/dev/null | tr '\n' ',' | sed 's/,$//')
+      if [[ -n "$CONFIG_PACKS" ]]; then
+        NIXLINE_PACKS="$CONFIG_PACKS"
+      fi
     fi
 
     echo "Packs: $NIXLINE_PACKS"
@@ -262,35 +195,93 @@ USAGE_EOF
     fi
     echo ""
 
-    # Export organization values for pack templates
-    export NIXLINE_ORG_NAME="$ORG_NAME"
-    export NIXLINE_ORG_EMAIL="$ORG_EMAIL"
-    export NIXLINE_ORG_TEAM="$ORG_TEAM"
+    # Create final configuration JSON for Nix evaluation
+    FINAL_CONFIG=$(jq -n \
+      --arg orgName "$ORG_NAME" \
+      --arg orgEmail "$ORG_EMAIL" \
+      --arg orgTeam "$ORG_TEAM" \
+      --argjson baseConfig "$CONFIG_JSON" \
+      '{
+        organization: {
+          name: $orgName,
+          email: $orgEmail,
+          security_email: $orgEmail,
+          default_team: $orgTeam
+        },
+        packs: ($baseConfig.packs // {})
+      }')
 
-    ${lib.concatStringsSep "\n" (lib.mapAttrsToList (packName: pack:
-      let
-        filesScript = lib.concatStringsSep "\n" (lib.mapAttrsToList (path: content: ''
-          if echo "$NIXLINE_PACKS" | grep -qw "${packName}"; then
-            if [[ "$DRY_RUN" == "true" ]]; then
-              echo "[DRY] ${packName}: ${path}"
-            else
-              mkdir -p "$(dirname "${path}")"
-              # Substitute organization variables in content
-              FINAL_CONTENT=$(cat << 'NIXLINE_EOF'
-${content}
-NIXLINE_EOF
-)
-              # Replace template variables
-              FINAL_CONTENT="''${FINAL_CONTENT//\$\{ORG_NAME\}/$NIXLINE_ORG_NAME}"
-              FINAL_CONTENT="''${FINAL_CONTENT//\$\{ORG_EMAIL\}/$NIXLINE_ORG_EMAIL}"
-              FINAL_CONTENT="''${FINAL_CONTENT//\$\{ORG_TEAM\}/$NIXLINE_ORG_TEAM}"
-              echo "$FINAL_CONTENT" > "${path}"
-              echo "[+] ${packName}: ${path}"
-            fi
-          fi
-        '') pack.files);
-      in filesScript
-    ) packsLib.packModules)}
+    echo "Final configuration for pack generation:"
+    echo "$FINAL_CONFIG" | jq .
+    echo ""
+
+    # Generate files using nix eval with configuration
+    # Use the baseline path from the Nix store build
+    BASELINE_PATH="${toString ./..}"
+
+    if [[ "$DRY_RUN" == "true" ]]; then
+      echo "DRY RUN: Would generate the following files:"
+
+      # Create temporary Nix file with variable substitution
+      TEMP_NIX=$(mktemp)
+      cat > "$TEMP_NIX" << EOF
+let
+  pkgs = import <nixpkgs> {};
+  lib = pkgs.lib;
+  config = builtins.fromJSON '''$FINAL_CONFIG''';
+
+  # Import the packs library with configuration
+  packsLib = import $BASELINE_PATH/lib/packs.nix { inherit pkgs lib config; };
+
+  # Parse pack list and get selected packs
+  packList = lib.filter (x: x != "") (lib.splitString "," "$NIXLINE_PACKS");
+  selectedPacks = lib.filterAttrs (name: _: lib.elem name packList) packsLib.packModules;
+
+  # Get all files from selected packs
+  allFiles = lib.foldl' (acc: pack: acc // (pack.files or {})) {} (lib.attrValues selectedPacks);
+in
+  lib.attrNames allFiles
+EOF
+
+      nix eval --no-warn-dirty --impure --file "$TEMP_NIX" --json | jq -r '.[]' | while read -r file; do
+        echo "[DRY] $file"
+      done
+      rm "$TEMP_NIX"
+    else
+      echo "Generating files..."
+
+      # Create temporary Nix file for file generation
+      TEMP_NIX=$(mktemp)
+      cat > "$TEMP_NIX" << EOF
+let
+  pkgs = import <nixpkgs> {};
+  lib = pkgs.lib;
+  config = builtins.fromJSON '''$FINAL_CONFIG''';
+
+  # Import the packs library with configuration
+  packsLib = import $BASELINE_PATH/lib/packs.nix { inherit pkgs lib config; };
+
+  # Parse pack list and get selected packs
+  packList = lib.filter (x: x != "") (lib.splitString "," "$NIXLINE_PACKS");
+  selectedPacks = lib.filterAttrs (name: _: lib.elem name packList) packsLib.packModules;
+
+  # Get all files from selected packs
+  allFiles = lib.foldl' (acc: pack: acc // (pack.files or {})) {} (lib.attrValues selectedPacks);
+in
+  allFiles
+EOF
+
+      nix eval --no-warn-dirty --impure --file "$TEMP_NIX" --json | jq -r 'to_entries[] | @base64' | while IFS= read -r entry; do
+        decoded=$(echo "$entry" | base64 -d)
+        file=$(echo "$decoded" | jq -r '.key')
+        content=$(echo "$decoded" | jq -r '.value')
+
+        mkdir -p "$(dirname "$file")"
+        echo "$content" > "$file"
+        echo "[+] $file"
+      done
+      rm "$TEMP_NIX"
+    fi
 
     echo ""
     if [[ "$DRY_RUN" == "true" ]]; then

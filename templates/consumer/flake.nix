@@ -1,5 +1,5 @@
 {
-  description = "NixLine consumer repository";
+  description = "NixLine consumer repository with TOML configuration and external pack support";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -7,9 +7,20 @@
       url = "github:NixLine-org/nixline-baseline?ref=stable";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # External pack sources (add your organization's pack repositories here)
+    # Example:
+    # myorg-security-packs = {
+    #   url = "github:myorg/nixline-security-packs?ref=v1.2.0";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
+    # myorg-language-packs = {
+    #   url = "github:myorg/nixline-language-packs?ref=main";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
   };
 
-  outputs = { self, nixpkgs, nixline-baseline }:
+  outputs = inputs@{ self, nixpkgs, nixline-baseline, ... }:
     let
       forAllSystems = nixpkgs.lib.genAttrs [
         "x86_64-linux"
@@ -19,56 +30,131 @@
       ];
     in
     {
-      # Expose apps from baseline packs
+      # Expose apps from baseline with TOML configuration support
       apps = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
           lib = nixpkgs.lib;
           baseline = nixline-baseline.lib.${system};
 
-          # CUSTOMIZE: Select which packs to enable
-          # Persistent packs (committed to repo for visibility)
-          persistentPacks = [
-            "editorconfig"   # Code formatting standards
-            "license"        # Repository license (Apache 2.0)
-            "security"       # Security policy
-            "codeowners"     # Code ownership rules
-            "dependabot"     # Dependabot configuration
-          ];
+          # Collect external pack sources from flake inputs
+          # Filter out standard inputs (self, nixpkgs, nixline-baseline)
+          standardInputs = [ "self" "nixpkgs" "nixline-baseline" ];
+          externalPackInputs = lib.filterAttrs (name: _: !(lib.elem name standardInputs)) inputs;
 
-          # Pure apps (no file materialization, run via nix run .#app)
-          # - sbom: Generate SBOM (CycloneDX + SPDX)
-          # - flake-update: Update flake.lock and create PR
-          # - setup-hooks: Install pre-commit hooks
+          # Load external pack registries from flake inputs
+          loadExternalPackRegistry = inputName: input:
+            let
+              # Assume external pack flakes expose lib.${system}.packs
+              externalLib = input.lib.${system} or {};
+              externalPacks = externalLib.packs or {};
+            in
+              # Prefix pack names with input name for namespacing
+              lib.mapAttrs' (packName: pack: {
+                name = "${inputName}/${packName}";
+                value = pack;
+              }) externalPacks;
 
-          # Get persistent files
-          selectedPacks = lib.filterAttrs (name: _: lib.elem name persistentPacks) baseline.packs;
-          persistentFiles = lib.foldl' (acc: pack: acc // pack.files) {} (lib.attrValues selectedPacks);
+          # Combine all external pack registries
+          allExternalPacks = lib.foldl' (acc: inputPair:
+            acc // (loadExternalPackRegistry inputPair.name inputPair.value)
+          ) {} (lib.mapAttrsToList (name: value: { inherit name value; }) externalPackInputs);
 
-          # Sync app - materialize persistent policy files
+          # Combined pack registry (baseline + external)
+          combinedPacks = baseline.packs // allExternalPacks;
+
+          # Generate pack files with configuration support
+          generatePackFiles = config: enabledPackNames:
+            let
+              # Parse pack list and filter available packs
+              packList = if builtins.isList enabledPackNames then enabledPackNames else lib.splitString "," enabledPackNames;
+              availablePacks = lib.filterAttrs (name: _: lib.elem name packList) combinedPacks;
+
+              # Apply configuration to each pack and get files
+              applyConfigToPack = packName: pack:
+                if builtins.isFunction pack
+                then (pack { inherit pkgs lib config; }).files or {}
+                else pack.files or {};
+
+              # Merge all files from selected packs
+              allFiles = lib.foldl' (acc: packFiles: acc // packFiles) {}
+                         (lib.mapAttrsToList applyConfigToPack availablePacks);
+            in
+              allFiles;
+
+          # Configuration-driven sync app with external pack support
           sync = pkgs.writeShellApplication {
             name = "nixline-sync";
+            runtimeInputs = with pkgs; [ jq remarshal ];
             text = ''
               echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║                    NixLine Sync                            ║"
+              echo "║                NixLine Sync (with External Packs)         ║"
               echo "╚════════════════════════════════════════════════════════════╝"
               echo ""
-              echo "Persistent packs (committed): ${lib.concatStringsSep ", " persistentPacks}"
+
+              # Show available packs
+              echo "Available packs:"
+              echo "  Built-in packs:"
+              ${lib.concatStringsSep "\n" (map (name: "echo \"    - ${name}\"") (lib.attrNames baseline.packs))}
+              ${lib.optionalString (allExternalPacks != {}) ''
+                echo "  External packs:"
+                ${lib.concatStringsSep "\n" (map (name: "echo \"    - ${name}\"") (lib.attrNames allExternalPacks))}
+              ''}
               echo ""
 
-              ${lib.concatStringsSep "\n" (lib.mapAttrsToList (path: content: ''
-                mkdir -p "$(dirname "${path}")"
-                cat > "${path}" << 'NIXLINE_EOF'
-                ${content}
-                NIXLINE_EOF
-                echo "✓ ${path}"
-              '') persistentFiles)}
+              # Default configuration and pack list
+              DEFAULT_CONFIG='${builtins.toJSON {
+                organization = { name = "NixLine-org"; email = "opensource@example.com"; };
+                packs = { enabled = [ "editorconfig" "codeowners" "security" "license" "precommit" "dependabot" ]; };
+              }}'
+
+              CONFIG_FILE=".nixline.toml"
+              if [[ -f "$CONFIG_FILE" ]]; then
+                echo "Using configuration: $CONFIG_FILE"
+                CONFIG_JSON=$(remarshal -if toml -of json < "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_CONFIG")
+              else
+                echo "No .nixline.toml found, using defaults"
+                CONFIG_JSON="$DEFAULT_CONFIG"
+              fi
+
+              # Extract enabled packs
+              ENABLED_PACKS=$(echo "$CONFIG_JSON" | jq -r '.packs.enabled[]?' | tr '\n' ',' | sed 's/,$//')
+              if [[ -z "$ENABLED_PACKS" ]]; then
+                ENABLED_PACKS="editorconfig,codeowners,security,license,precommit,dependabot"
+              fi
+
+              echo "Enabled packs: $ENABLED_PACKS"
+              echo ""
+
+              # Generate and materialize files
+              ${let
+                # Generate files for all possible pack combinations
+                allPossiblePacks = lib.attrNames combinedPacks;
+                maxConfig = { organization = { name = "TemplateOrg"; email = "test@example.com"; }; packs = {}; };
+
+                # Generate materialization script for each pack
+                materializeScript = packName: pack:
+                  let
+                    # Get pack files with template config
+                    packFiles = if builtins.isFunction pack
+                               then (pack { inherit pkgs lib; config = maxConfig; }).files or {}
+                               else pack.files or {};
+                  in
+                    lib.concatStringsSep "\n" (lib.mapAttrsToList (path: content: ''
+                      if [[ ",$ENABLED_PACKS," == *",${packName},"* ]]; then
+                        mkdir -p "$(dirname "${path}")"
+                        cat > "${path}" << 'NIXLINE_EOF'
+                      ${content}
+                      NIXLINE_EOF
+                        echo "✓ ${path} (from ${packName})"
+                      fi
+                    '') packFiles);
+
+              in lib.concatStringsSep "\n" (lib.mapAttrsToList materializeScript combinedPacks)}
 
               echo ""
-              echo "Sync complete"
-              echo ""
-              echo "These files should be committed to your repository."
-              echo "Run: git add ${lib.concatStringsSep " " (lib.attrNames persistentFiles)}"
+              echo "Sync complete! Files have been materialized."
+              echo "Run 'git add .' to stage the changes."
             '';
           };
 
@@ -134,47 +220,28 @@
             '';
           };
 
-          # Check app - validate persistent files match baseline
+          # Configuration-driven check app
+          # Validates files against baseline using same config as sync
+          # Supports passing additional arguments like --override
           check = pkgs.writeShellApplication {
             name = "nixline-check";
-            runtimeInputs = [ pkgs.diffutils ];
+            runtimeInputs = with pkgs; [ jq remarshal ];
             text = ''
               echo "╔════════════════════════════════════════════════════════════╗"
               echo "║                   NixLine Check                            ║"
               echo "╚════════════════════════════════════════════════════════════╝"
               echo ""
-              echo "Validating persistent policy files..."
-              echo ""
 
-              FAILED=0
+              # Pass through additional arguments like --override
+              ADDITIONAL_ARGS="$@"
 
-              ${lib.concatStringsSep "\n" (lib.mapAttrsToList (path: content: ''
-                if [[ ! -f "${path}" ]]; then
-                  echo "[-] Missing: ${path}"
-                  FAILED=1
-                else
-                  EXPECTED=$(mktemp)
-                  cat > "$EXPECTED" << 'NIXLINE_EOF'
-                  ${content}
-                  NIXLINE_EOF
-                  if diff -q "${path}" "$EXPECTED" > /dev/null; then
-                    echo "[+] ${path}"
-                  else
-                    echo "[-] Out of sync: ${path}"
-                    FAILED=1
-                  fi
-                  rm "$EXPECTED"
-                fi
-              '') persistentFiles)}
-
-              echo ""
-              if [[ $FAILED -eq 1 ]]; then
-                echo "FAILED: Validation failed"
-                echo ""
-                echo "Run 'nix run .#sync' to fix"
-                exit 1
+              CONFIG_FILE=".nixline.toml"
+              if [[ -f "$CONFIG_FILE" ]]; then
+                echo "Using configuration: $CONFIG_FILE"
+                eval "${nixline-baseline.apps.${system}.check.program} --config \"$CONFIG_FILE\" $ADDITIONAL_ARGS"
               else
-                echo "All checks passed"
+                echo "No .nixline.toml found, using default configuration"
+                eval "${nixline-baseline.apps.${system}.check.program} $ADDITIONAL_ARGS"
               fi
             '';
           };

@@ -18,6 +18,7 @@
 #   { pattern = "*", owners = ["@MyCompany/maintainers"] },
 #   { pattern = "*.py", owners = ["@MyCompany/python-team"] }
 # ]
+# custom_file = "path/to/custom-codeowners.txt"  # Use custom CODEOWNERS file
 #
 # ENVIRONMENT VARIABLES:
 # Can also be customized via environment variables from enhanced sync app:
@@ -39,6 +40,7 @@ let
 
   # Pack-specific configuration with defaults
   packConfig = config.packs.codeowners or {};
+  customFile = packConfig.custom_file or null;
 
   # Default ownership rules
   defaultRules = [
@@ -61,12 +63,23 @@ let
     in
     "${commentLine}${rule.pattern} ${ownersStr}";
 
-  codeownersContent = lib.concatStringsSep "\n\n" (map formatRule rules);
+  # Generate content - either from custom file or rules
+  codeownersContent =
+    if customFile != null then
+      if builtins.pathExists customFile then
+        builtins.readFile customFile
+      else
+        throw "Custom CODEOWNERS file ${customFile} does not exist"
+    else
+      lib.concatStringsSep "\n\n" (map formatRule rules);
 
 in
 {
   files = {
-    ".github/CODEOWNERS" = ''
+    ".github/CODEOWNERS" =
+      if customFile != null then
+        codeownersContent
+      else ''
       # CODEOWNERS - Generated from nixline-baseline
       # Organization: ${orgName}
       # Default Team: ${defaultTeam}

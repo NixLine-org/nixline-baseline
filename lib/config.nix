@@ -17,8 +17,12 @@
   security_email = "security@mycompany.com"
   default_team = "@MyCompany/maintainers"
 
+  [external_sources]
+  "@myorg/security-packs" = { url = "github:myorg/nixline-security-packs", ref = "v1.2.0" }
+  "@myorg/language-packs" = { url = "github:myorg/nixline-language-packs", ref = "main" }
+
   [packs]
-  enabled = ["editorconfig", "codeowners", "license"]
+  enabled = ["editorconfig", "codeowners", "@myorg/security-packs/custom-security"]
 
   [packs.codeowners]
   rules = [
@@ -144,6 +148,39 @@ let
     in
       lib.foldl' applyOverride config overrides;
 
+  # Get external sources configuration
+  getExternalSources = config:
+    config.external_sources or {};
+
+  # Parse external pack reference (e.g., "@myorg/security-packs/custom-security")
+  parseExternalPackRef = packRef:
+    let
+      parts = lib.splitString "/" packRef;
+    in
+      if lib.length parts >= 2 && lib.hasPrefix "@" (lib.head parts)
+      then {
+        isExternal = true;
+        source = lib.concatStringsSep "/" (lib.take 2 parts);
+        packName = lib.concatStringsSep "/" (lib.drop 2 parts);
+      }
+      else {
+        isExternal = false;
+        source = null;
+        packName = packRef;
+      };
+
+  # Separate internal and external packs from enabled list
+  separatePacksByType = config:
+    let
+      enabledPacks = config.packs.enabled or [];
+      parsed = map parseExternalPackRef enabledPacks;
+      internal = lib.filter (p: !p.isExternal) parsed;
+      external = lib.filter (p: p.isExternal) parsed;
+    in {
+      internal = map (p: p.packName) internal;
+      external = external;
+    };
+
   # Validate configuration structure
   validateConfig = config:
     let
@@ -165,6 +202,9 @@ in {
     getPacksFromConfig
     getOrgConfig
     getPackConfig
+    getExternalSources
+    parseExternalPackRef
+    separatePacksByType
     applyCliOverrides
     validateConfig;
 }

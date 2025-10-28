@@ -1,0 +1,61 @@
+# NixLine Configuration
+# This file configures which packs to sync and their parameters
+# Organizations can customize policies through this configuration
+
+[organization]
+name = "MyOrg"
+email = "opensource@myorg.com"
+
+# External pack sources - add these as flake inputs in flake.nix
+# Example flake inputs:
+#   myorg-security-packs.url = "github:myorg/nixline-security-packs?ref=v1.2.0";
+#   myorg-language-packs.url = "github:myorg/nixline-language-packs?ref=main";
+
+[packs]
+# Enable specific packs (if not specified, all default packs are enabled)
+enabled = [
+  "editorconfig",
+  "license",
+  "security",
+  "codeowners",
+  "dependabot",
+  "precommit"
+  # "myorg-security-packs/custom-security",    # External pack (requires flake input)
+  # "myorg-language-packs/golang-standards"    # External pack (requires flake input)
+]
+
+# Configure individual packs
+[packs.license]
+type = "apache-2.0"
+# For custom license files, use:
+# custom_file = "path/to/custom-license.txt"
+
+[packs.codeowners]
+default_team = "@myorg/engineering"
+teams = {
+  backend = "@myorg/backend-team",
+  frontend = "@myorg/frontend-team",
+  security = "@myorg/security-team"
+}
+
+[packs.security]
+contact_email = "security@myorg.com"
+
+[packs.dependabot]
+schedule = "weekly"
+open_pull_requests_limit = 5
+assignees = ["@myorg/maintainers"]
+
+[packs.precommit]
+# Additional pre-commit hooks specific to your organization
+additional_repos = [
+  { repo = "https://github.com/myorg/custom-hooks", rev = "v1.0.0", hooks = [{ id = "custom-lint" }] }
+]
+
+[packs.editorconfig]
+# Override language-specific settings
+[packs.editorconfig.languages.python]
+indent_size = 2  # Override default 4-space indentation
+
+[packs.editorconfig.languages.javascript]
+max_line_length = 120  # Override default 80

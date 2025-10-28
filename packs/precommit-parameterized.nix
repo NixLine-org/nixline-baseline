@@ -13,6 +13,7 @@
 # python_version = "3.11"
 # black_line_length = 88
 # node_version = "18"
+# custom_file = "path/to/custom-precommit.yaml"  # Use custom pre-commit config file
 #
 # To enable this pack in a consumer repository:
 # 1. Add "precommit" to the enabled packs list in .nixline.toml
@@ -23,6 +24,7 @@
 let
   # Pack-specific configuration with defaults
   packConfig = config.packs.precommit or {};
+  customFile = packConfig.custom_file or null;
 
   # Hook configuration
   enabledHooks = packConfig.hooks or [
@@ -51,20 +53,20 @@ let
     {
       repo = "https://github.com/pre-commit/pre-commit-hooks";
       rev = "v4.4.0";
-      hooks = lib.filter (hook: hook != null) [
-        (lib.optionalAttrs (hookEnabled "trailing-whitespace") { id = "trailing-whitespace"; })
-        (lib.optionalAttrs (hookEnabled "end-of-file-fixer") { id = "end-of-file-fixer"; })
-        (lib.optionalAttrs (hookEnabled "check-yaml") { id = "check-yaml"; })
-        (lib.optionalAttrs (hookEnabled "check-json") { id = "check-json"; })
-        (lib.optionalAttrs (hookEnabled "check-merge-conflict") { id = "check-merge-conflict"; })
-        (lib.optionalAttrs (hookEnabled "check-case-conflict") { id = "check-case-conflict"; })
+      hooks = lib.filter (hook: hook != null && hook != {}) [
+        (if hookEnabled "trailing-whitespace" then { id = "trailing-whitespace"; } else null)
+        (if hookEnabled "end-of-file-fixer" then { id = "end-of-file-fixer"; } else null)
+        (if hookEnabled "check-yaml" then { id = "check-yaml"; } else null)
+        (if hookEnabled "check-json" then { id = "check-json"; } else null)
+        (if hookEnabled "check-merge-conflict" then { id = "check-merge-conflict"; } else null)
+        (if hookEnabled "check-case-conflict" then { id = "check-case-conflict"; } else null)
       ];
     }
   ];
 
   # Generate Python tools section
-  pythonHooks = lib.optionals (lib.any hookEnabled ["black" "flake8"]) [
-    (lib.optionalAttrs (hookEnabled "black") {
+  pythonHooks = lib.filter (repo: repo != null && repo != {}) [
+    (if hookEnabled "black" then {
       repo = "https://github.com/psf/black";
       rev = "23.3.0";
       hooks = [{
@@ -72,15 +74,15 @@ let
         language_version = pythonVersion;
         args = ["--line-length=${blackLineLength}"];
       }];
-    })
-    (lib.optionalAttrs (hookEnabled "flake8") {
+    } else null)
+    (if hookEnabled "flake8" then {
       repo = "https://github.com/pycqa/flake8";
       rev = "6.0.0";
       hooks = [{
         id = "flake8";
         args = ["--max-line-length=${blackLineLength}"];
       }];
-    })
+    } else null)
   ];
 
   # Generate YAML tools section
@@ -93,23 +95,23 @@ let
   ];
 
   # Generate JavaScript/TypeScript tools section
-  jsHooks = lib.optionals (lib.any hookEnabled ["prettier" "eslint"]) [
-    (lib.optionalAttrs (hookEnabled "prettier") {
+  jsHooks = lib.filter (repo: repo != null && repo != {}) [
+    (if hookEnabled "prettier" then {
       repo = "https://github.com/pre-commit/mirrors-prettier";
       rev = "v3.0.0";
       hooks = [{
         id = "prettier";
         types_or = ["javascript" "jsx" "ts" "tsx" "json" "yaml" "markdown"];
       }];
-    })
-    (lib.optionalAttrs (hookEnabled "eslint") {
+    } else null)
+    (if hookEnabled "eslint" then {
       repo = "https://github.com/pre-commit/mirrors-eslint";
       rev = "v8.56.0";
       hooks = [{
         id = "eslint";
         types = ["javascript"];
       }];
-    })
+    } else null)
   ];
 
   # Combine all hooks, filtering out empty ones
@@ -136,10 +138,20 @@ ${lib.concatStringsSep "\n" (map (hook: ''
 '') repos)}
   '';
 
+  # Generate content - either from custom file or generated config
+  precommitContent =
+    if customFile != null then
+      if builtins.pathExists customFile then
+        builtins.readFile customFile
+      else
+        throw "Custom pre-commit config file ${customFile} does not exist"
+    else
+      generatePreCommitConfig allRepos;
+
 in
 {
   files = {
-    ".pre-commit-config.yaml" = generatePreCommitConfig allRepos;
+    ".pre-commit-config.yaml" = precommitContent;
   };
 
   checks = [

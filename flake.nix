@@ -64,7 +64,7 @@
             type = "app";
             program = "${syncApp}/bin/nixline-sync";
             meta = {
-              description = "Materialize policy files from baseline into current repository";
+              description = "Materialize policy files from baseline with configuration support";
               license = lib.licenses.asl20;
             };
           };
@@ -113,6 +113,7 @@
               license = lib.licenses.asl20;
             };
           };
+
         }
       );
     };

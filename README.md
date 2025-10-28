@@ -25,9 +25,144 @@ It provides the shared Nix logic, governance rules and automation logic that all
 
 ## What is NixLine?
 
-**NixLine** provides organization-wide CI governance and policy enforcement through Nix flakes.
+**NixLine** provides organization-wide CI governance and policy enforcement through Nix flakes with **configuration-driven consumption** that eliminates the need for forking or maintaining your own baseline.
 
-**Key advantage:** Instead of creating PRs that require manual review when policies change, NixLine **instantly materializes** the latest policies from your baseline using Nix flake inputs.
+### Key Benefits
+
+- **Pure Upstream Consumption**: Use NixLine baseline directly without forking
+- **Configuration-Driven**: Full customization through `.nixline.toml` files and CLI overrides
+- **Immediate Updates**: Receive baseline improvements instantly without manual intervention
+- **Custom File Support**: Override any pack with organization-specific files
+- **Parameterized Packs**: Runtime configuration passing following nix.dev best practices
+- **External Pack Support**: Add organization-specific packs via template pattern
+- **Reproducible**: All dependencies pinned, configuration separated from logic
+
+---
+
+## Consumption Patterns
+
+NixLine offers three consumption patterns to match different organizational needs:
+
+```mermaid
+graph TB
+    A[Organization Needs Governance] --> B{Configuration Needed?}
+
+    B -->|None| C[Direct Consumption]
+    B -->|Organization Branding| D[Configuration-Driven]
+    B -->|+ External Packs| E[Template-Based]
+
+    C --> C1[nix run github:NixLine-org/nixline-baseline#sync]
+    C --> C2[✅ Zero configuration]
+    C --> C3[✅ Default policies only]
+    C --> C4[❌ No customization]
+
+    D --> D1[Create .nixline.toml + run sync]
+    D --> D2[✅ Organization branding]
+    D --> D3[✅ Pack customization]
+    D --> D4[✅ Custom file support]
+    D --> D5[✅ CLI overrides]
+    D --> D6[❌ No external packs]
+
+    E --> E1[nix flake new -t baseline]
+    E --> E2[✅ All configuration features]
+    E --> E3[✅ External pack support]
+    E --> E4[✅ Version pinning]
+    E --> E5[❌ Requires local flake.nix]
+
+    style C fill:#f5f5f5
+    style D fill:#e1f5fe
+    style E fill:#f3e5f5
+```
+
+### Pattern 1: Direct Consumption (Default)
+
+**Best for**: Quick start with default NixLine policies.
+
+```bash
+# No configuration required - uses defaults
+nix run github:NixLine-org/nixline-baseline#sync
+```
+
+### Pattern 2: Configuration-Driven (Recommended)
+
+**Best for**: Organizations wanting customization without baseline forking.
+
+```bash
+# Create configuration file, then sync
+nix run github:NixLine-org/nixline-baseline#sync -- --config .nixline.toml
+```
+
+**Configuration-Driven Architecture**:
+```mermaid
+flowchart LR
+    A[.nixline.toml<br/>Organization Config] --> B[Enhanced Sync App]
+    C[CLI Overrides<br/>--override org.name=...] --> B
+    D[Custom Files<br/>custom-license.txt] --> B
+
+    B --> E[Runtime Config Passing]
+    E --> F[Parameterized Packs]
+    F --> G[Generated Policy Files<br/>with Org Branding]
+
+    style A fill:#e8f5e8
+    style C fill:#d1ecf1
+    style D fill:#fff3cd
+    style G fill:#FF9800
+```
+
+**Example Configuration**:
+```toml
+# .nixline.toml
+[organization]
+name = "MyCompany"
+security_email = "security@mycompany.com"
+default_team = "@MyCompany/maintainers"
+
+[packs]
+enabled = ["editorconfig", "license", "codeowners"]
+
+[packs.license]
+custom_file = "my-license.txt"
+
+[packs.editorconfig]
+indent_size = 4
+line_length = 100
+```
+
+### Pattern 3: Template-Based (With External Packs)
+
+**Best for**: Organizations needing custom packs while avoiding baseline forking.
+
+```bash
+# Initialize from template
+nix flake new -t github:NixLine-org/nixline-baseline my-repo
+cd my-repo
+
+# Add external packs to flake.nix, then sync
+nix run .#sync
+```
+
+**Architecture**:
+```mermaid
+flowchart TD
+    A[flake.nix] --> B[External Pack Inputs]
+    A --> C[Baseline Input]
+
+    D[.nixline.toml] --> E[Template Sync App]
+
+    B --> F[myorg-security-packs/custom-security]
+    C --> G[Built-in Packs]
+
+    E --> H[Combined Pack Registry]
+    F --> H
+    G --> H
+
+    H --> I[Policy Files]
+
+    style A fill:#e1f5fe
+    style D fill:#e8f5e8
+    style B fill:#f3e5f5
+    style C fill:#fff3cd
+```
 
 ---
 
@@ -41,157 +176,152 @@ Files like `LICENSE`, `SECURITY.md`, `.editorconfig` are materialized and commit
 ### 2. Pure Nix Apps (No Files)
 Apps like pack creation and policy import tools run via `nix run .#app` with no file materialization.
 
-Consumer repositories reference the baseline as a flake input, pulling policy updates instantly without pull requests.
-
 ---
 
-## Consumption Patterns
+## External Pack Development
 
-NixLine supports **three consumption patterns** for consumer repositories:
+Organizations can create their own pack repositories to extend NixLine functionality:
 
-### 1. Template-Based (Recommended for Organizations)
+### External Pack Repository Structure
 
-Consumer repositories use the baseline template which includes a `flake.nix` that references the baseline as an input:
-
-```bash
-# Initialize from template
-nix flake init -t github:NixLine-org/nixline-baseline
-
-# Run apps locally (baseline referenced as input)
-nix run .#sync
-nix run .#check
+```
+myorg-nixline-packs/
+├── flake.nix
+├── lib/
+│   └── default.nix      # Pack registry
+└── packs/
+    ├── golang-standards.nix
+    ├── custom-security.nix
+    └── compliance-audit.nix
 ```
 
-**Benefits:** Full Nix flake integration, local development, customizable pack selection per repo.
+### Example External Pack
 
-### 2. Configuration-Driven (Recommended for Organizations)
+```nix
+# packs/golang-standards.nix
+{ pkgs, lib, config ? {} }:
 
-Consumer repositories use `.nixline.toml` configuration files for customization without forking:
+{
+  files = {
+    ".golangci.yml" = ''
+      # Organization-specific Go linting rules
+      linters:
+        enable:
+          - gofmt
+          - golint
+          - govet
+    '';
+  };
 
-```bash
-# Run apps with configuration support
-nix run github:NixLine-org/nixline-baseline#sync
-nix run github:NixLine-org/nixline-baseline#sync -- --config .nixline.toml
-nix run github:NixLine-org/nixline-baseline#sync -- --override org.name=MyCompany
+  checks = [
+    {
+      name = "golang-format";
+      check = ''
+        if [[ -f ".golangci.yml" ]]; then
+          echo "✓ Go linting configuration present"
+        fi
+      '';
+    }
+  ];
+}
 ```
 
-**Benefits:** Full customization without baseline forking, organization-specific branding, selective pack adoption.
+### Using External Packs
 
-The [nixline-demo2](https://github.com/NixLine-org/nixline-demo2) repository demonstrates the **configuration-driven** pattern.
-
-### 3. Direct Consumption (Recommended for Simple Projects)
-
-Consumer repositories call baseline apps directly without customization:
-
-```bash
-# Run apps directly from baseline
-nix run github:NixLine-org/nixline-baseline#sync
-nix run github:NixLine-org/nixline-baseline#check
+1. **Add to flake inputs**:
+```nix
+inputs.myorg-packs.url = "github:myorg/nixline-packs";
 ```
 
-**Benefits:** No local flake.nix needed, simplest setup, always uses latest baseline.
+2. **Reference in .nixline.toml**:
+```toml
+[packs]
+enabled = [
+  "editorconfig",
+  "myorg-packs/golang-standards"
+]
+```
 
-The [nixline-demo1](https://github.com/NixLine-org/nixline-demo1) repository demonstrates the **direct consumption** pattern.
+The [nixline-demo1](https://github.com/NixLine-org/nixline-demo1) demonstrates **direct consumption**, while [nixline-demo2](https://github.com/NixLine-org/nixline-demo2) shows **configuration-driven** patterns.
 
 ---
 
 ## Architecture
 
-### Template-Based Pattern
+### Direct Consumption Pattern (Pure Upstream)
 
 ```mermaid
 graph LR
-    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;Baseline Repository (nixline-baseline)&nbsp;&nbsp;&nbsp;&nbsp;"]
-        B1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes lib.packs & apps&nbsp;&nbsp;"]
-        B2["&nbsp;&nbsp;packs/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Policy Definitions&nbsp;&nbsp;"]
-        B3["&nbsp;&nbsp;apps/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;sync, check, etc.&nbsp;&nbsp;"]
-        B4["&nbsp;&nbsp;templates/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Consumer Template&nbsp;&nbsp;"]
+    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;NixLine Baseline Repository&nbsp;&nbsp;&nbsp;&nbsp;"]
+        B1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes apps & packs&nbsp;&nbsp;"]
+        B2["&nbsp;&nbsp;packs/ (parameterized)&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Built-in Policy Definitions&nbsp;&nbsp;"]
+        B3["&nbsp;&nbsp;apps/sync.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Enhanced with TOML support&nbsp;&nbsp;"]
+        B4["&nbsp;&nbsp;lib/config.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Configuration Parser&nbsp;&nbsp;"]
         B1 --> B2
         B1 --> B3
         B1 --> B4
-    end
-
-    subgraph consumer["&nbsp;&nbsp;&nbsp;&nbsp;Consumer Repository (Template-Based)&nbsp;&nbsp;&nbsp;&nbsp;"]
-        C1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;References baseline&nbsp;&nbsp;<br/>&nbsp;&nbsp;as input&nbsp;&nbsp;"]
-        C2["&nbsp;&nbsp;Policy Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;LICENSE, SECURITY.md, etc.&nbsp;&nbsp;"]
-        C4["&nbsp;&nbsp;.github/workflows/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;policy-sync.yml&nbsp;&nbsp;"]
-    end
-
-    B1 -.->|"&nbsp;flake input&nbsp;"| C1
-    C1 -->|"&nbsp;nix run .#sync&nbsp;"| C2
-    C4 -->|"&nbsp;nix run .#check&nbsp;"| C1
-
-    style B1 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
-    style B2 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
-    style B3 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
-    style B4 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
-    style C1 fill:#2196F3,color:#000000,stroke:#333,stroke-width:2px
-    style C2 fill:#FF9800,color:#000000,stroke:#333,stroke-width:2px
-    style C4 fill:#FFD700,color:#000000,stroke:#333,stroke-width:2px
-```
-
-### Configuration-Driven Pattern
-
-```mermaid
-graph LR
-    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;Baseline Repository (nixline-baseline)&nbsp;&nbsp;&nbsp;&nbsp;"]
-        B1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes parameterized packs&nbsp;&nbsp;"]
-        B2["&nbsp;&nbsp;packs/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Parameterized Definitions&nbsp;&nbsp;"]
-        B3["&nbsp;&nbsp;apps/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;sync --config, --override&nbsp;&nbsp;"]
-        B4["&nbsp;&nbsp;lib/config.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;TOML Configuration Parser&nbsp;&nbsp;"]
-        B1 --> B2
-        B1 --> B3
-        B1 --> B4
-    end
-
-    subgraph consumer["&nbsp;&nbsp;&nbsp;&nbsp;Consumer Repository (Config-Driven)&nbsp;&nbsp;&nbsp;&nbsp;"]
-        C1["&nbsp;&nbsp;.nixline.toml&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Organization Config&nbsp;&nbsp;"]
-        C2["&nbsp;&nbsp;Policy Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Customized for Org&nbsp;&nbsp;"]
-        C4["&nbsp;&nbsp;.github/workflows/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;ci.yml&nbsp;&nbsp;"]
-        C5["&nbsp;&nbsp;Project Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;No baseline fork needed&nbsp;&nbsp;"]
-    end
-
-    C1 -.->|"&nbsp;config input&nbsp;"| B3
-    B3 -->|"&nbsp;nix run github:org/baseline#sync&nbsp;"| C2
-    C4 -->|"&nbsp;nix run github:org/baseline#check&nbsp;"| B3
-
-    style B1 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
-    style B2 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
-    style B3 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
-    style B4 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
-    style C1 fill:#E91E63,color:#FFFFFF,stroke:#333,stroke-width:2px
-    style C2 fill:#FF9800,color:#000000,stroke:#333,stroke-width:2px
-    style C4 fill:#FFD700,color:#000000,stroke:#333,stroke-width:2px
-    style C5 fill:#9C27B0,color:#FFFFFF,stroke:#333,stroke-width:2px
-```
-
-### Direct Consumption Pattern
-
-```mermaid
-graph LR
-    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;Baseline Repository (nixline-baseline)&nbsp;&nbsp;&nbsp;&nbsp;"]
-        B1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes lib.packs & apps&nbsp;&nbsp;"]
-        B2["&nbsp;&nbsp;packs/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Policy Definitions&nbsp;&nbsp;"]
-        B3["&nbsp;&nbsp;apps/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;sync, check, etc.&nbsp;&nbsp;"]
-        B1 --> B2
-        B1 --> B3
     end
 
     subgraph consumer["&nbsp;&nbsp;&nbsp;&nbsp;Consumer Repository (Direct)&nbsp;&nbsp;&nbsp;&nbsp;"]
+        C1["&nbsp;&nbsp;.nixline.toml&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Configuration Only&nbsp;&nbsp;"]
         C2["&nbsp;&nbsp;Policy Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;LICENSE, SECURITY.md, etc.&nbsp;&nbsp;"]
-        C4["&nbsp;&nbsp;.github/workflows/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;ci.yml&nbsp;&nbsp;"]
-        C5["&nbsp;&nbsp;Project Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;No flake.nix needed&nbsp;&nbsp;"]
+        C3["&nbsp;&nbsp;Custom Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;(optional overrides)&nbsp;&nbsp;"]
     end
 
-    B3 -->|"&nbsp;nix run github:org/baseline#sync&nbsp;"| C2
-    C4 -->|"&nbsp;nix run github:org/baseline#check&nbsp;"| B3
+    C1 -.->|"&nbsp;github:baseline#sync&nbsp;"| B3
+    C3 -.->|"&nbsp;custom_file refs&nbsp;"| B3
+    B3 -->|"&nbsp;materialized&nbsp;"| C2
 
     style B1 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
     style B2 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
     style B3 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B4 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style C1 fill:#e8f5e8,color:#000000,stroke:#333,stroke-width:2px
     style C2 fill:#FF9800,color:#000000,stroke:#333,stroke-width:2px
-    style C4 fill:#FFD700,color:#000000,stroke:#333,stroke-width:2px
-    style C5 fill:#9C27B0,color:#FFFFFF,stroke:#333,stroke-width:2px
+    style C3 fill:#fff3cd,color:#000000,stroke:#333,stroke-width:2px
+```
+
+### Template Consumption Pattern (With External Packs)
+
+```mermaid
+graph TD
+    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;NixLine Baseline Repository&nbsp;&nbsp;&nbsp;&nbsp;"]
+        B1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes apps & packs&nbsp;&nbsp;"]
+        B2["&nbsp;&nbsp;packs/ (parameterized)&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Built-in Policy Definitions&nbsp;&nbsp;"]
+        B3["&nbsp;&nbsp;templates/consumer/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Template with External Pack Support&nbsp;&nbsp;"]
+    end
+
+    subgraph external["&nbsp;&nbsp;&nbsp;&nbsp;External Pack Repository&nbsp;&nbsp;&nbsp;&nbsp;"]
+        E1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes lib.packs&nbsp;&nbsp;"]
+        E2["&nbsp;&nbsp;packs/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Custom Organization Packs&nbsp;&nbsp;"]
+    end
+
+    subgraph consumer["&nbsp;&nbsp;&nbsp;&nbsp;Consumer Repository (Template)&nbsp;&nbsp;&nbsp;&nbsp;"]
+        C1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;References baseline + external&nbsp;&nbsp;"]
+        C2["&nbsp;&nbsp;.nixline.toml&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Pack selection & config&nbsp;&nbsp;"]
+        C3["&nbsp;&nbsp;Policy Files&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;From built-in + external packs&nbsp;&nbsp;"]
+        C4["&nbsp;&nbsp;Template Sync App&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Combines all pack sources&nbsp;&nbsp;"]
+    end
+
+    B1 -.->|"&nbsp;flake input&nbsp;"| C1
+    E1 -.->|"&nbsp;flake input&nbsp;"| C1
+    B3 -.->|"&nbsp;template&nbsp;"| C1
+
+    C1 --> C4
+    C2 --> C4
+    B2 --> C4
+    E2 --> C4
+    C4 --> C3
+
+    style B1 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B2 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B3 fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style E1 fill:#f3e5f5,color:#000000,stroke:#333,stroke-width:2px
+    style E2 fill:#f3e5f5,color:#000000,stroke:#333,stroke-width:2px
+    style C1 fill:#e1f5fe,color:#000000,stroke:#333,stroke-width:2px
+    style C2 fill:#e8f5e8,color:#000000,stroke:#333,stroke-width:2px
+    style C3 fill:#FF9800,color:#000000,stroke:#333,stroke-width:2px
+    style C4 fill:#d1ecf1,color:#000000,stroke:#333,stroke-width:2px
 ```
 
 ### Repository Types
@@ -217,25 +347,45 @@ graph LR
 
 ## Usage
 
-### Baseline Apps
+### Enhanced Sync App
 
-The baseline exposes apps for setup and migration. These can be run two ways:
+The sync app now features **runtime configuration passing** following nix.dev best practices, enabling organizations to consume the baseline as pure upstream without forking.
 
-**Direct consumption:**
+**Basic Usage:**
 ```bash
-# Materialize persistent policies
+# Default policies (no configuration)
 nix run github:NixLine-org/nixline-baseline#sync
 
-# Configuration-driven consumption
+# Configuration-driven (organization branding)
 nix run github:NixLine-org/nixline-baseline#sync -- --config .nixline.toml
-nix run github:NixLine-org/nixline-baseline#sync -- --override org.name=MyCompany
+
+# Preview changes without applying
 nix run github:NixLine-org/nixline-baseline#sync -- --dry-run
 
+# Select specific packs
+nix run github:NixLine-org/nixline-baseline#sync -- --packs editorconfig,license,codeowners
+
+# Exclude packs from defaults
+nix run github:NixLine-org/nixline-baseline#sync -- --exclude security,dependabot
+
+# CLI overrides (runtime customization)
+nix run github:NixLine-org/nixline-baseline#sync -- --override org.name=MyCompany
+nix run github:NixLine-org/nixline-baseline#sync -- --override org.email=security@mycompany.com
+
+# Combine options
+nix run github:NixLine-org/nixline-baseline#sync -- --config .nixline.toml --override org.name=TestCorp --dry-run
+```
+
+**Other Apps:**
+```bash
 # Validate policies match baseline
 nix run github:NixLine-org/nixline-baseline#check
 
 # Import existing policy files
 nix run github:NixLine-org/nixline-baseline#import-policy -- --auto
+
+# List supported license types
+nix run github:NixLine-org/nixline-baseline#list-licenses
 
 # Fetch license from SPDX
 nix run github:NixLine-org/nixline-baseline#fetch-license -- Apache-2.0 --holder "ACME Corp"
@@ -260,14 +410,14 @@ nix run .#fetch-license -- Apache-2.0 --holder "My Company"
 
 ### Quick Start for Consumer Repos
 
-Choose one of two consumption patterns:
+Choose from three consumption patterns:
 
-#### Option 1: Direct Consumption (Simple)
+#### Option 1: Direct Consumption (Default Policies)
 
-For simple projects that don't need local flake customization:
+For quick start with default NixLine policies:
 
 ```bash
-# Just sync policies directly
+# Sync default policies
 nix run github:NixLine-org/nixline-baseline#sync
 
 # Verify policies are in sync
@@ -313,9 +463,9 @@ jobs:
 
 See [nixline-demo1](https://github.com/NixLine-org/nixline-demo1) for a complete example.
 
-#### Option 2: Configuration-Driven (Organization Customization)
+#### Option 2: Configuration-Driven (Recommended)
 
-For organizations that want full customization without forking the baseline:
+For organizations wanting customization without baseline forking:
 
 **Create configuration file:**
 ```toml
@@ -364,6 +514,15 @@ nix run github:NixLine-org/nixline-baseline#sync -- --config my-config.toml
 - Organization-specific customization
 - Instant updates from upstream baseline
 - Configuration-driven policy inheritance
+- Runtime configuration passing to parameterized packs
+- Custom file support for complete override capability
+
+**Technical Implementation:**
+The enhanced sync app follows nix.dev best practices by:
+- Separating configuration (JSON) from logic (Nix expressions)
+- Using `nix eval` for runtime configuration passing
+- Maintaining reproducibility through explicit dependencies
+- Supporting both TOML configuration and CLI overrides
 
 See [nixline-demo2](https://github.com/NixLine-org/nixline-demo2) for a complete example.
 
@@ -592,6 +751,8 @@ supported_versions = [
 type = "MIT"
 holder = "MyCompany, Inc."
 year = "2024"
+# OR use custom file for complete override
+custom_file = "my-custom-license.txt"
 
 [packs.precommit]
 hooks = ["trailing-whitespace", "black", "flake8", "prettier"]
@@ -636,6 +797,7 @@ Each pack can have its own configuration section:
 - `type`: License type (MIT, Apache-2.0, etc.)
 - `holder`: Copyright holder
 - `year`: Copyright year
+- `custom_file`: Path to custom license file (overrides generated content)
 
 **`[packs.precommit]`**
 - `hooks`: Array of pre-commit hooks to enable
@@ -660,6 +822,40 @@ nix run .#sync -- --dry-run
 # Combine options
 nix run .#sync -- --config .nixline.toml --override org.name=TestCorp --dry-run
 ```
+
+### Custom File Support
+
+All packs support the `custom_file` parameter for complete content override:
+
+```toml
+[packs.license]
+custom_file = "my-license.txt"
+
+[packs.security]
+custom_file = "our-security-policy.md"
+
+[packs.editorconfig]
+custom_file = "team-editorconfig"
+```
+
+**How it works:**
+1. Create your custom file in the repository root
+2. Reference it in `.nixline.toml` using `custom_file`
+3. Run sync - your file content replaces the generated pack content
+4. Organization templating still works (${ORG_NAME} substitution)
+
+**Example custom license:**
+```txt
+# my-license.txt
+Proprietary License
+
+Copyright (c) 2024 ${ORG_NAME}
+
+This software is proprietary and confidential.
+Unauthorized copying is strictly prohibited.
+```
+
+Custom files enable complete override capability while maintaining the benefits of configuration-driven consumption.
 
 See [`examples/nixline.toml`](./examples/nixline.toml) for a complete configuration example.
 
