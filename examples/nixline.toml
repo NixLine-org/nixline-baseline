@@ -1,0 +1,105 @@
+# Example .nixline.toml configuration file
+# Place this file in the root of your consumer repository to customize
+# pack behavior without forking the baseline.
+
+[baseline]
+repo = "github:NixLine-org/nixline-baseline"
+ref = "stable"
+
+[organization]
+# Your organization name (used in CODEOWNERS, documentation, etc.)
+name = "MyCompany"
+
+# Security contact email (used in SECURITY.md)
+security_email = "security@mycompany.com"
+
+# Default team for code ownership (used in CODEOWNERS)
+default_team = "@MyCompany/maintainers"
+
+[packs]
+# List of packs to enable (overrides default pack list)
+enabled = [
+  "editorconfig",
+  "codeowners",
+  "license",
+  "security",
+  "precommit",
+  "dependabot"
+]
+
+# Pack-specific configuration
+
+[packs.editorconfig]
+# Code formatting preferences
+indent_size = 4
+line_length = 100
+charset = "utf-8"
+end_of_line = "lf"
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Language-specific overrides
+[packs.editorconfig.languages]
+yaml = { indent_size = 2 }
+json = { indent_size = 2 }
+markdown = { trim_trailing_whitespace = false }
+
+[packs.codeowners]
+# Custom code ownership rules
+rules = [
+  { pattern = "*", owners = ["@MyCompany/maintainers"] },
+  { pattern = "*.py", owners = ["@MyCompany/python-team"] },
+  { pattern = "*.js", owners = ["@MyCompany/frontend-team"] },
+  { pattern = "*.ts", owners = ["@MyCompany/frontend-team"] },
+  { pattern = "docs/**", owners = ["@MyCompany/docs-team"] },
+  { pattern = ".github/**", owners = ["@MyCompany/devops"] },
+  { pattern = "*.nix", owners = ["@MyCompany/nix-team"] }
+]
+
+[packs.security]
+# Security policy customization
+response_time = "within 2 business days"
+disclosure_policy = "coordinated"
+
+# Supported version matrix
+supported_versions = [
+  { version = "2.x.x", supported = true },
+  { version = "1.9.x", supported = true },
+  { version = "1.8.x", supported = false }
+]
+
+[packs.license]
+# License configuration
+type = "Apache-2.0"
+holder = "MyCompany, Inc."
+year = "2024"
+
+[packs.precommit]
+# Pre-commit hook configuration
+hooks = [
+  "trailing-whitespace",
+  "end-of-file-fixer",
+  "check-yaml",
+  "check-json",
+  "black",
+  "flake8"
+]
+
+# Language-specific settings
+python_version = "3.11"
+black_line_length = 100
+
+[packs.dependabot]
+# Dependency update configuration
+schedule = "weekly"
+commit_message_prefix = "deps:"
+
+# Package ecosystems to monitor
+ecosystems = [
+  "github-actions",
+  "npm",
+  "pip"
+]
+
+# Custom reviewer assignments
+reviewers = ["@MyCompany/deps-reviewers"]
