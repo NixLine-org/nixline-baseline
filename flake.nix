@@ -49,6 +49,7 @@
           # Import helper libraries
           helpers = import ./lib/default.nix { inherit pkgs; };
           packsLib = import ./lib/packs.nix { inherit pkgs lib; };
+          configLib = import ./lib/config.nix { inherit pkgs lib; };
 
           # Import apps
           syncApp = import ./apps/sync.nix { inherit pkgs lib helpers packsLib; };
