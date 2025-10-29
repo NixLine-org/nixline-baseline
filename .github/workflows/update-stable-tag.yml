@@ -1,0 +1,15 @@
+name: Always Keep Stable Tag Updated
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6 AM UTC
+  workflow_dispatch:
+
+jobs:
+  update-stable-tag:
+    uses: NixLine-org/.github/.github/workflows/update-stable-tag.yml@stable
+    with:
+      tag_name: stable
+      target_branch: main
