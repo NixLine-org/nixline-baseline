@@ -7,6 +7,9 @@ on:
     - cron: '0 6 * * *'  # Daily at 6 AM UTC
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-stable-tag:
     uses: NixLine-org/.github/.github/workflows/update-stable-tag.yml@stable
