@@ -1,0 +1,21 @@
+# Nix
+result
+result-*
+
+# Build artifacts
+*.tar.gz
+*.zip
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*~
+.#*
