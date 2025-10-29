@@ -277,8 +277,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     else if license == "BSD-3-Clause" then bsd3LicenseText
     else apacheLicenseText; # Ultimate fallback
 
+  # Remove APPENDIX section and references from license text
+  stripAppendix = text:
+    let
+      # Split on "END OF TERMS AND CONDITIONS" and take only the first part + that line
+      parts = lib.splitString "END OF TERMS AND CONDITIONS" text;
+      mainPart = lib.head parts;
+      cleanedMain =
+        # Remove references to appendix from the license text
+        builtins.replaceStrings
+          [" (an example is provided in the Appendix below)"]
+          [""]
+          mainPart;
+    in
+      if lib.length parts > 1
+      then cleanedMain + "END OF TERMS AND CONDITIONS"
+      else builtins.replaceStrings
+        [" (an example is provided in the Appendix below)"]
+        [""]
+        text;
+
   # Multi-layer license text resolution: custom file -> SPDX -> hardcoded -> default
-  licenseText =
+  rawLicenseText =
     if customLicenseFile != null then
       # Use custom license file if specified
       if builtins.pathExists customLicenseFile then
@@ -305,34 +325,35 @@ EOF
         '')
     else getHardcodedLicense licenseType;
 
+  # Clean license text with APPENDIX removed
+  licenseText = stripAppendix rawLicenseText;
+
   # Generate copyright notice based on license type
   copyrightNotice =
     if licenseType == "MIT" then ''
-
 Copyright (c) ${copyrightYear} ${copyrightHolder}
-    ''
+
+''
     else if licenseType == "Apache-2.0" then ''
 
 Copyright ${copyrightYear} ${copyrightHolder}
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
     ''
-    else "";
+    else if licenseType == "BSD-3-Clause" then ''
+
+Copyright (c) ${copyrightYear} ${copyrightHolder}
+All rights reserved.
+    ''
+    else ''
+
+Copyright ${copyrightYear} ${copyrightHolder}
+    '';
 
 in
 {
   files = {
-    "LICENSE" = licenseText + copyrightNotice;
+    "LICENSE" =
+      if licenseType == "MIT" then copyrightNotice + licenseText
+      else licenseText + copyrightNotice;
   };
 
   checks = [
