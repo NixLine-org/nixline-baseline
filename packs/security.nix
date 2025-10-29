@@ -154,7 +154,7 @@ in
 
       ---
 
-      *Last updated: $(date +"%Y-%m-%d")*
+      *Last updated: 2025-01-29*
     '';
   };
 
