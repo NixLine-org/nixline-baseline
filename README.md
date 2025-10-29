@@ -621,6 +621,21 @@ These packs materialize files that should be committed for visibility and GitHub
 | `security` | Security policy and reporting | `SECURITY.md` |
 | `codeowners` | Code ownership and review rules | `.github/CODEOWNERS` |
 | `dependabot` | Dependabot configuration | `.github/dependabot.yml` |
+| `precommit` | Pre-commit hooks configuration | `.pre-commit-config.yaml` |
+
+### Example Packs (Reference Implementations)
+
+The `examples/packs/` directory contains language-specific pack examples that demonstrate how to create custom packs:
+
+| Pack | Purpose | File Materialized |
+|------|---------|-------------------|
+| `black` | Python Black formatter config | `pyproject.toml` (Black section) |
+| `flake8` | Python Flake8 linter config | `.flake8` |
+| `pytest` | Python pytest config | `pytest.ini` |
+| `yamllint` | YAML linting config | `.yamllint` |
+| `prettierignore` | Prettier ignore patterns | `.prettierignore` |
+
+These are not included in the default pack registry but serve as reference implementations for creating organization-specific packs. See [Creating New Packs](#creating-new-packs) for how to use them.
 
 ### Pure Apps (No File Materialization)
 
@@ -636,31 +651,33 @@ These run as Nix apps. Usage depends on consumption pattern:
 
 ### Creating New Packs
 
-To add custom policies (like flake8 configuration), use the pack creation app:
+**Use example packs as starting point:**
+
+The `examples/packs/` directory contains reference implementations for language-specific packs (black, flake8, pytest, yamllint, prettierignore). Copy these to your forked baseline's `packs/` directory and add them to `lib/packs.nix`.
+
+**Or create from scratch using the pack creation app:**
 
 ```bash
 # Create a new pack with template (direct consumption)
-nix run github:NixLine-org/nixline-baseline#create-pack flake8
+nix run github:NixLine-org/nixline-baseline#create-pack mypack
 
 # Or if using template-based approach
-nix run .#create-pack flake8
+nix run .#create-pack mypack
 
 # List example pack ideas
 nix run github:NixLine-org/nixline-baseline#create-pack -- --list-examples
 ```
 
-This generates `packs/flake8.nix` with a template structure. Edit the file to define your configuration:
+This generates `packs/mypack.nix` with a template structure. Edit the file to define your configuration:
 
 ```nix
-{ pkgs, lib }:
+{ pkgs, lib, config ? {} }:
 
 {
   files = {
-    ".flake8" = ''
-      [flake8]
-      max-line-length = 88
-      extend-ignore = E203, W503
-      exclude = .git,__pycache__,build,dist
+    ".mypackrc" = ''
+      # Your pack configuration here
+      setting = value
     '';
   };
 
@@ -668,32 +685,28 @@ This generates `packs/flake8.nix` with a template structure. Edit the file to de
 }
 ```
 
-**Add to consumer repository:**
+**Add to baseline:**
 
-Edit your consumer's `flake.nix` to include the new pack:
+For custom packs in your forked baseline, add them to `lib/packs.nix`:
 
 ```nix
-persistentPacks = [
-  "editorconfig"
-  "license"
-  "security"
-  "codeowners"
-  "dependabot"
-  "flake8"        # Add your new pack
-];
+packModules = {
+  # ... existing packs ...
+  mypack = import ../packs/mypack.nix { inherit pkgs lib config; };
+};
 ```
 
-**Materialize the new policy:**
+**Use in consumer repositories:**
 
 ```bash
-# Direct consumption
+# Direct consumption with pack selection
+nix run github:YOUR-ORG/nixline-baseline#sync -- --packs editorconfig,license,mypack
+
+# Or with .nixline.toml
+# [packs]
+# enabled = ["editorconfig", "license", "mypack"]
+
 nix run github:YOUR-ORG/nixline-baseline#sync
-
-# Or template-based
-nix run .#sync    # Materializes .flake8 file
-
-git add .flake8
-git commit -m "add flake8 configuration"
 ```
 
 The pack will now be included in automated policy sync across all consumer repositories that enable it.
