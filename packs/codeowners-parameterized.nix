@@ -54,12 +54,18 @@ let
   # Use configured rules or defaults
   rules = packConfig.rules or defaultRules;
 
+  # Ensure owner has @ prefix if it doesn't start with @
+  normalizeOwner = owner:
+    if lib.hasPrefix "@" owner then owner
+    else "@${owner}";
+
   # Generate CODEOWNERS file from rules
   formatRule = rule:
     let
       commentLine = if (rule.comment or null) != null then "# ${rule.comment}\n" else "";
       owners = if builtins.isList rule.owners then rule.owners else [rule.owners];
-      ownersStr = lib.concatStringsSep " " owners;
+      normalizedOwners = map normalizeOwner owners;
+      ownersStr = lib.concatStringsSep " " normalizedOwners;
     in
     "${commentLine}${rule.pattern} ${ownersStr}";
 
