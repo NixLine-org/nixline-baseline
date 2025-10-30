@@ -489,7 +489,7 @@ EOF
     log_verbose "Analyzing organization scripts..."
 
     # Check for executable files in root directory
-    for script_file in $(find . -maxdepth 1 -type f -executable 2>/dev/null); do
+    while IFS= read -r script_file; do
       if [[ -x "$script_file" && -f "$script_file" ]]; then
         # Check if file is readable and not binary
         if [[ ! -r "$script_file" ]]; then
@@ -511,11 +511,11 @@ EOF
         found_scripts+=("$script_file")
         log_verbose "Found executable script: $script_file -> $pack_name"
       fi
-    done
+    done < <(find . -maxdepth 1 -type f -executable 2>/dev/null)
 
     # Check for script files by extension
     for ext in sh py pl rb js; do
-      for script_file in $(find . -maxdepth 2 -name "*.$ext" -type f 2>/dev/null); do
+      while IFS= read -r script_file; do
         if [[ -f "$script_file" ]]; then
           # Skip if already detected as executable
           if printf '%s\n' "''${found_scripts[@]}" | grep -q "^$script_file$"; then
@@ -542,13 +542,13 @@ EOF
           found_scripts+=("$script_file")
           log_verbose "Found script by extension: $script_file -> $pack_name"
         fi
-      done
+      done < <(find . -maxdepth 2 -name "*.$ext" -type f 2>/dev/null)
     done
 
     # Check for scripts in common directories
     for dir in scripts bin tools; do
       if [[ -d "$dir" ]]; then
-        for script_file in $(find "$dir" -type f 2>/dev/null); do
+        while IFS= read -r script_file; do
           # Skip if already detected
           if printf '%s\n' "''${found_scripts[@]}" | grep -q "^$script_file$"; then
             continue
@@ -570,12 +570,12 @@ EOF
 
           script_name=$(basename "$script_file")
           # Remove common extensions for pack naming
-          script_name=$${script_name%.*}
+          script_name=''${script_name%.*}
           pack_name="script-$dir-$script_name"
           script_packs+=("$pack_name")
           found_scripts+=("$script_file")
           log_verbose "Found script in $dir/: $script_file -> $pack_name"
-        done
+        done < <(find "$dir" -type f 2>/dev/null)
       fi
     done
 
