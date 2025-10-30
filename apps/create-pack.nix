@@ -268,7 +268,7 @@ utils.template-utils.createStaticPack {
   files = {
     # TODO: Define configuration files to materialize
     # Example:
-    # ".$pack_name" = '''
+    # "$pack_name.conf" = '''
     #   # $pack_name configuration
     #   # Add your configuration content here
     # ''';
@@ -320,8 +320,8 @@ EOF
     echo "  4. Test with 'nix run .#check' to validate the configuration"
     echo ""
     echo "Example files you might want to create:"
-    echo "  - .$pack_name (main configuration file)"
-    echo "  - .$${pack_name}rc (resource configuration)"
+    echo "  - $pack_name.conf (main configuration file)"
+    echo "  - $${pack_name}rc (resource configuration)"
     echo "  - config/$pack_name.yml (YAML configuration)"
   }
 

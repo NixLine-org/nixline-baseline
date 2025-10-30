@@ -864,7 +864,7 @@ These packs materialize files that should be committed for visibility and GitHub
 
 ### Example Packs (Reference Implementations)
 
-The `examples/packs/` directory contains language-specific pack examples that demonstrate how to create custom packs:
+The [`examples/packs/`](examples/packs/) directory contains language-specific pack examples that demonstrate how to create custom packs:
 
 | Pack | Purpose | File Materialized |
 |------|---------|-------------------|
@@ -894,7 +894,7 @@ These run as Nix apps. Usage depends on consumption pattern:
 
 **Use example packs as starting point:**
 
-The `examples/packs/` directory contains reference implementations for language-specific packs (black, flake8, pytest, yamllint, prettierignore). Copy these to your forked baseline's `packs/` directory and add them to `lib/packs.nix`.
+The [`examples/packs/`](examples/packs/) directory contains reference implementations for language-specific packs (black, flake8, pytest, yamllint, prettierignore). Copy these to your forked baseline's `packs/` directory and add them to `lib/packs.nix`.
 
 **Or create from scratch using the pack creation app:**
 
@@ -909,21 +909,43 @@ nix run .#create-pack mypack
 nix run github:NixLine-org/nixline-baseline#create-pack -- --list-examples
 ```
 
-This generates `packs/mypack.nix` with a template structure. Edit the file to define your configuration:
+This generates `packs/mypack.nix` with a template structure. Edit the file to define your pack files and configuration:
 
 ```nix
-{ pkgs, lib, config ? {} }:
+{ pkgs, lib, config ? {} }:  # config parameter enables parameterization via .nixline.toml
 
 {
+  # Define files to materialize in consumer repositories
   files = {
-    ".mypackrc" = ''
+    "mypack.conf" = ''  # File created at repository root when synced
       # Your pack configuration here
       setting = value
     '';
   };
 
-  checks = [];
+  # Define validation checks to ensure files are properly synced
+  checks = [
+    {
+      name = "mypack-config-present";
+      check = ''
+        if [[ -f "mypack.conf" ]]; then
+          echo "[PASS] MyPack configuration present"
+        else
+          echo "[FAIL] MyPack configuration missing"
+          exit 1
+        fi
+      '';
+    }
+  ];
 }
+```
+
+**When synced, this creates `mypack.conf` at the repository root:**
+
+```bash
+# mypack.conf
+# Your pack configuration here
+setting = value
 ```
 
 **Add to baseline:**
