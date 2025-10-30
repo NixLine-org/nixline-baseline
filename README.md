@@ -1183,13 +1183,41 @@ on:
 
 jobs:
   test-migration:
-    uses: NixLine-org/.github/.github/workflows/migrate-governance.yml@stable
+    uses: NixLine-org/.github/.github/workflows/test-governance-migration.yml@stable
     with:
-      governance-repo: ${{ github.server_url }}/${{ github.repository }}
       organization-name: ${{ inputs.organization-name }}
       organization-email: "test@example.com"
-      output-mode: 'artifact'
-      dry-run: true
+      dry-run-only: true
+```
+
+**How it works:** This workflow tests migration compatibility of the **current repository** (the governance repository containing the workflow). The reusable workflow automatically uses the checked-out repository as the governance source.
+
+**Test Workflow Architecture:**
+```mermaid
+flowchart TD
+    A[Governance Repository] --> B[Add test-nixline-migration.yml]
+    B --> C[Run Workflow Manually]
+    C --> D[GitHub Actions Checkout]
+    D --> E[NixLine Migration Analysis]
+
+    E --> F{Analysis Results}
+    F -->|Success| G[✓ Compatible - Ready for Migration]
+    F -->|Warnings| H[⚠ Minor Issues - Review Logs]
+    F -->|Errors| I[✗ Incompatible - Fix Issues]
+
+    G --> J[Proceed with Actual Migration]
+    H --> K[Review and Fix Warnings]
+    I --> L[Fix Errors and Re-test]
+
+    K --> C
+    L --> C
+
+    style A fill:#e1f5fe
+    style D fill:#f3e5f5
+    style E fill:#fff3cd
+    style G fill:#c8e6c9
+    style H fill:#fff8e1
+    style I fill:#ffcdd2
 ```
 
 #### Expected Test Results
@@ -1198,7 +1226,7 @@ Successful tests complete dry-runs with detected languages and governance files.
 #### Edge Case Testing
 The migration tool gracefully handles empty repositories by creating universal packs only, skips binary files with warnings, provides clear error messages for permission issues, and handles malformed config files without failing.
 
-See [examples/workflows/test-nixline-migration.yml](examples/workflows/test-nixline-migration.yml) for a complete test workflow template.
+See the [test-governance-migration.yml reusable workflow](https://github.com/NixLine-org/.github/blob/main/.github/workflows/test-governance-migration.yml) for a complete test workflow implementation.
 
 ### Demo Repository
 
