@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   # Wait for CI validation to pass before updating flake.lock
@@ -33,3 +34,5 @@ jobs:
       flake-directory: 'templates/consumer'
       commit-message: 'Update consumer template flake.lock'
       validate-after-update: true
+      create-pr: true
+      enable-auto-merge: true
