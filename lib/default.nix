@@ -1,3 +1,8 @@
+# NixLine Core Utilities
+#
+# Core file manipulation functions used by sync and check apps.
+# Provides shell script generators for writing and validating files.
+
 { pkgs }:
 
 rec {

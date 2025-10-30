@@ -58,6 +58,8 @@
           fetchLicenseApp = import ./apps/fetch-license.nix { inherit pkgs lib; };
           createPackApp = import ./apps/create-pack.nix { inherit pkgs lib; };
           listLicensesApp = import ./apps/list-licenses.nix { inherit pkgs; };
+          extractConfigApp = import ./apps/extract-config.nix { inherit pkgs lib; };
+          migrateGovernanceApp = import ./apps/migrate-governance.nix { inherit pkgs lib; };
         in
         {
           sync = {
@@ -101,6 +103,22 @@
             program = "${listLicensesApp}/bin/list-licenses";
             meta = {
               description = "List supported license types and configuration examples";
+              license = lib.licenses.asl20;
+            };
+          };
+          extract-config = {
+            type = "app";
+            program = "${extractConfigApp}/bin/nixline-extract-config";
+            meta = {
+              description = "Extract configuration from existing files to generate .nixline.toml sections";
+              license = lib.licenses.asl20;
+            };
+          };
+          migrate-governance = {
+            type = "app";
+            program = "${migrateGovernanceApp}/bin/nixline-migrate-governance";
+            meta = {
+              description = "Migrate existing governance repositories to create custom NixLine baselines";
               license = lib.licenses.asl20;
             };
           };

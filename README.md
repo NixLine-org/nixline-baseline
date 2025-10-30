@@ -13,7 +13,9 @@ It provides the shared Nix logic, governance rules and automation logic that all
   - [Quick Start for Consumer Repos](#quick-start-for-consumer-repos)
 - [Policy Packs](#policy-packs)
 - [Configuration File Reference](#configuration-file-reference)
-- [Migrating Existing Policies](#migrating-existing-policies)
+- [Governance Migration](#governance-migration)
+  - [Migration Architecture](#migration-architecture)
+  - [Testing Governance Migration](#testing-governance-migration)
 - [Understanding Pack Propagation](#understanding-pack-propagation)
 - [Recommended Implementation](#recommended-implementation)
 - [Customization Checklist](#customization-checklist)
@@ -610,6 +612,153 @@ The policy sync workflow runs automatically weekly on Sunday at 2 PM UTC, checki
 
 ## Policy Packs
 
+NixLine uses two types of policy packs with different architectural approaches and capabilities:
+
+### Pack Types Overview
+
+**Parameterized Packs** are dynamic, configuration-driven policy generators that adapt their output based on runtime configuration. These packs support organization-specific customization through `.nixline.toml` files and CLI overrides.
+
+**Non-Parameterized Packs** are static policy definitions that provide standardized configurations without customization. These are used for policies that should remain consistent across all repositories without variation.
+
+### Parameterized vs Non-Parameterized Architecture
+
+```mermaid
+graph TB
+    subgraph "Parameterized Packs"
+        A1[.nixline.toml Configuration] --> B1[Runtime Config Passing]
+        B1 --> C1[Dynamic Policy Generation]
+        C1 --> D1[Organization-Branded Files]
+
+        style A1 fill:#e8f5e8
+        style D1 fill:#4CAF50
+    end
+
+    subgraph "Non-Parameterized Packs"
+        A2[Static Nix Expression] --> B2[Fixed Content]
+        B2 --> C2[Standardized Files]
+
+        style A2 fill:#f5f5f5
+        style C2 fill:#9E9E9E
+    end
+```
+
+### Organized Pack Directory Structure
+
+Packs are organized by language ecosystem and type:
+
+```
+packs/
+├── universal/           # Cross-language parameterized packs
+│   ├── license-parameterized.nix
+│   ├── codeowners-parameterized.nix
+│   ├── security-parameterized.nix
+│   ├── editorconfig-parameterized.nix
+│   ├── precommit-parameterized.nix
+│   ├── dependabot-parameterized.nix
+│   ├── gitignore-parameterized.nix
+│   ├── prettier-parameterized.nix
+│   └── yamllint-parameterized.nix
+├── python/              # Python ecosystem packs
+│   ├── bandit.nix              # Non-parameterized security rules
+│   └── flake8-parameterized.nix # Parameterized linting config
+├── javascript/          # JavaScript/Node.js ecosystem packs
+│   ├── eslint-parameterized.nix # Parameterized linting config
+│   └── jest-parameterized.nix   # Parameterized testing config
+├── rust/                # Rust ecosystem packs (future)
+└── go/                  # Go ecosystem packs (future)
+```
+
+### When to Use Each Type
+
+**Use Parameterized Packs When:**
+- Organizations need branding customization (names, emails, teams)
+- Configuration varies between organizations (coding standards, policies)
+- Multiple valid approaches exist (license types, formatting preferences)
+- Organizations want to maintain consistency while allowing flexibility
+
+**Use Non-Parameterized Packs When:**
+- Security scanning rules should be standardized without variation
+- Compliance requirements mandate specific configurations
+- Best practices are universal and should not be customized
+- Simplicity is preferred over flexibility
+
+### Example: Parameterized Pack
+
+```nix
+# packs/universal/license-parameterized.nix
+{ pkgs, lib, config ? {} }:
+
+let
+  licenseType = config.packs.license.type or "Apache-2.0";
+  copyrightHolder = config.organization.name or "CHANGEME";
+  copyrightYear = config.packs.license.year or "2025";
+in {
+  files = {
+    "LICENSE" = ''
+      Copyright ${copyrightYear} ${copyrightHolder}
+
+      Licensed under the ${licenseType} License...
+    '';
+  };
+
+  meta = {
+    description = "Configurable license with organization branding";
+    parameterized = true;
+  };
+}
+```
+
+**Configuration (`.nixline.toml`):**
+```toml
+[organization]
+name = "ACME Corp"
+
+[packs.license]
+type = "MIT"
+year = "2024"
+```
+
+### Example: Non-Parameterized Pack
+
+```nix
+# packs/python/bandit.nix
+{ pkgs, lib, config ? {} }:
+
+{
+  files = {
+    ".bandit" = ''
+      [bandit]
+      # Standardized Python security scanning configuration
+      exclude_dirs = ["tests", "test", ".tox", ".venv"]
+      skips = ["B101"]  # Skip assert_used test
+
+      [bandit.any_other_function_with_shell_equals_true]
+      no_shell = [
+        "subprocess.run",
+        "subprocess.call",
+        "subprocess.Popen"
+      ]
+    '';
+  };
+
+  checks = [
+    {
+      name = "bandit-security-scan";
+      check = ''
+        if command -v bandit >/dev/null 2>&1; then
+          bandit -c .bandit -r .
+        fi
+      '';
+    }
+  ];
+
+  meta = {
+    description = "Standardized Python security scanning rules";
+    parameterized = false;
+  };
+}
+```
+
 ### Persistent Packs (Committed to Repos)
 
 These packs materialize files that should be committed for visibility and GitHub integration:
@@ -645,8 +794,10 @@ These run as Nix apps. Usage depends on consumption pattern:
 |-----|---------|-------------------|----------------|
 | `sync` | Materialize persistent policies | `nix run github:ORG/nixline-baseline#sync` | `nix run .#sync` |
 | `check` | Validate policies match baseline | `nix run github:ORG/nixline-baseline#check` | `nix run .#check` |
+| `migrate-governance` | Migrate governance repository to baseline (URL or path) | `nix run github:ORG/nixline-baseline#migrate-governance` | `nix run .#migrate-governance` |
+| `extract-config` | Extract config from files to generate .nixline.toml | `nix run github:ORG/nixline-baseline#extract-config` | `nix run .#extract-config` |
 | `create-pack` | Create new policy pack template | `nix run github:ORG/nixline-baseline#create-pack <name>` | `nix run .#create-pack <name>` |
-| `import-policy` | Import existing policy files | `nix run github:ORG/nixline-baseline#import-policy` | `nix run .#import-policy` |
+| `import-policy` | Import individual policy files | `nix run github:ORG/nixline-baseline#import-policy` | `nix run .#import-policy` |
 | `fetch-license` | Fetch license from SPDX | `nix run github:ORG/nixline-baseline#fetch-license` | `nix run .#fetch-license` |
 
 ### Creating New Packs
@@ -874,9 +1025,86 @@ See [`examples/nixline.toml`](./examples/nixline.toml) for a complete configurat
 
 ---
 
-## Migrating Existing Policies
+## Governance Migration
 
-### Import Existing Policy Files
+Organizations can migrate their existing governance repositories to create custom NixLine baselines automatically using Nix's deterministic fetching capabilities.
+
+### Complete Governance Migration
+
+**Migrate entire governance repository:**
+
+```bash
+nix run github:NixLine-org/nixline-baseline#migrate-governance -- \
+  --governance-repo https://github.com/yourorg/governance \
+  --org-name "Your Organization" \
+  --org-email "admin@yourorg.com" \
+  --security-email "security@yourorg.com"
+```
+
+This will fetch the governance repository using Nix's deterministic fetchGit, analyze it for languages and existing policies, generate appropriate .nixline.toml configuration, import supported governance files as NixLine packs, and create a complete baseline directory structure ready for deployment.
+
+### Migration Architecture
+
+The governance migration uses a **Nix-idiomatic approach** for repository fetching:
+
+**URL Input Processing:**
+- URLs are fetched using `builtins.fetchGit` for deterministic, cached access
+- Commit hashes are automatically pinned for reproducibility
+- Nix store caching improves performance on repeated runs
+- Works with public and private repositories (with appropriate credentials)
+
+**Local Path Support:**
+- Local directories are accessed directly for development workflows
+- Useful for testing modifications before pushing to remote repositories
+
+**Benefits:**
+- **Deterministic**: Same URL always produces same commit hash
+- **Cached**: Nix store eliminates redundant downloads
+- **Reproducible**: Migration results are consistent across environments
+- **Pure**: No external git commands or temporary file handling
+
+**For dry-run analysis:**
+
+```bash
+nix run github:NixLine-org/nixline-baseline#migrate-governance -- \
+  --governance-repo https://github.com/yourorg/governance \
+  --org-name "Your Organization" \
+  --dry-run
+```
+
+### GitHub Actions Governance Migration
+
+Use the reusable workflow to automate governance migration in CI:
+
+```yaml
+# .github/workflows/migrate-to-nixline.yml
+name: Migrate to NixLine
+
+on:
+  workflow_dispatch:
+    inputs:
+      organization-name:
+        description: 'Organization name'
+        required: true
+        type: string
+      organization-email:
+        description: 'Organization contact email'
+        required: true
+        type: string
+
+jobs:
+  migrate:
+    uses: NixLine-org/.github/.github/workflows/migrate-governance.yml@stable
+    with:
+      governance-repo: ${{ github.server_url }}/${{ github.repository }}
+      organization-name: ${{ inputs.organization-name }}
+      organization-email: ${{ inputs.organization-email }}
+      output-mode: 'artifact'
+```
+
+This workflow uses Nix's deterministic fetchGit to analyze your repository for governance files and project languages, generate a complete NixLine baseline with organization-specific configuration, create downloadable artifacts with the generated baseline, and provide migration reports with next-step instructions.
+
+### Import Individual Policy Files
 
 **Auto-import all recognized files:**
 
@@ -923,6 +1151,58 @@ The import and fetch tools will:
 3. Preserve your content while making it Nix-compatible
 
 After importing, you can customize the generated packs and commit them to your forked baseline.
+
+### Testing Governance Migration
+
+Before migrating your organization's governance, test the process:
+
+#### Pre-Migration Testing
+```bash
+# Test migration compatibility (dry-run)
+nix run github:NixLine-org/nixline-baseline#migrate-governance -- \
+  --governance-repo https://github.com/yourorg/governance \
+  --org-name "Your Organization" \
+  --org-email "admin@yourorg.com" \
+  --dry-run --verbose
+```
+
+#### Add Test Workflow to Governance Repository
+Add this workflow to your governance repository to test migration readiness:
+
+```yaml
+# .github/workflows/test-nixline-migration.yml
+name: Test NixLine Governance Migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      organization-name:
+        description: 'Organization name for testing'
+        required: true
+        type: string
+
+jobs:
+  test-migration:
+    uses: NixLine-org/.github/.github/workflows/migrate-governance.yml@stable
+    with:
+      governance-repo: ${{ github.server_url }}/${{ github.repository }}
+      organization-name: ${{ inputs.organization-name }}
+      organization-email: "test@example.com"
+      output-mode: 'artifact'
+      dry-run: true
+```
+
+#### Expected Test Results
+Successful tests complete dry-runs with detected languages and governance files. Warnings about binary files or permission issues are acceptable. Errors about invalid configuration or missing required files must be fixed before migration.
+
+#### Edge Case Testing
+The migration tool gracefully handles empty repositories by creating universal packs only, skips binary files with warnings, provides clear error messages for permission issues, and handles malformed config files without failing.
+
+See [examples/workflows/test-nixline-migration.yml](examples/workflows/test-nixline-migration.yml) for a complete test workflow template.
+
+### Demo Repository
+
+A demonstration repository will be available to showcase governance migration results. Organizations can browse the generated baseline to see migration results and use it as a template.
 
 ---
 

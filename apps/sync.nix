@@ -2,11 +2,6 @@
 
 /*
   Enhanced sync app with proper configuration passing to parameterized packs.
-
-  This implementation follows nix.dev best practices:
-  - Separates configuration (JSON) from logic (Nix expressions)
-  - Uses nix eval for runtime configuration passing
-  - Maintains reproducibility through explicit dependencies
 */
 
 pkgs.writeShellApplication {

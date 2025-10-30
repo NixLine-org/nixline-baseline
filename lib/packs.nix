@@ -1,20 +1,31 @@
+# NixLine Packs Library
+#
+# Central registry and loader for all pack modules in the baseline.
+# Manages pack imports, configuration passing, and external pack references.
+
 { pkgs, lib, config ? {} }:
 
 let
   # Import all pack modules with configuration
   packModules = {
-    # Persistent packs (committed to consumer repos)
-    editorconfig = import ../packs/editorconfig-parameterized.nix { inherit pkgs lib config; };
-    license = import ../packs/license-parameterized.nix { inherit pkgs lib config; };
-    security = import ../packs/security-parameterized.nix { inherit pkgs lib config; };
-    codeowners = import ../packs/codeowners-parameterized.nix { inherit pkgs lib config; };
-    precommit = import ../packs/precommit-parameterized.nix { inherit pkgs lib config; };
-    dependabot = import ../packs/dependabot-parameterized.nix { inherit pkgs lib config; };
+    # Universal packs (all languages/ecosystems)
+    editorconfig = import ../packs/universal/editorconfig-parameterized.nix { inherit pkgs lib config; };
+    license = import ../packs/universal/license-parameterized.nix { inherit pkgs lib config; };
+    security = import ../packs/universal/security-parameterized.nix { inherit pkgs lib config; };
+    codeowners = import ../packs/universal/codeowners-parameterized.nix { inherit pkgs lib config; };
+    precommit = import ../packs/universal/precommit-parameterized.nix { inherit pkgs lib config; };
+    dependabot = import ../packs/universal/dependabot-parameterized.nix { inherit pkgs lib config; };
+    gitignore = import ../packs/universal/gitignore-parameterized.nix { inherit pkgs lib config; };
+    prettier = import ../packs/universal/prettier-parameterized.nix { inherit pkgs lib config; };
+    yamllint = import ../packs/universal/yamllint-parameterized.nix { inherit pkgs lib config; };
 
-    # Pure apps in consumer flakes (no pack files):
-    # - sbom: nix run .#sbom
-    # - flake-update: nix run .#flake-update
-    # - setup-hooks: nix run .#setup-hooks
+    # Python ecosystem packs
+    bandit = import ../packs/python/bandit.nix { inherit pkgs lib config; };
+    flake8 = import ../packs/python/flake8-parameterized.nix { inherit pkgs lib config; };
+
+    # JavaScript/Node.js ecosystem packs
+    eslint = import ../packs/javascript/eslint-parameterized.nix { inherit pkgs lib config; };
+    jest = import ../packs/javascript/jest-parameterized.nix { inherit pkgs lib config; };
   };
 
   # Load external pack sources (placeholder for future implementation)
@@ -22,8 +33,9 @@ let
   # This function prepares the structure for external pack references
   loadExternalPacks = externalSources: externalPackRefs:
     let
-      # For now, return empty set - external packs will be handled in sync app
-      # TODO: Implement dynamic flake loading when called from sync context
+      # External pack loading is intentionally disabled to maintain pure evaluation
+      # External packs are handled at sync time via the migrate-governance app
+      # This preserves reproducibility and avoids impure builtins.getFlake calls
       loadExternalSource = sourceName: sourceSpec:
         if false  # Disabled for pure evaluation
         then {} # builtins.getFlake sourceSpec.url
