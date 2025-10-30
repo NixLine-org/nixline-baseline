@@ -1380,55 +1380,198 @@ This is the key difference from traditional policy distribution systems that use
 
 ### Automated Policy Sync
 
-Consumer repositories can enable automated policy synchronization using the `policy-sync.yml` workflow from the [`.github` repository](https://github.com/NixLine-org/.github):
+NixLine provides two policy sync workflows to match different organizational governance requirements:
+
+#### Option 1: Direct Commit (Default - Maximum Automation)
+
+Consumer repositories can enable automated policy synchronization that commits directly to main:
 
 ```yaml
-# .github/workflows/policy-sync.yml (included in consumer template)
+# .github/workflows/policy-sync.yml
 name: Policy Sync
 
 on:
-  # Run weekly on Sunday at 2 PM UTC
   schedule:
-    - cron: '0 14 * * 0'
-
+    - cron: '0 14 * * 0'  # Weekly on Sunday at 2 PM UTC
   workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
 
 jobs:
   sync:
     uses: YOUR-ORG/.github/.github/workflows/nixline-policy-sync.yml@stable
+    with:
+      consumption_pattern: direct
+      baseline_repo: YOUR-ORG/nixline-baseline
+      baseline_ref: stable
 ```
 
-**How automated sync works:**
+**How it works:**
 
-1. **Weekly cron** triggers the reusable workflow
-2. **Workflow runs** sync/check commands to validate policies
-3. **If out of sync**, materializes updated policy files
-4. **Auto-commits and pushes** changes directly to main branch
+1. Weekly cron triggers the workflow
+2. Runs `nix run github:ORG/baseline#check` to validate policies
+3. If out of sync, runs `nix run github:ORG/baseline#sync` to materialize files
+4. **Automatically commits and pushes changes directly to main**
+5. Creates issue if sync or push fails
 
-Note: Workflows use the consumption pattern configured for that repository (template-based or direct).
+**This eliminates the 500-repo PR bottleneck** - when baseline changes are reviewed once, they propagate automatically to all consumer repos without requiring 500 manual PR reviews.
 
-This provides instant policy materialization without PR bottlenecks. Organizations that require review can use branch protection rules to enforce PR workflows.
+**Use when:**
+- You want maximum automation
+- Baseline changes are already reviewed before propagation
+- Organization trusts automated policy updates
+- No branch protection requiring PRs
 
-**Customizing the schedule:**
+#### Option 2: PR with Auto-Approval (Governance + Automation)
 
-Edit the `cron` schedule in your consumer repo's workflow file:
+For organizations requiring review trails while maintaining automation:
 
 ```yaml
-schedule:
-  - cron: '0 14 * * 0'  # Sunday 2 PM UTC (default)
-  - cron: '0 9 * * 1'   # Monday 9 AM UTC
-  - cron: '0 0 1 * *'   # First day of month at midnight
+# .github/workflows/policy-sync.yml
+name: Policy Sync
+
+on:
+  schedule:
+    - cron: '0 14 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  sync:
+    uses: YOUR-ORG/.github/.github/workflows/nixline-policy-sync-pr.yml@stable
+    with:
+      consumption_pattern: direct
+      baseline_repo: YOUR-ORG/nixline-baseline
+      baseline_ref: stable
+      create_pr: true
+      auto_approve: true
 ```
 
-**Branch protection for review:**
+**How it works:**
 
-If your organization requires review before policy changes are applied, configure branch protection rules:
+1. Creates PR with policy changes instead of direct commit
+2. Auto-approval workflow approves policy-sync PRs after validation
+3. GitHub auto-merge merges PR when CI passes
+4. Maintains audit trail while eliminating manual work
+
+**Required: Add auto-approval workflow**
 
 ```yaml
-# Require PR reviews for main branch
-# Changes will be pushed to a branch instead and require PR
-# Configure this in your repository settings
+# .github/workflows/auto-approve.yml
+name: Auto Approve Policy Updates
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  auto-approve:
+    uses: YOUR-ORG/.github/.github/workflows/nixline-auto-approve.yml@stable
+    with:
+      pr_title_pattern: "Policy Sync"
+      actor_filter: "github-actions[bot]"
+      merge_method: "squash"
+      enable_auto_merge: true
+      require_checks: true
 ```
+
+**Why auto-approval is safe:**
+
+- Baseline changes are reviewed during PR to baseline repo
+- Sync validation ensures policies are correct before creating PR
+- CI checks validate materialized files before auto-merge
+- Only policy-sync PRs from github-actions bot are auto-approved
+- Full audit trail maintained through PR history
+
+**Use when:**
+- Organization requires PR audit trails for compliance
+- Branch protection rules mandate PRs
+- Security team needs review gate option
+- Want automation with governance controls
+
+#### Choosing the Right Pattern
+
+| Aspect | Direct Commit | PR with Auto-Approval |
+|--------|---------------|----------------------|
+| **Automation Level** | Maximum | High (with controls) |
+| **Speed** | Instant | Minutes (waits for CI) |
+| **Audit Trail** | Commit history | PR + commit history |
+| **Governance** | Trust-based | Controlled automation |
+| **Review Points** | 1 (at baseline) | 2 (baseline + auto-approve) |
+| **Branch Protection** | Not compatible | Required |
+| **Best For** | Small/medium orgs | Enterprise orgs |
+
+Both patterns solve the 500-repo bottleneck by eliminating manual PR reviews across consumer repos. The difference is whether you want pure automation or controlled automation with audit trails.
+
+#### Option 3: Smart Unified Workflow (NEW - Recommended)
+
+The smart workflow combines both approaches with intelligent fallback:
+
+```yaml
+# .github/workflows/policy-sync.yml
+name: Policy Sync
+
+on:
+  schedule:
+    - cron: '0 14 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  sync:
+    uses: YOUR-ORG/.github/.github/workflows/nixline-policy-sync-smart.yml@stable
+    with:
+      consumption_pattern: direct
+      baseline_repo: YOUR-ORG/nixline-baseline
+      baseline_ref: stable
+      prefer_pr: false         # Try direct push first
+      auto_merge: true         # Enable auto-merge if PR created
+      stagger_minutes: 5       # Random delay to prevent rate limits
+```
+
+**How the smart workflow works:**
+
+1. **Staggered execution**: Random delay (0-5 min) prevents 500 repos hitting API simultaneously
+2. **Attempts direct push first** (fastest path)
+3. **Falls back to PR if**:
+   - Branch protection requires PRs
+   - Merge conflicts need resolution
+   - You set `prefer_pr: true`
+4. **Validates content**: Checks for placeholder text (CHANGEME, TODO)
+5. **Handles conflicts gracefully**: Creates PR with conflict markers for manual resolution
+6. **Auto-merges when safe**: Skips auto-merge if conflicts or validation errors
+
+**Rate Limit Protection:**
+
+GitHub's API limits content creation to:
+- 80 PRs per minute
+- 500 PRs per hour
+
+The smart workflow handles this with:
+- **Staggered execution**: Random delays spread load
+- **Batched processing**: Natural throttling from workflow runtime
+- **Retry logic**: Handles transient failures
+
+**Why this is the best approach:**
+- **One workflow for all scenarios** (simpler for users)
+- **Optimal performance** (direct push when possible)
+- **Graceful degradation** (PR fallback when needed)
+- **Built-in safety** (validation, conflict handling)
+- **Scale-ready** (rate limit protection for 500+ repos)
 
 ---
 
