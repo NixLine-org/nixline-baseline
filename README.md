@@ -6,6 +6,9 @@ It provides the shared Nix logic, governance rules and automation logic that all
 ## Table of Contents
 
 - [What is NixLine?](#what-is-nixline)
+  - [Key Benefits](#key-benefits)
+  - [Why NixLine?](#why-nixline)
+- [Consumption Patterns](#consumption-patterns)
 - [Purpose](#purpose)
 - [Architecture](#architecture)
 - [Usage](#usage)
@@ -38,12 +41,28 @@ It provides the shared Nix logic, governance rules and automation logic that all
 ### Key Benefits
 
 - **Pure Upstream Consumption**: Use NixLine baseline directly without forking
+- **Zero Maintenance Overhead**: Consume as pure upstream, receive improvements automatically
 - **Configuration-Driven**: Full customization through `.nixline.toml` files and CLI overrides
+- **Governance Migration**: Automatic conversion of existing governance repositories to NixLine format
+- **Workflow Automation**: Pre-validated CI/CD workflows with auto-merge support
+- **Script Packaging**: Automatic detection and distribution of organization-specific scripts
 - **Immediate Updates**: Receive baseline improvements instantly without manual intervention
 - **Custom File Support**: Override any pack with organization-specific files
 - **Parameterized Packs**: Runtime configuration passing following nix.dev best practices
 - **External Pack Support**: Add organization-specific packs via template pattern
 - **Reproducible**: All dependencies pinned, configuration separated from logic
+
+### Why NixLine?
+
+**The Problem**: Organizations managing hundreds of repositories face a critical challenge - when security policies change, licenses are adopted or coding standards are updated, those changes must propagate to every repository. Traditional governance systems create individual pull requests to each repository, requiring manual review and merge. For an organization with 500 repositories, a single policy change creates 500 separate pull requests requiring human attention.
+
+**The Solution**: NixLine eliminates the pull request bottleneck through Nix-based materialization. Policies propagate instantly through flake updates while maintaining audit trails through optional PR workflows with auto-merge. Organizations receive:
+
+- **Instant Policy Updates**: Changes materialize immediately without PR bottlenecks
+- **Governance Migration**: Convert existing governance repositories automatically
+- **Automated Workflows**: Pre-built CI/CD with validation and auto-merge
+- **Pure Upstream Consumption**: Zero maintenance overhead, no baseline forking required
+- **Flexible Review Controls**: Direct commits for speed or PR workflows for compliance
 
 ---
 
