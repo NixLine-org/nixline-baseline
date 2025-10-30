@@ -483,14 +483,13 @@ EOF
     done
 
     # Organization script detection with error handling
-    declare -A detected_scripts=()
     script_packs=()
     found_scripts=()
 
     log_verbose "Analyzing organization scripts..."
 
     # Check for executable files in root directory
-    while IFS= read -r -d '' script_file; do
+    for script_file in $(find . -maxdepth 1 -type f -executable 2>/dev/null); do
       if [[ -x "$script_file" && -f "$script_file" ]]; then
         # Check if file is readable and not binary
         if [[ ! -r "$script_file" ]]; then
@@ -508,19 +507,18 @@ EOF
 
         script_name=$(basename "$script_file")
         pack_name="script-$script_name"
-        detected_scripts["$script_file"]="$pack_name"
         script_packs+=("$pack_name")
         found_scripts+=("$script_file")
         log_verbose "Found executable script: $script_file -> $pack_name"
       fi
-    done < <(find . -maxdepth 1 -type f -executable -print0 2>/dev/null)
+    done
 
     # Check for script files by extension
     for ext in sh py pl rb js; do
-      while IFS= read -r script_file; do
+      for script_file in $(find . -maxdepth 2 -name "*.$ext" -type f 2>/dev/null); do
         if [[ -f "$script_file" ]]; then
           # Skip if already detected as executable
-          if [[ -n "''${detected_scripts[$script_file]:-}" ]]; then
+          if printf '%s\n' "''${found_scripts[@]}" | grep -q "^$script_file$"; then
             continue
           fi
 
@@ -540,20 +538,19 @@ EOF
 
           script_name=$(basename "$script_file" ".$ext")
           pack_name="script-$script_name"
-          detected_scripts["$script_file"]="$pack_name"
           script_packs+=("$pack_name")
           found_scripts+=("$script_file")
           log_verbose "Found script by extension: $script_file -> $pack_name"
         fi
-      done < <(find . -maxdepth 2 -name "*.$ext" -type f 2>/dev/null)
+      done
     done
 
     # Check for scripts in common directories
     for dir in scripts bin tools; do
       if [[ -d "$dir" ]]; then
-        while IFS= read -r script_file; do
+        for script_file in $(find "$dir" -type f 2>/dev/null); do
           # Skip if already detected
-          if [[ -n "''${detected_scripts[$script_file]:-}" ]]; then
+          if printf '%s\n' "''${found_scripts[@]}" | grep -q "^$script_file$"; then
             continue
           fi
 
@@ -575,11 +572,10 @@ EOF
           # Remove common extensions for pack naming
           script_name=$${script_name%.*}
           pack_name="script-$dir-$script_name"
-          detected_scripts["$script_file"]="$pack_name"
           script_packs+=("$pack_name")
           found_scripts+=("$script_file")
           log_verbose "Found script in $dir/: $script_file -> $pack_name"
-        done < <(find "$dir" -type f 2>/dev/null)
+        done
       fi
     done
 
@@ -795,9 +791,11 @@ PACK_EOF
     cd "$GOVERNANCE_REPO"
     created_script_packs=()
 
-    # Use the detected_scripts associative array from analysis
-    for script_file in "''${!detected_scripts[@]}"; do
-      pack_name="''${detected_scripts[$script_file]}"
+    # Use the found_scripts array from analysis
+    for i in "''${!found_scripts[@]}"; do
+      script_file="''${found_scripts[$i]}"
+      script_name=$(basename "$script_file")
+      pack_name="script-$script_name"
 
       # Skip if pack already exists
       if [[ -f "$OUTPUT_DIR/packs/$pack_name.nix" ]]; then
