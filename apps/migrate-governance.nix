@@ -573,7 +573,7 @@ EOF
 
           script_name=$(basename "$script_file")
           # Remove common extensions for pack naming
-          script_name=''${script_name%.*}
+          script_name=$${script_name%.*}
           pack_name="script-$dir-$script_name"
           detected_scripts["$script_file"]="$pack_name"
           script_packs+=("$pack_name")
