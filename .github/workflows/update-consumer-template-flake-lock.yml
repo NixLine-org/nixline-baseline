@@ -1,0 +1,35 @@
+name: Update Consumer Template Flake Lock
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'templates/consumer/flake.nix'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # Wait for CI validation to pass before updating flake.lock
+  wait-for-ci:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Wait for CI to complete
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'validate-flake'
+          repo-token: ${{ github.token }}
+          wait-interval: 10
+
+  update-flake-lock:
+    needs: [wait-for-ci]
+    if: always() && (needs.wait-for-ci.result == 'success' || github.event_name == 'workflow_dispatch')
+    uses: NixLine-org/.github/.github/workflows/nixline-flake-lock-update.yml@stable
+    with:
+      flake-directory: 'templates/consumer'
+      commit-message: 'Update consumer template flake.lock'
+      validate-after-update: true
