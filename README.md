@@ -1235,7 +1235,7 @@ See the [test-governance-migration.yml reusable workflow](https://github.com/Nix
 
 ### Demo Repository
 
-A demonstration repository will be available to showcase governance migration results. Organizations can browse the generated baseline to see migration results and use it as a template.
+A demonstration repository will be available to showcase governance migration results. Organizations can browse the generated baseline to see migration results and use it as a template for their own implementations.
 
 ---
 
