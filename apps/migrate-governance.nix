@@ -482,6 +482,112 @@ EOF
       fi
     done
 
+    # Organization script detection with error handling
+    declare -A detected_scripts=()
+    script_packs=()
+    found_scripts=()
+
+    log_verbose "Analyzing organization scripts..."
+
+    # Check for executable files in root directory
+    while IFS= read -r -d '' script_file; do
+      if [[ -x "$script_file" && -f "$script_file" ]]; then
+        # Check if file is readable and not binary
+        if [[ ! -r "$script_file" ]]; then
+          skipped_files+=("$script_file (permission denied)")
+          analysis_warnings+=("Cannot read script $script_file: permission denied")
+          log_verbose "Warning: Cannot read script $script_file (permission denied)"
+          continue
+        fi
+
+        if is_binary_file "$script_file"; then
+          skipped_files+=("$script_file (binary executable)")
+          log_verbose "Skipping binary executable: $script_file"
+          continue
+        fi
+
+        script_name=$(basename "$script_file")
+        pack_name="script-$script_name"
+        detected_scripts["$script_file"]="$pack_name"
+        script_packs+=("$pack_name")
+        found_scripts+=("$script_file")
+        log_verbose "Found executable script: $script_file -> $pack_name"
+      fi
+    done < <(find . -maxdepth 1 -type f -executable -print0 2>/dev/null)
+
+    # Check for script files by extension
+    for ext in sh py pl rb js; do
+      while IFS= read -r script_file; do
+        if [[ -f "$script_file" ]]; then
+          # Skip if already detected as executable
+          if [[ -n "''${detected_scripts[$script_file]:-}" ]]; then
+            continue
+          fi
+
+          # Check if file is readable and not binary
+          if [[ ! -r "$script_file" ]]; then
+            skipped_files+=("$script_file (permission denied)")
+            analysis_warnings+=("Cannot read script $script_file: permission denied")
+            log_verbose "Warning: Cannot read script $script_file (permission denied)"
+            continue
+          fi
+
+          if is_binary_file "$script_file"; then
+            skipped_files+=("$script_file (binary file)")
+            log_verbose "Skipping binary file: $script_file"
+            continue
+          fi
+
+          script_name=$(basename "$script_file" ".$ext")
+          pack_name="script-$script_name"
+          detected_scripts["$script_file"]="$pack_name"
+          script_packs+=("$pack_name")
+          found_scripts+=("$script_file")
+          log_verbose "Found script by extension: $script_file -> $pack_name"
+        fi
+      done < <(find . -maxdepth 2 -name "*.$ext" -type f 2>/dev/null)
+    done
+
+    # Check for scripts in common directories
+    for dir in scripts bin tools; do
+      if [[ -d "$dir" ]]; then
+        while IFS= read -r script_file; do
+          # Skip if already detected
+          if [[ -n "''${detected_scripts[$script_file]:-}" ]]; then
+            continue
+          fi
+
+          # Check if file is readable and not binary
+          if [[ ! -r "$script_file" ]]; then
+            skipped_files+=("$script_file (permission denied)")
+            analysis_warnings+=("Cannot read script $script_file: permission denied")
+            log_verbose "Warning: Cannot read script $script_file (permission denied)"
+            continue
+          fi
+
+          if is_binary_file "$script_file"; then
+            skipped_files+=("$script_file (binary file)")
+            log_verbose "Skipping binary file in $dir: $script_file"
+            continue
+          fi
+
+          script_name=$(basename "$script_file")
+          # Remove common extensions for pack naming
+          script_name=''${script_name%.*}
+          pack_name="script-$dir-$script_name"
+          detected_scripts["$script_file"]="$pack_name"
+          script_packs+=("$pack_name")
+          found_scripts+=("$script_file")
+          log_verbose "Found script in $dir/: $script_file -> $pack_name"
+        done < <(find "$dir" -type f 2>/dev/null)
+      fi
+    done
+
+    # Remove duplicates from script packs
+    if [[ ''${#script_packs[@]} -gt 0 ]]; then
+      mapfile -t script_packs < <(printf '%s\n' "''${script_packs[@]}" | sort -u)
+    fi
+
     # Language-based pack suggestions
     for lang in "''${detected_languages[@]}"; do
       case "$lang" in
@@ -500,6 +606,9 @@ EOF
     # Add config-detected packs
     suggested_packs+=("''${config_packs[@]}")
 
+    # Add script-detected packs
+    suggested_packs+=("''${script_packs[@]}")
+
     # Universal packs
     suggested_packs+=("license" "codeowners" "security")
 
@@ -510,6 +619,7 @@ EOF
     log_info "  Languages: $(IFS=, ; echo "''${detected_languages[*]}")"
     log_info "  Governance files: ''${#found_governance[@]}"
     log_info "  Config files: ''${#config_packs[@]}"
+    log_info "  Scripts: ''${#script_packs[@]}"
     log_info "  Suggested packs: $(printf '%s ' "''${unique_packs[@]}")"
 
     # Report any skipped files or warnings
@@ -679,6 +789,99 @@ PACK_EOF
       log_success "Created ''${#additional_configs[@]} additional configuration packs"
     fi
 
+    # Create script packs for organization scripts
+    log_info "Creating organization script packs..."
+
+    cd "$GOVERNANCE_REPO"
+    created_script_packs=()
+
+    # Use the detected_scripts associative array from analysis
+    for script_file in "''${!detected_scripts[@]}"; do
+      pack_name="''${detected_scripts[$script_file]}"
+
+      # Skip if pack already exists
+      if [[ -f "$OUTPUT_DIR/packs/$pack_name.nix" ]]; then
+        log_verbose "Script pack $pack_name.nix already exists, skipping"
+        continue
+      fi
+
+      created_script_packs+=("$script_file")
+
+      if [[ "$DRY_RUN" == false ]]; then
+        # Double-check file is still readable before creating pack
+        if [[ ! -r "$script_file" ]]; then
+          log_error "Cannot read script $script_file during pack creation, skipping"
+          continue
+        fi
+
+        # Read script content safely
+        if ! script_content=$(cat "$script_file" 2>/dev/null); then
+          log_error "Failed to read script $script_file content, skipping pack creation"
+          continue
+        fi
+
+        # Determine if script should be executable
+        script_executable="false"
+        if [[ -x "$script_file" ]]; then
+          script_executable="true"
+        fi
+
+        # Get relative path for installation
+        script_path="$script_file"
+        if [[ "$script_path" =~ ^\./ ]]; then
+          script_path="''${script_path#./}"
+        fi
+
+        cat > "$OUTPUT_DIR/packs/$pack_name.nix" << SCRIPT_PACK_EOF
+{ pkgs, lib }:
+
+#
+# Organization Script Pack
+#
+# Imported from $script_file during governance migration
+# Generated by NixLine governance migration
+#
+# This pack provides organization-specific scripts to consumer repositories
+#
+
+{
+  files = {
+    "$script_path" = '''
+$(printf '%s\n' "$script_content")
+    ''';
+  };
+
+  # Set executable permissions if the original script was executable
+  permissions = lib.optionalAttrs ($script_executable) {
+    "$script_path" = "755";
+  };
+
+  checks = [
+    {
+      name = "$pack_name-present";
+      check = '''
+        if [[ -f "$script_path" ]]; then
+          echo "[✓] Organization script $script_path present"
+          if [[ "$script_executable" == "true" && ! -x "$script_path" ]]; then
+            echo "[!] Warning: $script_path should be executable"
+          fi
+        else
+          echo "[✗] Organization script $script_path missing"
+          exit 1
+        fi
+      ''';
+    }
+  ];
+}
+SCRIPT_PACK_EOF
+          log_verbose "Created script pack: $pack_name.nix (executable: $script_executable)"
+        fi
+    done
+
+    if [[ ''${#created_script_packs[@]} -gt 0 ]]; then
+      log_success "Created ''${#created_script_packs[@]} organization script packs"
+    fi
+
     # Generate migration report
     log_info "Generating migration report..."
 
@@ -696,6 +899,7 @@ PACK_EOF
 - **Languages Detected:** $(IFS=, ; echo "''${detected_languages[*]}")
 - **Governance Files Found:** ''${#found_governance[@]}
 - **Additional Config Files:** ''${#additional_configs[@]}
+- **Organization Scripts Found:** ''${#script_packs[@]}
 - **Total Packs Generated:** $(find "$OUTPUT_DIR/packs" -name "*.nix" -type f 2>/dev/null | wc -l)
 
 ## Generated Packs
