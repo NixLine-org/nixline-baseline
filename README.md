@@ -1545,6 +1545,48 @@ jobs:
 
 **How the smart workflow works:**
 
+```mermaid
+graph TD
+    A[Policy Sync Triggered] --> B[Random Delay<br/>0-5 minutes]
+    B --> C[Check Policy Compliance]
+    C -->|In Sync| D[Exit - No Action Needed]
+    C -->|Out of Sync| E[Pull Latest with Rebase]
+
+    E --> F[Materialize Policy Files]
+    F --> G[Validate Content<br/>Check for CHANGEME/TODO]
+
+    G --> H{Has Changes?}
+    H -->|No| D
+    H -->|Yes| I{Prefer PR?}
+
+    I -->|No| J[Try Direct Push]
+    I -->|Yes| N[Create PR]
+
+    J -->|Success| K[Done ✅]
+    J -->|Branch Protection| N[Create PR]
+    J -->|Merge Conflict| L[Pull & Retry Once]
+
+    L -->|Fixed| M[Push]
+    L -->|Still Conflicts| N[Create PR]
+
+    M --> K
+
+    N --> O{Has Issues?}
+    O -->|Conflicts or Errors| P[Create PR<br/>Skip Auto-merge<br/>Create Issue]
+    O -->|Clean| Q[Create PR<br/>Enable Auto-merge]
+
+    Q --> R[Auto-approve Workflow]
+    R --> S[CI Validation]
+    S --> T[Merge PR]
+    T --> K
+
+    P --> U[Manual Review Required]
+
+    style K fill:#90EE90
+    style D fill:#FFE4B5
+    style U fill:#FFB6C1
+```
+
 1. **Staggered execution**: Random delay (0-5 min) prevents 500 repos hitting API simultaneously
 2. **Attempts direct push first** (fastest path)
 3. **Falls back to PR if**:
