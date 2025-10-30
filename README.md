@@ -3,8 +3,13 @@
 The **NixLine Baseline** defines the foundational Nix expressions and policies used by all repositories in the [NixLine-org](https://github.com/NixLine-org) organization.
 It provides the shared Nix logic, governance rules and automation logic that all NixLine consumer repositories rely on.
 
+## ⚠️ Security Warning
+
+**This baseline repository is a critical trust point.** Changes here automatically propagate to all consumer repositories. See [SECURITY-BASELINE.md](SECURITY-BASELINE.md) for mandatory security requirements.
+
 ## Table of Contents
 
+- [Security Requirements](#security-requirements)
 - [What is NixLine?](#what-is-nixline)
   - [Key Benefits](#key-benefits)
   - [Why NixLine?](#why-nixline)
@@ -31,6 +36,24 @@ It provides the shared Nix logic, governance rules and automation logic that all
 - [Tagging Policy](#tagging-policy)
 - [NixLine vs Traditional Policy Distribution](#nixline-vs-traditional-policy-distribution)
 - [Importance of the Baseline](#importance-of-the-baseline)
+
+---
+
+## Security Requirements
+
+### Critical: Baseline Repository Protection
+
+Before using NixLine in production:
+
+1. **Enable branch protection** on main branch (2+ reviewers required)
+2. **Restrict write access** to security/platform team only
+3. **Enable CODEOWNERS** for all critical paths
+4. **Audit flake inputs** before updating flake.lock
+5. **Never commit secrets** - use parameterization for all org-specific values
+
+**Why this matters:** The baseline repo is a single point of trust. A compromise here affects ALL consumer repositories automatically through policy sync workflows.
+
+See [SECURITY-BASELINE.md](SECURITY-BASELINE.md) for complete security guidelines.
 
 ---
 
