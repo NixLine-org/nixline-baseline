@@ -12,6 +12,7 @@ It provides the shared Nix logic, governance rules and automation logic that all
   - [Baseline Apps](#baseline-apps)
   - [Quick Start for Consumer Repos](#quick-start-for-consumer-repos)
 - [Policy Packs](#policy-packs)
+  - [Organization Script Packs](#organization-script-packs)
 - [Configuration File Reference](#configuration-file-reference)
 - [Governance Migration](#governance-migration)
   - [Complete Governance Migration](#complete-governance-migration)
@@ -764,6 +765,90 @@ year = "2024"
 }
 ```
 
+### Organization Script Packs
+
+**Organization Script Packs** are a special type of pack that provides the distribution mechanism for organization-specific scripts and tooling. During governance migration, NixLine detects executable scripts and common tool files in the governance repository and automatically creates script packs for them.
+
+#### The "Delivery Mechanism" Concept
+
+Script packs serve as the **delivery mechanism** that enables organization-specific scripts to be consistently distributed across all consumer repositories. While the scripts themselves remain intact (not converted to Nix), the pack provides the infrastructure to:
+
+- **Distribute scripts** across all consumer repositories via `nix run baseline#sync`
+- **Preserve permissions** ensuring executable scripts maintain their `755` permissions
+- **Validate deployment** checking that scripts are present and properly configured
+- **Track provenance** documenting where scripts originated during migration
+- **Enable customization** allowing per-organization script deployment configuration
+
+#### Script Detection During Migration
+
+The governance migration process automatically detects:
+
+- **Executable files** in the repository root (e.g., `bump-version`, `setup-env`)
+- **Script extensions** (.sh, .py, .pl, .rb, .js) in root and subdirectories
+- **Script directories** common locations like `scripts/`, `bin/`, `tools/`
+
+#### Generated Script Pack Structure
+
+```nix
+# packs/script-bump-version.nix
+{ pkgs, lib }:
+
+{
+  files = {
+    "bump-version" = '''
+      #!/bin/bash
+      # Original script content preserved exactly
+      set -euo pipefail
+      # ... rest of script ...
+    ''';
+  };
+
+  # Preserve executable permissions from original
+  permissions = {
+    "bump-version" = "755";
+  };
+
+  checks = [
+    {
+      name = "script-bump-version-present";
+      check = '''
+        if [[ -f "bump-version" ]]; then
+          echo "[✓] Organization script bump-version present"
+          if [[ ! -x "bump-version" ]]; then
+            echo "[!] Warning: bump-version should be executable"
+          fi
+        else
+          echo "[✗] Organization script bump-version missing"
+          exit 1
+        fi
+      ''';
+    }
+  ];
+}
+```
+
+#### Why Not Just Copy Files Directly?
+
+Script packs might seem like overhead since scripts remain unchanged, but they provide essential infrastructure:
+
+| Aspect | Without Packs | With Script Packs |
+|--------|---------------|-------------------|
+| **Distribution** | Manual copying required | Automatic via `nix run baseline#sync` |
+| **Validation** | No verification scripts deployed | Automated checks for presence/permissions |
+| **Integration** | Outside NixLine ecosystem | Full integration with policy workflow |
+| **Customization** | No deployment control | Pack-level configuration possible |
+| **Consistency** | Ad-hoc script management | Standardized deployment mechanism |
+
+#### Example: Organization Scripts
+
+When migrating a governance repository with organization-specific tooling, NixLine detects and creates packs for scripts like:
+
+- `bump-version` → `script-bump-version.nix`
+- `setup-env` → `script-setup-env.nix`
+- `deploy.sh` → `script-deploy.nix`
+
+Consumer repositories then receive these scripts via the standard sync process, ensuring organization tooling is available across all repositories.
+
 ### Persistent Packs (Committed to Repos)
 
 These packs materialize files that should be committed for visibility and GitHub integration:
@@ -1046,7 +1131,7 @@ nix run github:NixLine-org/nixline-baseline#migrate-governance -- \
   --security-email "security@yourorg.com"
 ```
 
-This will fetch the governance repository using Nix's deterministic fetchGit, analyze it for languages and existing policies, generate appropriate .nixline.toml configuration, import supported governance files as NixLine packs, and create a complete baseline directory structure ready for deployment.
+This will fetch the governance repository using Nix's deterministic fetchGit, analyze it for languages and existing policies, generate appropriate .nixline.toml configuration, import supported governance files as NixLine packs and create a complete baseline directory structure ready for deployment.
 
 ### Migration Architecture
 
@@ -1107,7 +1192,7 @@ jobs:
       output-mode: 'artifact'
 ```
 
-This workflow uses Nix's deterministic fetchGit to analyze your repository for governance files and project languages, generate a complete NixLine baseline with organization-specific configuration, create downloadable artifacts with the generated baseline, and provide migration reports with next-step instructions.
+This workflow uses Nix's deterministic fetchGit to analyze your repository for governance files and project languages, generate a complete NixLine baseline with organization-specific configuration, create downloadable artifacts with the generated baseline and provide migration reports with next-step instructions.
 
 ### Import Individual Policy Files
 
@@ -1229,7 +1314,7 @@ flowchart TD
 Successful tests complete dry-runs with detected languages and governance files. Warnings about binary files or permission issues are acceptable. Errors about invalid configuration or missing required files must be fixed before migration.
 
 #### Edge Case Testing
-The migration tool gracefully handles empty repositories by creating universal packs only, skips binary files with warnings, provides clear error messages for permission issues, and handles malformed config files without failing.
+The migration tool gracefully handles empty repositories by creating universal packs only, skips binary files with warnings, provides clear error messages for permission issues and handles malformed config files without failing.
 
 See the [test-governance-migration.yml reusable workflow](https://github.com/NixLine-org/.github/blob/main/.github/workflows/test-governance-migration.yml) for a complete test workflow implementation.
 
