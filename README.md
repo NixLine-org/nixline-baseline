@@ -2005,6 +2005,72 @@ Pinning nixpkgs to explicit commit hashes provides better supply chain security:
 
 ---
 
+## Baseline Promotion Workflow
+
+The baseline repository implements a PR-based promotion system to ensure only validated changes reach the stable tag used by consumer repositories.
+
+### Promotion Process
+
+The baseline uses a two-stage promotion system with manual approval gates:
+
+**unstable tag** - Latest baseline changes undergo comprehensive validation before promotion. Triggered when commits are pushed to main branch.
+
+**stable tag** - Validated baseline version used by consumer repositories. Only updated after manual approval through PR workflow.
+
+### Workflow Architecture
+
+```mermaid
+graph TD
+    A[Commit to Main] --> B[Auto-tag unstable]
+    B --> C[Comprehensive Validation]
+    C --> D[Build All Apps]
+    D --> E[Test Flake Check]
+    E --> F[Validate Packs]
+    F --> G{Validation Passed?}
+
+    G -->|Yes| H[Create Promotion PR]
+    G -->|No| I[Create Issue<br/>Alert Maintainers]
+
+    H --> J[Manual Review]
+    J --> K[Merge PR]
+    K --> L[Update stable Tag]
+    L --> M[Consumer Repos Sync<br/>Updated Policies]
+
+    style A fill:#e1f5fe
+    style H fill:#fff3cd
+    style J fill:#ffe4b5
+    style L fill:#c8e6c9
+    style I fill:#ffcdd2
+```
+
+### Manual Approval Gate
+
+Unlike traditional automated promotion, NixLine requires manual approval for baseline updates because the baseline repository is a critical trust point affecting all consumer repositories.
+
+**Why manual approval is necessary:**
+- Baseline changes propagate automatically to all consumer repositories
+- Policy errors could affect hundreds of repositories simultaneously
+- Manual review ensures changes are intentional and tested
+- Provides audit trail for organizational governance compliance
+
+### Validation Steps
+
+Before creating a promotion PR, the system validates:
+
+1. **Flake integrity** - `nix flake check` passes on multiple platforms
+2. **App functionality** - All baseline apps build and run correctly
+3. **Pack syntax** - All policy packs have valid Nix syntax
+4. **Cross-platform** - Builds succeed on Linux and macOS
+5. **Input validation** - New packs are scanned for security issues
+
+### Consumer Repository Impact
+
+Consumer repositories detect baseline updates through their policy sync workflows. When the stable tag is updated, consumer repos will show "out of sync" status on next CI run. Policy sync can be triggered manually or waits for the scheduled weekly sync.
+
+This staged promotion system ensures that baseline changes are thoroughly validated and intentionally approved before affecting consumer repositories across the organization.
+
+---
+
 ## NixLine vs Traditional Policy Distribution
 
 Traditional policy distribution systems use automated pull requests to propagate policy updates across repositories. When a baseline changes, the system creates PRs in every consumer repository, requiring manual review and merge.
