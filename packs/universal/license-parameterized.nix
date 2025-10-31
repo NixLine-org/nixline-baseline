@@ -11,7 +11,16 @@
 # [packs.license]
 # type = "Apache-2.0"  # or "MIT", "GPL-3.0", etc.
 # holder = "MyCompany, Inc."
-# year = "2024"
+# year = 2025  # Copyright year (defaults to current year if not specified)
+# fetch_from_source = false  # Set to true to fetch latest license text from SPDX
+#
+# SPDX LICENSE FETCHING:
+# By default, this pack uses hardcoded SPDX-canonical license texts for common licenses.
+# This ensures reproducibility and allows the pack to work with --no-build validation.
+#
+# To enable automatic fetching of the latest license text from spdx.org:
+# 1. Add fetch_from_source = true to your .nixline.toml [packs.license] section
+# 2. Note: This requires network access during sync and adds a build-time dependency
 #
 # ENVIRONMENT VARIABLES:
 # Can also be customized via environment variables from enhanced sync app:
@@ -25,11 +34,22 @@ let
   # Organization configuration for fallback
   orgName = config.organization.name or "NixLine-org";
 
+  # Calculate current year from Unix timestamp
+  currentYear =
+    let
+      # builtins.currentTime returns Unix timestamp in seconds
+      timestamp = builtins.currentTime;
+      # Convert to approximate year (timestamp / seconds per year + 1970)
+      # 31557600 = average seconds per year accounting for leap years
+      year = 1970 + (timestamp / 31557600);
+    in
+      toString year;
+
   # License configuration
   licenseType = packConfig.type or "Apache-2.0";
   copyrightHolder = packConfig.holder or "${orgName} Contributors";
-  copyrightYear = toString (packConfig.year or 2024);
-  fetchFromSource = packConfig.fetch_from_source or true;
+  copyrightYear = toString (packConfig.year or currentYear);
+  fetchFromSource = packConfig.fetch_from_source or false;
   customLicenseFile = packConfig.custom_license_file or null;
 
   # Common SPDX license identifiers supported
