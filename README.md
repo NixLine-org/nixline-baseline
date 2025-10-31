@@ -43,6 +43,7 @@ This baseline provides organization-wide policy management with comprehensive va
 - [Tagging Policy](#tagging-policy)
 - [Supply Chain Security - Nixpkgs Updates](#supply-chain-security---nixpkgs-updates)
 - [Baseline Promotion Workflow](#baseline-promotion-workflow)
+- [Stable Candidate Coordination](#stable-candidate-coordination)
 - [NixLine vs Traditional Policy Distribution](#nixline-vs-traditional-policy-distribution)
 - [Importance of the Baseline](#importance-of-the-baseline)
 
@@ -2279,6 +2280,66 @@ Consumer repositories detect baseline updates through their policy sync workflow
 3. **Policy synchronization**: Can be triggered manually via Actions tab or waits for scheduled weekly sync
 
 This staged promotion system ensures that baseline changes are thoroughly validated and intentionally approved before affecting consumer repositories across the organization.
+
+---
+
+## Stable Candidate Coordination
+
+The baseline repository uses a `.stable-candidate` file to coordinate promotion from main branch to stable tag. This file acts as a temporary promotion signal in the complete automation pipeline.
+
+### How .stable-candidate Works
+
+**File Purpose:**
+- Acts as a "promotion queue" marker for commits ready to be tagged as stable
+- Contains the commit hash that baseline CI has validated and approved for stable promotion
+- Serves as the handoff mechanism between baseline CI and the promote-to-stable workflow
+
+**Lifecycle:**
+1. **Creation**: Baseline CI creates/updates `.stable-candidate` when validation passes on main branch
+2. **Content**: Contains the exact commit hash that passed validation: `a1b2c3d4e5f6...`
+3. **Consumption**: Promote-to-stable workflow reads this file to know which commit to promote
+4. **Removal**: File is deleted after successful promotion to stable tag
+
+### Architecture Benefits
+
+**Decoupled Workflows:**
+- Baseline CI focuses on validation and candidate marking
+- Promote-to-stable workflow focuses on tag management and promotion
+- Clear separation of concerns with file-based coordination
+
+**Auditability:**
+- File presence indicates promotion is pending
+- File absence indicates no pending promotions
+- Git history shows exactly when candidates were marked and promoted
+
+**Reliability:**
+- Atomic operations prevent race conditions
+- File-based handoff is more reliable than API calls
+- Workflow failures are visible through file state
+
+### Integration with Complete Automation
+
+The `.stable-candidate` file enables the complete automation pipeline:
+
+```
+unstable branch push → validation → PR with promote-to-stable label →
+auto-merge to main → baseline CI → .stable-candidate creation →
+promote-to-stable trigger → stable tag update → .stable-candidate removal
+```
+
+**Key Points:**
+- File only exists temporarily between main branch CI and stable promotion
+- Multiple commits may update the file before promotion occurs
+- Latest commit hash in the file always wins for promotion
+- Removal after promotion prevents duplicate promotions
+
+### File Location and Format
+
+**Location:** `.stable-candidate` in repository root
+**Format:** Single line containing commit hash
+**Example:** `ca83961a2f5e8b6c9d1234567890abcdef123456`
+
+This architecture ensures that stable promotions are both automated and traceable while maintaining clear workflow boundaries.
 
 ---
 
