@@ -22,3 +22,4 @@ Thumbs.db
 
 # Promotion coordination files
 .stable-candidate
+# Test unstable tag fix
