@@ -1,0 +1,29 @@
+#
+# Dependabot Auto-merge (Baseline)
+#
+# Automatically merges Dependabot pull requests for GitHub Actions updates
+# when they meet safety criteria (minor/patch versions or security updates).
+# Uses the reusable workflow from the .github repository.
+#
+# Triggered by: pull_request from dependabot[bot]
+# Purpose: Automated dependency management for baseline repository workflows
+# Safety: Only merges minor/patch updates and security fixes
+#
+
+name: Dependabot Auto-merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: github.actor == 'dependabot[bot]'
+    uses: NixLine-org/.github/.github/workflows/nixline-dependabot-automerge.yml@stable
+    with:
+      allow_minor_patch: "true"
+      allow_security_updates: "true"

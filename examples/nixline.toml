@@ -14,7 +14,7 @@ name = "MyCompany"
 security_email = "security@mycompany.com"
 
 # Default team for code ownership (used in CODEOWNERS)
-default_team = "@MyCompany/maintainers"
+default_team = "MyCompany/maintainers"
 
 [packs]
 # List of packs to enable (overrides default pack list)
@@ -47,13 +47,13 @@ markdown = { trim_trailing_whitespace = false }
 [packs.codeowners]
 # Custom code ownership rules
 rules = [
-  { pattern = "*", owners = ["@MyCompany/maintainers"] },
-  { pattern = "*.py", owners = ["@MyCompany/python-team"] },
-  { pattern = "*.js", owners = ["@MyCompany/frontend-team"] },
-  { pattern = "*.ts", owners = ["@MyCompany/frontend-team"] },
-  { pattern = "docs/**", owners = ["@MyCompany/docs-team"] },
-  { pattern = ".github/**", owners = ["@MyCompany/devops"] },
-  { pattern = "*.nix", owners = ["@MyCompany/nix-team"] }
+  { pattern = "*", owners = ["MyCompany/maintainers"] },
+  { pattern = "*.py", owners = ["MyCompany/python-team"] },
+  { pattern = "*.js", owners = ["MyCompany/frontend-team"] },
+  { pattern = "*.ts", owners = ["MyCompany/frontend-team"] },
+  { pattern = "docs/**", owners = ["MyCompany/docs-team"] },
+  { pattern = ".github/**", owners = ["MyCompany/devops"] },
+  { pattern = "*.nix", owners = ["MyCompany/nix-team"] }
 ]
 
 [packs.security]
@@ -102,4 +102,4 @@ ecosystems = [
 ]
 
 # Custom reviewer assignments
-reviewers = ["@MyCompany/deps-reviewers"]
+reviewers = ["MyCompany/deps-reviewers"]

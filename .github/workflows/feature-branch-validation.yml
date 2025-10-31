@@ -1,0 +1,33 @@
+#
+# Feature Branch Validation (Baseline)
+#
+# Validates feature branch pull requests targeting the unstable branch with
+# comprehensive security and quality checks. Ensures feature branches meet all
+# requirements before being merged to unstable branch for further promotion.
+#
+# Triggered by: pull_request targeting unstable branch
+# Purpose: Secure feature branch validation and quality control
+# Required: All checks must pass + 1 review before merge allowed
+#
+
+name: Feature Branch Validation
+
+on:
+  pull_request:
+    branches:
+      - unstable
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: read
+
+jobs:
+  validate:
+    uses: NixLine-org/.github/.github/workflows/nixline-feature-branch-validation.yml@stable
+    with:
+      target_branch: unstable
+      validation_apps: "sync,check,import-policy,fetch-license,list-licenses"
+      require_conventional_commits: true
+      enable_codeql: true

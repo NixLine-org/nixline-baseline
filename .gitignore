@@ -19,3 +19,7 @@ Thumbs.db
 # Temporary files
 *~
 .#*
+
+# Promotion coordination files
+.stable-candidate
+# Test unstable tag fix

@@ -136,7 +136,7 @@ let
              else "2025";
       holder = if isCC0 then null
                else if copyrightMatch != null then builtins.elemAt copyrightMatch 1
-               else "CHANGEME";
+               else "Organization Name";
     in {
       type = licenseType;
     } // lib.optionalAttrs (!isCC0) { inherit year holder; };
@@ -298,7 +298,7 @@ let
           else {
             type = "Apache-2.0";
             year = "2025";
-            holder = "CHANGEME";
+            holder = "Organization Name";
           };
 
       # All pack configurations

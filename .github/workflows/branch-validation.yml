@@ -22,6 +22,7 @@ name: Branch Validation
 on:
   push:
     branches-ignore: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -35,3 +36,5 @@ jobs:
       baseline_repo: NixLine-org/nixline-baseline
       validation_apps: "sync,check,import-policy,fetch-license,list-licenses"
       issue_labels: "validation-failure,automated"
+      enable_codeql: true
+      enable_dependency_scan: true
