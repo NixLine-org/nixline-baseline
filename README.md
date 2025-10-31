@@ -2081,11 +2081,13 @@ The baseline repository implements automated nixpkgs dependency updates with val
 
 ### Update Strategy
 
-NixLine uses a two-tag strategy for managing nixpkgs dependencies:
+NixLine uses a three-stage strategy for managing both baseline changes and nixpkgs dependencies:
 
-**unstable tag** - Latest nixpkgs commit from nixos-unstable channel. Updated weekly via automated workflow. Undergoes comprehensive validation before promotion.
+**unstable branch** - Primary development branch containing latest baseline changes and nixpkgs updates. Unstable tag automatically tracks this branch for immediate testing availability.
 
-**stable tag** - Validated nixpkgs commit that passed all tests. Used by consumer repositories via policy sync workflows. Only updated after successful validation of unstable.
+**main branch** - Production branch with validated changes. Automatically updated via auto-merge PRs when unstable branch validation passes.
+
+**stable tag** - Production-ready version used by consumer repositories. Automatically updated when main branch CI completes successfully.
 
 ### Automated Update Pipeline
 
@@ -2094,54 +2096,59 @@ graph TD
     A[Weekly Schedule<br/>Sunday 2 AM UTC] --> B[Fetch Latest Commit<br/>nixos-unstable]
     B --> C[Update flake.nix<br/>Pin to Commit Hash]
     C --> D[Update flake.lock]
-    D --> E[Commit and Push]
-    E --> F[Tag as unstable]
+    D --> E[Commit to unstable branch]
+    E --> F[Auto-update unstable tag]
 
-    F --> G[Validate Unstable Tag]
-    G --> H[Verify Commit Pinning]
-    H --> I[Run nix flake check]
-    I --> J[Build All Apps]
-    J --> K[Test sync and check]
-    K --> L{All Tests Pass?}
+    F --> G[Branch Validation Workflow]
+    G --> H[Comprehensive Testing]
+    H --> I[Flake check + Apps + Content validation]
+    I --> J{All Tests Pass?}
 
-    L -->|Yes| M[Promote to stable]
-    L -->|No| N[Create Issue<br/>Alert Maintainers]
+    J -->|Yes| K[Create PR to main<br/>Add promote-to-stable label]
+    J -->|No| L[Create Issue<br/>Alert Maintainers]
 
-    M --> O[Move stable Tag]
-    O --> P[Consumer Repos Update<br/>on Next Sync]
+    K --> M[Auto-approve & merge PR]
+    M --> N[Main Branch CI]
+    N --> O[Update .stable-candidate]
+    O --> P[Trigger stable promotion]
+    P --> Q[Update stable tag]
+    Q --> R[Consumer Repos Auto-sync<br/>Updated Policies]
 
     style A fill:#e1f5fe
     style F fill:#fff3cd
-    style L fill:#ffe4b5
-    style M fill:#c8e6c9
-    style N fill:#ffcdd2
+    style J fill:#ffe4b5
+    style M fill:#4CAF50
+    style Q fill:#4CAF50
+    style L fill:#ffcdd2
 ```
 
 ### Workflows
 
-The baseline repository includes two caller workflows that use reusable workflows from the `.github` repository:
+The baseline repository includes workflows that integrate with the complete automation pipeline:
 
-**update-nixpkgs.yml** - Runs weekly on Sunday at 2 AM UTC. Fetches latest nixos-unstable commit hash. Updates flake.nix with pinned commit. Tags as unstable.
+**update-nixpkgs.yml** - Runs weekly on Sunday at 2 AM UTC. Fetches latest nixos-unstable commit hash. Updates flake.nix with pinned commit. Commits to unstable branch (triggering validation workflow).
 
-**validate-unstable.yml** - Triggers on unstable tag creation. Runs comprehensive validation tests. Promotes to stable on success.
+**ci.yml** - Baseline CI that runs on main branch. Validates flake integrity and apps. Updates .stable-candidate file and triggers stable promotion when validation passes.
+
+The complete automation leverages reusable workflows from the `.github` repository for branch validation and promotion orchestration.
 
 ### Manual Updates
 
 For emergency nixpkgs updates outside the weekly schedule:
 
 ```bash
-# Trigger manual update
+# Trigger manual update via GitHub Actions
 gh workflow run update-nixpkgs.yml
 
-# Or update locally
+# Or update locally on unstable branch
+git checkout unstable
 LATEST=$(gh api repos/NixOS/nixpkgs/commits/nixos-unstable --jq '.sha')
 sed -i "s|github:NixOS/nixpkgs/[^\"]*|github:NixOS/nixpkgs/$LATEST|g" flake.nix
 nix flake update
 git add flake.nix flake.lock
 git commit -m "Update nixpkgs to $LATEST"
-git push origin main
-git tag -f unstable
-git push -f origin unstable
+git push origin unstable
+# unstable tag auto-updates, validation workflow triggers automatically
 ```
 
 ### Rollback Procedures
@@ -2149,14 +2156,16 @@ git push -f origin unstable
 If a nixpkgs update causes issues:
 
 ```bash
-# Find previous working commit
+# Find previous working commit on unstable branch
+git checkout unstable
 git log --oneline --grep="Update nixpkgs"
 
-# Reset unstable tag to previous commit
-git tag -f unstable PREVIOUS_COMMIT_HASH
-git push -f origin unstable
+# Reset unstable branch to previous commit
+git reset --hard PREVIOUS_COMMIT_HASH
+git push --force-with-lease origin unstable
+# unstable tag auto-updates, validation workflow triggers
 
-# Or reset stable tag directly
+# For emergency stable rollback (bypasses validation)
 git tag -f stable KNOWN_GOOD_COMMIT
 git push -f origin stable
 ```
@@ -2177,51 +2186,79 @@ Pinning nixpkgs to explicit commit hashes provides better supply chain security:
 
 ## Baseline Promotion Workflow
 
-The baseline repository implements a PR-based promotion system to ensure only validated changes reach the stable tag used by consumer repositories.
+The baseline repository implements a complete automation workflow that eliminates manual steps while maintaining validation and safety. The workflow supports development through an unstable branch with automatic promotion to main and stable tags.
 
-### Promotion Process
+### Complete Automation Process
 
-The baseline uses a two-stage promotion system with manual approval gates:
+The baseline uses a three-stage automated promotion system:
 
-**unstable tag** - Latest baseline changes undergo comprehensive validation before promotion. Triggered when commits are pushed to main branch.
+**unstable branch** - Main development branch where all commits are made. Unstable tag automatically tracks this branch for immediate testing availability.
 
-**stable tag** - Validated baseline version used by consumer repositories. Only updated after manual approval through PR workflow.
+**main branch** - Production branch containing validated changes. Automatically updated via auto-merge PRs when unstable branch validation passes.
 
-### Workflow Architecture
+**stable tag** - Production-ready baseline version used by consumer repositories. Automatically updated when main branch CI completes successfully.
+
+### Complete Automation Architecture
 
 ```mermaid
 graph TD
-    A[Commit to Main] --> B[Auto-tag unstable]
-    B --> C[Comprehensive Validation]
-    C --> D[Build All Apps]
-    D --> E[Test Flake Check]
-    E --> F[Validate Packs]
-    F --> G{Validation Passed?}
+    A[Push to unstable branch] --> B[Update unstable tag<br/>Immediate testing availability]
+    B --> C[Branch Validation Workflow]
+    C --> D[Comprehensive Testing]
+    D --> E[Flake check + Apps + Content validation]
+    E --> F{Validation Passed?}
 
-    G -->|Yes| H[Create Promotion PR]
-    G -->|No| I[Create Issue<br/>Alert Maintainers]
+    F -->|Yes| G[Create PR to main<br/>Add promote-to-stable label]
+    F -->|No| H[Create/Update Issue<br/>Assign to author]
 
-    H --> J[Manual Review]
-    J --> K[Merge PR]
-    K --> L[Update stable Tag]
-    L --> M[Consumer Repos Sync<br/>Updated Policies]
+    G --> I[Auto-approve PR]
+    I --> J[Auto-merge to main]
+    J --> K[Main Branch CI]
+    K --> L[Update .stable-candidate]
+    L --> M[Trigger Stable Promotion]
+    M --> N[Update stable tag]
+    N --> O[Consumer Repos Auto-sync<br/>Updated Policies]
+
+    H --> P[Fix Issues]
+    P --> A
 
     style A fill:#e1f5fe
-    style H fill:#fff3cd
-    style J fill:#ffe4b5
-    style L fill:#c8e6c9
-    style I fill:#ffcdd2
+    style B fill:#fff3cd
+    style G fill:#4CAF50
+    style J fill:#4CAF50
+    style N fill:#4CAF50
+    style O fill:#90EE90
+    style H fill:#ffcdd2
 ```
 
-### Manual Approval Gate
+### Unstable Branch Development
 
-Unlike traditional automated promotion, NixLine requires manual approval for baseline updates because the baseline repository is a critical trust point affecting all consumer repositories.
+**The unstable branch is the primary development branch** where all changes are made. Key characteristics:
 
-**Why manual approval is necessary:**
-- Baseline changes propagate automatically to all consumer repositories
-- Policy errors could affect hundreds of repositories simultaneously
-- Manual review ensures changes are intentional and tested
-- Provides audit trail for organizational governance compliance
+- **Unstable tag tracks unstable branch**: Every commit to unstable automatically updates the unstable tag
+- **Immediate testing**: Teams can test latest changes via `nix run github:ORG/baseline?ref=unstable#sync`
+- **No manual tagging**: Tag updates are fully automated
+- **Continuous validation**: Each push triggers validation and potential promotion
+
+### Automation Benefits
+
+**Zero Manual Promotion Steps:**
+- Development commits to unstable branch trigger complete pipeline
+- Validation, PR creation, approval, and stable promotion are automated
+- No human intervention required for successful changes
+- Issues only created when validation fails
+
+**Fast Feedback Loop:**
+- Unstable tag updates immediately for testing
+- Validation results available within minutes
+- Failed validation creates assigned issues with details
+- Successful validation promotes to stable automatically
+
+**Complete Audit Trail:**
+- All changes flow through PR process with promote-to-stable label
+- .stable-candidate file tracks promotion progression
+- GitHub Actions provide complete workflow history
+- Issues document any validation failures
 
 ### Validation Steps
 

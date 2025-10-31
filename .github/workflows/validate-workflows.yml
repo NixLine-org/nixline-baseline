@@ -1,0 +1,28 @@
+#
+# Validate Workflows (Baseline)
+#
+# Validates all workflow files in the baseline repository using the reusable
+# workflow from the .github repository. Ensures YAML syntax, GitHub Actions
+# syntax, and shell scripts are correct before workflows are used.
+#
+# Triggered by: push, pull_request when workflow files change
+# Purpose: Quality control for baseline repository workflows
+# Output: Prevents broken workflows from being deployed
+#
+
+name: Validate Workflows
+
+on:
+  push:
+    paths:
+      - '.github/workflows/*.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    uses: NixLine-org/.github/.github/workflows/validate-workflows.yml@stable
