@@ -22,7 +22,11 @@ permissions:
 
 jobs:
   update-flake-lock:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/tags/stable') || (github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.modified, 'templates/consumer/flake.nix'))
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/tags/stable') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+       contains(github.event.head_commit.modified, 'templates/consumer/flake.nix'))
     uses: NixLine-org/.github/.github/workflows/nixline-flake-lock-update.yml@stable
     with:
       flake-directory: 'templates/consumer'

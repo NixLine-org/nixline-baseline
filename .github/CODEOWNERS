@@ -9,9 +9,9 @@
 * @NixLine-org/maintainers
 
 # Critical infrastructure files require maintainer approval
-/.github/ @NixLine-org/maintainers @jasonodoom
-/flake.nix @NixLine-org/maintainers @jasonodoom
-/flake.lock @NixLine-org/maintainers @jasonodoom
+/.github/ @NixLine-org/maintainers
+/flake.nix @NixLine-org/maintainers
+/flake.lock @NixLine-org/maintainers
 
 # Policy packs - maintainers team
 /packs/ @NixLine-org/maintainers
