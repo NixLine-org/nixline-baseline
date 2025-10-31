@@ -1,5 +1,9 @@
 # NixLine Baseline
 
+[![Validate Unstable](https://github.com/NixLine-org/nixline-baseline/actions/workflows/validate-unstable.yml/badge.svg)](https://github.com/NixLine-org/nixline-baseline/actions/workflows/validate-unstable.yml)
+[![Update Nixpkgs](https://github.com/NixLine-org/nixline-baseline/actions/workflows/update-nixpkgs.yml/badge.svg)](https://github.com/NixLine-org/nixline-baseline/actions/workflows/update-nixpkgs.yml)
+[![Promote to Stable](https://github.com/NixLine-org/nixline-baseline/actions/workflows/promote-to-stable.yml/badge.svg)](https://github.com/NixLine-org/nixline-baseline/actions/workflows/promote-to-stable.yml)
+
 The **NixLine Baseline** defines the foundational Nix expressions and policies used by all repositories in the [NixLine-org](https://github.com/NixLine-org) organization.
 It provides the shared Nix logic, governance rules and automation logic that all NixLine consumer repositories rely on.
 
@@ -35,6 +39,7 @@ It provides the shared Nix logic, governance rules and automation logic that all
 - [Customization Checklist](#customization-checklist)
 - [Tagging Policy](#tagging-policy)
 - [Supply Chain Security - Nixpkgs Updates](#supply-chain-security---nixpkgs-updates)
+- [Baseline Promotion Workflow](#baseline-promotion-workflow)
 - [NixLine vs Traditional Policy Distribution](#nixline-vs-traditional-policy-distribution)
 - [Importance of the Baseline](#importance-of-the-baseline)
 
