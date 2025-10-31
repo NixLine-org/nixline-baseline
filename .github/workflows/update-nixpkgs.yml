@@ -1,3 +1,15 @@
+#
+# Update Nixpkgs Workflow
+#
+# Part of the supply chain security pipeline. Fetches the latest nixos-unstable
+# commit hash and updates flake.nix to pin to that specific commit instead of
+# using branch references.
+#
+# Triggered by: weekly schedule (Sunday 2 AM UTC), manual trigger
+# Purpose: Supply chain security through explicit commit pinning
+# Output: Tags updated baseline as 'unstable' to trigger validation pipeline
+#
+
 name: Update Nixpkgs
 
 on:

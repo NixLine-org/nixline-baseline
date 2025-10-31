@@ -1,3 +1,15 @@
+#
+# Validate Unstable Workflow
+#
+# Critical validation step in the PR-based promotion pipeline. Runs comprehensive
+# tests on the unstable tag before allowing promotion to stable. Creates promotion
+# PR with manual approval gate on successful validation.
+#
+# Triggered by: unstable tag updates (from nixpkgs updates or manual tagging)
+# Purpose: Comprehensive validation before promotion to stable
+# Output: Creates promotion PR on success, issue on failure
+#
+
 name: Validate Unstable Nixpkgs
 
 on:

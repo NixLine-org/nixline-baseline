@@ -1,3 +1,14 @@
+#
+# Promote to Stable Workflow
+#
+# Final step in the PR-based promotion process. Updates the stable tag when
+# promotion PRs with the 'promote-to-stable' label are merged to main.
+#
+# Triggered by: PR merge events with 'promote-to-stable' label
+# Purpose: Move stable tag to validated commit, clean up promotion artifacts
+# Requirements: Reads commit hash from .stable-candidate marker file
+#
+
 name: Promote to Stable
 
 on:
