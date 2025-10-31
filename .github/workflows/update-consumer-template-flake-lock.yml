@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - 'templates/consumer/flake.nix'
+  push:
+    tags:
+      - stable
   workflow_dispatch:
 
 permissions:
@@ -13,10 +16,10 @@ permissions:
   pull-requests: write
 
 jobs:
-  # Wait for CI validation to pass before updating flake.lock
+  # Wait for CI validation to pass before updating flake.lock (only for push to main)
   wait-for-ci:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Wait for CI to complete
         uses: lewagon/wait-on-check-action@v1.3.4
@@ -28,7 +31,7 @@ jobs:
 
   update-flake-lock:
     needs: [wait-for-ci]
-    if: always() && (needs.wait-for-ci.result == 'success' || github.event_name == 'workflow_dispatch')
+    if: always() && (needs.wait-for-ci.result == 'success' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')))
     uses: NixLine-org/.github/.github/workflows/nixline-flake-lock-update.yml@stable
     with:
       flake-directory: 'templates/consumer'
