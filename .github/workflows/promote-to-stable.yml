@@ -1,13 +1,12 @@
 #
 # Promote to Stable Workflow
 #
-# Updates the stable tag to promote commits from main. Supports two modes:
-# 1. PR-based: Triggered when promotion PRs with 'promote-to-stable' label are merged
-# 2. Manual: Triggered via workflow_dispatch to promote any commit directly
+# Final step in the PR-based promotion process. Updates the stable tag when
+# promotion PRs with the 'promote-to-stable' label are merged to main.
 #
-# Triggered by: PR merge events with 'promote-to-stable' label, workflow_dispatch
-# Purpose: Move stable tag to specified commit, clean up promotion artifacts (PR mode only)
-# Requirements: For PR mode, reads commit hash from .stable-candidate marker file
+# Triggered by: PR merge events with 'promote-to-stable' label
+# Purpose: Move stable tag to validated commit, clean up promotion artifacts
+# Requirements: Reads commit hash from .stable-candidate marker file
 #
 
 name: Promote to Stable
@@ -17,12 +16,6 @@ on:
     types: [closed]
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      commit_hash:
-        description: 'Commit hash to promote (defaults to HEAD of main)'
-        required: false
-        type: string
 
 permissions:
   contents: write
@@ -30,7 +23,7 @@ permissions:
 
 jobs:
   promote:
-    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'promote-to-stable'))
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'promote-to-stable')
     runs-on: ubuntu-latest
 
     steps:
@@ -39,36 +32,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Determine promotion commit
+      - name: Read stable candidate
         id: candidate
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            # Manual promotion - use provided commit or HEAD
-            if [ -n "${{ github.event.inputs.commit_hash }}" ]; then
-              CANDIDATE_COMMIT="${{ github.event.inputs.commit_hash }}"
-              echo "Using manual commit: $CANDIDATE_COMMIT"
-            else
-              CANDIDATE_COMMIT=$(git rev-parse HEAD)
-              echo "Using HEAD of main: $CANDIDATE_COMMIT"
-            fi
-            echo "promotion_type=manual" >> $GITHUB_OUTPUT
+          if [ -f .stable-candidate ]; then
+            CANDIDATE_COMMIT=$(cat .stable-candidate)
+            echo "commit_hash=$CANDIDATE_COMMIT" >> $GITHUB_OUTPUT
+            SHORT_HASH="${CANDIDATE_COMMIT:0:12}"
+            echo "short_hash=$SHORT_HASH" >> $GITHUB_OUTPUT
+            echo "found=true" >> $GITHUB_OUTPUT
           else
-            # PR-based promotion - read from .stable-candidate
-            if [ -f .stable-candidate ]; then
-              CANDIDATE_COMMIT=$(cat .stable-candidate)
-              echo "Using PR promotion commit: $CANDIDATE_COMMIT"
-              echo "promotion_type=pr" >> $GITHUB_OUTPUT
-            else
-              echo "found=false" >> $GITHUB_OUTPUT
-              echo "Warning: .stable-candidate file not found"
-              exit 1
-            fi
+            echo "found=false" >> $GITHUB_OUTPUT
+            echo "Warning: .stable-candidate file not found"
           fi
-
-          echo "commit_hash=$CANDIDATE_COMMIT" >> $GITHUB_OUTPUT
-          SHORT_HASH="${CANDIDATE_COMMIT:0:12}"
-          echo "short_hash=$SHORT_HASH" >> $GITHUB_OUTPUT
-          echo "found=true" >> $GITHUB_OUTPUT
 
       - name: Update stable tag
         if: steps.candidate.outputs.found == 'true'
@@ -90,7 +66,7 @@ jobs:
           echo "Updated stable tag to $COMMIT"
 
       - name: Cleanup marker file
-        if: steps.candidate.outputs.found == 'true' && steps.candidate.outputs.promotion_type == 'pr'
+        if: steps.candidate.outputs.found == 'true'
         uses: actions/github-script@v7
         env:
           SHORT_HASH: ${{ steps.candidate.outputs.short_hash }}
@@ -139,13 +115,6 @@ jobs:
         run: |
           echo "## Promotion Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ "${{ steps.candidate.outputs.promotion_type }}" == "manual" ]; then
-            echo "**Type:** Manual promotion" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "**Type:** PR-based promotion" >> $GITHUB_STEP_SUMMARY
-          fi
-
           echo "**Stable tag updated to:** \`${{ steps.candidate.outputs.commit_hash }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Consumer repositories will receive this update on their next policy sync." >> $GITHUB_STEP_SUMMARY
