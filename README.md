@@ -2070,7 +2070,11 @@ Before creating a promotion PR, the system validates:
 
 ### Consumer Repository Impact
 
-Consumer repositories detect baseline updates through their policy sync workflows. When the stable tag is updated, consumer repos will show "out of sync" status on next CI run. Policy sync can be triggered manually or waits for the scheduled weekly sync.
+Consumer repositories detect baseline updates through their policy sync workflows. When the stable tag is updated:
+
+1. **Template-based repositories**: The consumer template flake.lock is automatically updated to reference the new stable baseline version
+2. **Direct consumption repositories**: Policy sync workflows detect changes on next CI run and show "out of sync" status
+3. **Policy synchronization**: Can be triggered manually via Actions tab or waits for scheduled weekly sync
 
 This staged promotion system ensures that baseline changes are thoroughly validated and intentionally approved before affecting consumer repositories across the organization.
 
