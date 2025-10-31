@@ -21,6 +21,14 @@ on:
         description: 'Commit hash to promote (defaults to HEAD of main)'
         required: false
         type: string
+      promotion_target:
+        description: 'Promotion target'
+        required: false
+        type: choice
+        options:
+          - stable
+          - unstable
+        default: stable
 
 permissions:
   contents: write
@@ -42,3 +50,4 @@ jobs:
       promotion_mode: manual
       commit_hash: ${{ github.event.inputs.commit_hash }}
       stable_tag: stable
+      promotion_target: ${{ github.event.inputs.promotion_target }}

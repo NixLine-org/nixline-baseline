@@ -6,18 +6,39 @@ This baseline repository is a **critical trust point** that affects all consumer
 
 ## Required Security Measures
 
-### 1. Branch Protection (MANDATORY)
+### 1. Branch Protection (RECOMMENDED)
 
-**Main branch MUST have:**
+**CI-First Security Model (Recommended):**
+```yaml
+# Primary protection through comprehensive CI validation
+- Require status checks to pass (MANDATORY)
+- Require branches to be up to date (MANDATORY)
+
+# Allow automation bypass for validated workflows
+- Bypass pull request requirements for:
+  - github-actions[bot] (automated policy sync, dependency updates)
+  - dependabot[bot] (security updates)
+
+# Require PRs only for:
+  - Manual changes by humans
+  - Failed CI validation that needs review
+  - Complex changes requiring discussion
+```
+
+**Legacy Model (Still Supported):**
 ```yaml
 - Require pull request reviews (2+ reviewers for baseline changes)
 - Dismiss stale PR approvals when new commits are pushed
 - Require review from CODEOWNERS
-- Require status checks to pass
-- Require branches to be up to date
 - Include administrators in restrictions
-- Restrict who can push to matching branches
 ```
+
+**Why CI-First is Better:**
+- [+] **Faster security updates** - no human bottleneck for validated changes
+- [+] **Better automation** - dependency updates, policy sync work seamlessly
+- [+] **Focus human review** on complex changes that actually need it
+- [+] **Stronger validation** - comprehensive CI catches issues better than manual review
+- [+] **Audit trail preserved** - all changes logged with context and validation results
 
 ### 2. Access Control
 

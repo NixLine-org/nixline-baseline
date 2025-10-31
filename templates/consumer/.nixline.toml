@@ -6,22 +6,79 @@
 name = "MyOrg"
 email = "opensource@myorg.com"
 
+# Language detection and pack selection
+[languages]
+# Primary language for the project (used for defaults)
+primary = "auto"  # auto-detect or specify: "python", "javascript", "rust", "go", etc.
+
+# Additional languages used in the project
+supported = []  # ["python", "javascript", "rust"] - will auto-detect if empty
+
+# Enable automatic language detection from project files
+auto_detect = true
+
+# Language-specific configuration
+[languages.python]
+# Python tooling preferences
+formatter = "black"      # "black" or "ruff"
+linter = "flake8"        # "flake8" or "ruff" or "pylint"
+type_checker = "mypy"    # "mypy" or "pyright"
+
+[languages.javascript]
+# JavaScript/TypeScript tooling preferences
+formatter = "prettier"   # "prettier" or "biome"
+linter = "eslint"        # "eslint" or "biome"
+package_manager = "npm"  # "npm", "yarn", "pnpm"
+
+[languages.rust]
+# Rust tooling preferences
+formatter = "rustfmt"    # "rustfmt" (standard)
+linter = "clippy"        # "clippy" (standard)
+edition = "2021"         # Rust edition: "2018", "2021"
+
+[languages.go]
+# Go tooling preferences
+formatter = "gofmt"      # "gofmt" or "goimports"
+linter = "golangci-lint" # "golangci-lint" (comprehensive)
+
 # External pack sources - add these as flake inputs in flake.nix
 # Example flake inputs:
 #   myorg-security-packs.url = "github:myorg/nixline-security-packs?ref=v1.2.0";
 #   myorg-language-packs.url = "github:myorg/nixline-language-packs?ref=main";
 
 [packs]
-# Enable specific packs (if not specified, all default packs are enabled)
-enabled = [
+# Base packs - always enabled regardless of language
+base = [
   "editorconfig",
   "license",
   "security",
   "codeowners",
   "dependabot",
   "precommit"
-  # "myorg-security-packs/custom-security",    # External pack (requires flake input)
-  # "myorg-language-packs/golang-standards"    # External pack (requires flake input)
+]
+
+# Language packs - automatically included based on [languages] detection
+# You can explicitly enable/disable specific language packs here
+# Format: "language/pack-name" or just "pack-name" for universal packs
+enabled = [
+  # Explicitly enabled packs (in addition to auto-detected ones)
+  # "python/bandit",           # Security linting for Python
+  # "javascript/jest",         # Testing framework config
+  # "rust/clippy",             # Rust linting configuration
+  # "rust/rustfmt",            # Rust formatting configuration
+  # "go/gofmt",                # Go formatting and basic linting
+  # "go/golangci-lint",        # Comprehensive Go linting
+]
+
+# Explicitly disabled packs (overrides auto-detection)
+disabled = [
+  # "python/flake8",           # Disable if using ruff instead
+]
+
+# External packs
+external = [
+  # "myorg-security-packs/custom-security",    # Requires flake input
+  # "myorg-language-packs/golang-standards"    # Requires flake input
 ]
 
 # Configure individual packs
@@ -59,3 +116,44 @@ indent_size = 2  # Override default 4-space indentation
 
 [packs.editorconfig.languages.javascript]
 max_line_length = 120  # Override default 80
+
+# Language-specific pack configuration
+[packs."python/flake8"]
+max_line_length = 88
+ignore = ["E203", "W503"]
+
+[packs."javascript/eslint"]
+extends = ["@myorg/eslint-config"]
+rules = {
+  "no-console" = "warn"
+}
+
+[packs."python/mypy"]
+strict = true
+ignore_missing_imports = true
+
+# Rust pack configuration
+[packs."rust/clippy"]
+# Clippy linting configuration
+msrv = "1.70"              # Minimum supported Rust version
+deny = ["clippy::all"]     # Deny all clippy warnings
+warn = ["clippy::pedantic"] # Warn on pedantic lints
+
+[packs."rust/rustfmt"]
+# Rust formatting configuration
+max_width = 100
+edition = "2021"
+hard_tabs = false
+tab_spaces = 4
+
+# Go pack configuration
+[packs."go/gofmt"]
+# Go formatting configuration
+use_goimports = true       # Use goimports instead of gofmt
+tab_width = 4
+
+[packs."go/golangci-lint"]
+# golangci-lint configuration
+timeout = "5m"
+issues_exit_code = 1
+tests = true               # Run linters on test files

@@ -9,9 +9,9 @@
 The **NixLine Baseline** defines the foundational Nix expressions and policies used by all repositories in the [NixLine-org](https://github.com/NixLine-org) organization.
 It provides the shared Nix logic, governance rules and automation logic that all NixLine consumer repositories rely on.
 
-## ⚠️ Security Warning
+## Security & Configuration
 
-**This baseline repository is a critical trust point.** Changes here automatically propagate to all consumer repositories. See [SECURITY-BASELINE.md](SECURITY-BASELINE.md) for mandatory security requirements.
+This baseline provides organization-wide policy management with comprehensive validation. See [SECURITY-BASELINE.md](SECURITY-BASELINE.md) for security best practices and recommended branch protection settings.
 
 ## Table of Contents
 
@@ -22,6 +22,7 @@ It provides the shared Nix logic, governance rules and automation logic that all
 - [Consumption Patterns](#consumption-patterns)
 - [Purpose](#purpose)
 - [Architecture](#architecture)
+- [Workflow Dependencies](#workflow-dependencies)
 - [Usage](#usage)
   - [Baseline Apps](#baseline-apps)
   - [Quick Start for Consumer Repos](#quick-start-for-consumer-repos)
@@ -49,19 +50,17 @@ It provides the shared Nix logic, governance rules and automation logic that all
 
 ## Security Requirements
 
-### Critical: Baseline Repository Protection
+### Baseline Repository Best Practices
 
-Before using NixLine in production:
+For production usage:
 
-1. **Enable branch protection** on main branch (2+ reviewers required)
-2. **Restrict write access** to security/platform team only
-3. **Enable CODEOWNERS** for all critical paths
-4. **Audit flake inputs** before updating flake.lock
-5. **Never commit secrets** - use parameterization for all org-specific values
+1. **Enable comprehensive CI validation** - primary security control
+2. **Configure branch protection** with required status checks
+3. **Use automation-friendly policies** - allow validated workflows to bypass PRs
+4. **Enable CODEOWNERS** for human changes requiring review
+5. **Use configuration-driven customization** - avoid hard-coding org values
 
-**Why this matters:** The baseline repo is a single point of trust. A compromise here affects ALL consumer repositories automatically through policy sync workflows.
-
-See [SECURITY-BASELINE.md](SECURITY-BASELINE.md) for complete security guidelines.
+See [SECURITY-BASELINE.md](SECURITY-BASELINE.md) for detailed security guidelines and CI-first best practices.
 
 ---
 
@@ -400,6 +399,106 @@ graph TD
    - Reference baseline as a flake input
    - Run `nix run .#sync` to materialize persistent policies
    - Run utility apps for pack creation and policy import
+
+---
+
+## Workflow Dependencies
+
+The NixLine architecture follows a clean dependency pattern where baseline repositories exclusively use reusable workflows from the `.github` repository, rather than calling GitHub Actions directly.
+
+### Proper Dependency Architecture
+
+```mermaid
+graph TD
+    subgraph "NixLine Organization"
+        subgraph ".github Repository"
+            A[Reusable Workflows]
+            A1[nixline-ci.yml]
+            A2[nixline-promote-to-stable.yml]
+            A3[nixline-branch-validation.yml]
+            A4[nixline-policy-sync.yml]
+            A --> A1
+            A --> A2
+            A --> A3
+            A --> A4
+        end
+
+        subgraph "Baseline Repository"
+            B[Caller Workflows]
+            B1[ci.yml]
+            B2[promote-to-stable.yml]
+            B3[update-nixpkgs.yml]
+            B --> B1
+            B --> B2
+            B --> B3
+        end
+
+        subgraph "GitHub Actions Marketplace"
+            C[Actions]
+            C1[actions/checkout@v4]
+            C2[cachix/install-nix-action@v31]
+            C3[github-script@v7]
+            C --> C1
+            C --> C2
+            C --> C3
+        end
+    end
+
+    B1 -.->|uses| A1
+    B2 -.->|uses| A2
+    B3 -.->|uses| A2
+
+    A1 -.->|uses| C1
+    A1 -.->|uses| C2
+    A2 -.->|uses| C1
+    A2 -.->|uses| C2
+    A3 -.->|uses| C1
+    A3 -.->|uses| C3
+
+    style A fill:#4CAF50,color:#000000,stroke:#333,stroke-width:2px
+    style B fill:#2196F3,color:#ffffff,stroke:#333,stroke-width:2px
+    style C fill:#FF9800,color:#000000,stroke:#333,stroke-width:2px
+```
+
+### Why This Pattern Matters
+
+**Centralized Maintenance:**
+- All GitHub Action versions managed in one place (`.github` repo)
+- Dependency updates only need to happen once
+- Security patches propagate automatically to all repositories
+
+**Clean Separation:**
+- Baseline repositories only know about `.github` workflows
+- No direct coupling to external GitHub Actions
+- Easier to audit and manage dependencies
+
+**Consistent Patterns:**
+- Same approach across all NixLine repositories
+- Predictable workflow structure
+- Better developer experience
+
+### Implementation Status
+
+Current baseline workflows should only call reusable workflows:
+
+[+] **Correct Pattern:**
+```yaml
+jobs:
+  ci:
+    uses: NixLine-org/.github/.github/workflows/nixline-ci.yml@stable
+```
+
+[-] **Avoid Direct Action Calls:**
+```yaml
+steps:
+  - uses: actions/checkout@v4
+  - uses: cachix/install-nix-action@v31
+```
+
+Organizations forking NixLine should maintain this pattern by:
+1. Forking both `.github` and `nixline-baseline` repositories
+2. Updating workflow references to point to their organization
+3. Never calling actions directly from baseline workflows
 
 ---
 
