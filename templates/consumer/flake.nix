@@ -2,7 +2,7 @@
   description = "NixLine consumer repository with TOML configuration and external pack support";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/08dacfca559e1d7da38f3cf05f1f45ee9bfd213c";
     nixline-baseline = {
       url = "github:NixLine-org/nixline-baseline?ref=stable";
       inputs.nixpkgs.follows = "nixpkgs";
