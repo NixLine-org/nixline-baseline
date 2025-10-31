@@ -1,0 +1,75 @@
+name: Promote to Stable
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'promote-to-stable')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Read stable candidate
+        id: candidate
+        run: |
+          if [ -f .stable-candidate ]; then
+            CANDIDATE_COMMIT=$(cat .stable-candidate)
+            echo "commit_hash=$CANDIDATE_COMMIT" >> $GITHUB_OUTPUT
+            SHORT_HASH="${CANDIDATE_COMMIT:0:12}"
+            echo "short_hash=$SHORT_HASH" >> $GITHUB_OUTPUT
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+            echo "Warning: .stable-candidate file not found"
+          fi
+
+      - name: Update stable tag
+        if: steps.candidate.outputs.found == 'true'
+        run: |
+          COMMIT=${{ steps.candidate.outputs.commit_hash }}
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Delete existing stable tag
+          git tag -d stable || true
+          git push origin :refs/tags/stable || true
+
+          # Create new stable tag at validated commit
+          git tag -a stable -m "Promote to stable: $COMMIT" $COMMIT
+          git push origin stable
+
+          echo "Updated stable tag to $COMMIT"
+
+      - name: Cleanup marker file
+        if: steps.candidate.outputs.found == 'true'
+        run: |
+          git rm .stable-candidate
+          git commit -m "Remove stable candidate marker after promotion"
+          git push origin main
+
+      - name: Cleanup promotion branch
+        if: steps.candidate.outputs.found == 'true'
+        run: |
+          BRANCH_NAME="promote-${{ steps.candidate.outputs.short_hash }}"
+          git push origin --delete $BRANCH_NAME || echo "Branch already deleted"
+
+      - name: Summary
+        if: steps.candidate.outputs.found == 'true'
+        run: |
+          echo "## Promotion Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Stable tag updated to:** \`${{ steps.candidate.outputs.commit_hash }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Consumer repositories will receive this update on their next policy sync." >> $GITHUB_STEP_SUMMARY
