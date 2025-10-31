@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1761877074,
-        "narHash": "sha256-8T9wzivO1t1HaFEd811mb6fx1pwFKIYmJkM+LGhXeTI=",
+        "lastModified": 1761883546,
+        "narHash": "sha256-4WbWPa+ZIhaaig6pE9M1FKnoo9nHlOxEsuCkVt5PMYc=",
         "owner": "NixLine-org",
         "repo": "nixline-baseline",
-        "rev": "b141b4b38fff9e9edc1de269098a284db13fb344",
+        "rev": "1b15d6172a964b3fd7f085d17dc1b8bd6be2d08e",
         "type": "github"
       },
       "original": {
@@ -32,8 +32,8 @@
       },
       "original": {
         "owner": "NixOS",
-        "ref": "nixos-unstable",
         "repo": "nixpkgs",
+        "rev": "08dacfca559e1d7da38f3cf05f1f45ee9bfd213c",
         "type": "github"
       }
     },
