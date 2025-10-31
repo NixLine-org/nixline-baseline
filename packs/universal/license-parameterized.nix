@@ -11,7 +11,7 @@
 # [packs.license]
 # type = "Apache-2.0"  # or "MIT", "GPL-3.0", etc.
 # holder = "MyCompany, Inc."
-# year = 2025  # Copyright year (defaults to current year if not specified)
+# year = 2025  # Copyright year (update annually, defaults to 2025)
 # fetch_from_source = false  # Set to true to fetch latest license text from SPDX
 #
 # SPDX LICENSE FETCHING:
@@ -34,21 +34,10 @@ let
   # Organization configuration for fallback
   orgName = config.organization.name or "NixLine-org";
 
-  # Calculate current year from Unix timestamp
-  currentYear =
-    let
-      # builtins.currentTime returns Unix timestamp in seconds
-      timestamp = builtins.currentTime;
-      # Convert to approximate year (timestamp / seconds per year + 1970)
-      # 31557600 = average seconds per year accounting for leap years
-      year = 1970 + (timestamp / 31557600);
-    in
-      toString year;
-
   # License configuration
   licenseType = packConfig.type or "Apache-2.0";
   copyrightHolder = packConfig.holder or "${orgName} Contributors";
-  copyrightYear = toString (packConfig.year or currentYear);
+  copyrightYear = toString (packConfig.year or 2025);
   fetchFromSource = packConfig.fetch_from_source or false;
   customLicenseFile = packConfig.custom_license_file or null;
 
