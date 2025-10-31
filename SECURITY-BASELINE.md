@@ -175,14 +175,18 @@ checks = [
 
 **Regular Security Audits:**
 ```bash
-# Monthly: Check for hardcoded secrets
-./security-audit.sh
-
 # Quarterly: Full dependency audit
 nix flake check --all-systems
 
 # Annually: External security review
 ```
+
+**GitHub Security Features:**
+Organizations should enable and configure GitHub's built-in security features:
+- **Secret scanning** - Automatically detects committed secrets
+- **Dependabot** - Vulnerability scanning and automated updates
+- **CodeQL** - Static analysis for security vulnerabilities
+- **Security advisories** - Notifications for known vulnerabilities
 
 **Automated Security Tests:**
 ```yaml
