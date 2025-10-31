@@ -1,3 +1,13 @@
+#
+# CI Validation Workflow
+#
+# Validates the baseline repository on every push and pull request.
+# Ensures flake integrity, tests core apps, and validates baseline functionality.
+#
+# Triggered by: push, pull_request
+# Purpose: Basic validation and testing of baseline repository changes
+#
+
 name: CI
 
 on: [push, pull_request]

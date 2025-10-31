@@ -1,3 +1,15 @@
+#
+# Update Consumer Template Flake Lock Workflow
+#
+# Automatically updates the flake.lock file in templates/consumer/ when:
+# 1. The template's flake.nix file changes
+# 2. The stable tag is updated (baseline promotion)
+#
+# Triggered by: changes to template flake.nix, stable tag updates, manual trigger
+# Purpose: Keep consumer template synchronized with latest baseline stable version
+# Output: Creates PR with updated flake.lock for template-based consumption pattern
+#
+
 name: Update Consumer Template Flake Lock
 
 on:
