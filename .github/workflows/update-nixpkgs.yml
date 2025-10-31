@@ -1,0 +1,17 @@
+name: Update Nixpkgs
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly on Sunday at 2 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    uses: NixLine-org/.github/.github/workflows/nixline-nixpkgs-update.yml@stable
+    with:
+      unstable_tag: unstable
+      target_branch: main
+      nixpkgs_channel: nixos-unstable

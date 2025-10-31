@@ -34,6 +34,7 @@ It provides the shared Nix logic, governance rules and automation logic that all
 - [Recommended Implementation](#recommended-implementation)
 - [Customization Checklist](#customization-checklist)
 - [Tagging Policy](#tagging-policy)
+- [Supply Chain Security - Nixpkgs Updates](#supply-chain-security---nixpkgs-updates)
 - [NixLine vs Traditional Policy Distribution](#nixline-vs-traditional-policy-distribution)
 - [Importance of the Baseline](#importance-of-the-baseline)
 
@@ -1901,6 +1902,106 @@ git push origin stable
 ```
 
 Always verify CI passes before re-tagging `stable`.
+
+---
+
+## Supply Chain Security - Nixpkgs Updates
+
+The baseline repository implements automated nixpkgs dependency updates with validation testing before promotion to stable. This follows the supply chain security best practices by pinning nixpkgs to specific commit hashes instead of branch references.
+
+### Update Strategy
+
+NixLine uses a two-tag strategy for managing nixpkgs dependencies:
+
+**unstable tag** - Latest nixpkgs commit from nixos-unstable channel. Updated weekly via automated workflow. Undergoes comprehensive validation before promotion.
+
+**stable tag** - Validated nixpkgs commit that passed all tests. Used by consumer repositories via policy sync workflows. Only updated after successful validation of unstable.
+
+### Automated Update Pipeline
+
+```mermaid
+graph TD
+    A[Weekly Schedule<br/>Sunday 2 AM UTC] --> B[Fetch Latest Commit<br/>nixos-unstable]
+    B --> C[Update flake.nix<br/>Pin to Commit Hash]
+    C --> D[Update flake.lock]
+    D --> E[Commit and Push]
+    E --> F[Tag as unstable]
+
+    F --> G[Validate Unstable Tag]
+    G --> H[Verify Commit Pinning]
+    H --> I[Run nix flake check]
+    I --> J[Build All Apps]
+    J --> K[Test sync and check]
+    K --> L{All Tests Pass?}
+
+    L -->|Yes| M[Promote to stable]
+    L -->|No| N[Create Issue<br/>Alert Maintainers]
+
+    M --> O[Move stable Tag]
+    O --> P[Consumer Repos Update<br/>on Next Sync]
+
+    style A fill:#e1f5fe
+    style F fill:#fff3cd
+    style L fill:#ffe4b5
+    style M fill:#c8e6c9
+    style N fill:#ffcdd2
+```
+
+### Workflows
+
+The baseline repository includes two caller workflows that use reusable workflows from the `.github` repository:
+
+**update-nixpkgs.yml** - Runs weekly on Sunday at 2 AM UTC. Fetches latest nixos-unstable commit hash. Updates flake.nix with pinned commit. Tags as unstable.
+
+**validate-unstable.yml** - Triggers on unstable tag creation. Runs comprehensive validation tests. Promotes to stable on success.
+
+### Manual Updates
+
+For emergency nixpkgs updates outside the weekly schedule:
+
+```bash
+# Trigger manual update
+gh workflow run update-nixpkgs.yml
+
+# Or update locally
+LATEST=$(gh api repos/NixOS/nixpkgs/commits/nixos-unstable --jq '.sha')
+sed -i "s|github:NixOS/nixpkgs/[^\"]*|github:NixOS/nixpkgs/$LATEST|g" flake.nix
+nix flake update
+git add flake.nix flake.lock
+git commit -m "Update nixpkgs to $LATEST"
+git push origin main
+git tag -f unstable
+git push -f origin unstable
+```
+
+### Rollback Procedures
+
+If a nixpkgs update causes issues:
+
+```bash
+# Find previous working commit
+git log --oneline --grep="Update nixpkgs"
+
+# Reset unstable tag to previous commit
+git tag -f unstable PREVIOUS_COMMIT_HASH
+git push -f origin unstable
+
+# Or reset stable tag directly
+git tag -f stable KNOWN_GOOD_COMMIT
+git push -f origin stable
+```
+
+### Security Rationale
+
+Pinning nixpkgs to explicit commit hashes provides better supply chain security:
+
+**Auditability** - Commit hashes in flake.nix are immediately visible without checking flake.lock
+
+**Intentional updates** - Changes require explicit commit modification, preventing accidental updates via `nix flake update`
+
+**Compliance** - Aligns with SECURITY-BASELINE.md recommendations for critical trust points
+
+**Traceability** - Clear git history of when and why nixpkgs was updated
 
 ---
 
