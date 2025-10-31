@@ -1,0 +1,24 @@
+# NixLine Baseline Repository Code Owners
+#
+# This file defines who is responsible for code review and approval
+# for different parts of the NixLine baseline repository.
+#
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global ownership - maintainers team reviews all changes
+* @NixLine-org/maintainers
+
+# Critical infrastructure files require maintainer approval
+/.github/ @NixLine-org/maintainers @jasonodoom
+/flake.nix @NixLine-org/maintainers @jasonodoom
+/flake.lock @NixLine-org/maintainers @jasonodoom
+
+# Policy packs - maintainers team
+/packs/ @NixLine-org/maintainers
+
+# Core applications - maintainers team
+/apps/ @NixLine-org/maintainers
+
+# Documentation - maintainers team
+/*.md @NixLine-org/maintainers
+/docs/ @NixLine-org/maintainers

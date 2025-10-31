@@ -6,6 +6,43 @@ Thanks for contributing to NixLine! This is the baseline repository that defines
 
 You'll need Nix installed. If you don't have it, we recommend the [Determinate Nix Installer](https://github.com/DeterminateSystems/nix-installer) for the best experience.
 
+## Development Workflow
+
+This repository uses an automated branching workflow:
+
+### Branch Structure
+
+- **unstable**: Main development branch - all changes should be pushed here
+- **main**: Stable integration branch - receives validated changes from unstable
+- **stable tag**: Production releases - tagged automatically from main
+
+### Making Changes
+
+1. **Work on the unstable branch**: All development happens on `unstable`
+   ```bash
+   git checkout unstable
+   git pull origin unstable
+   # Make your changes
+   git add .
+   git commit -m "descriptive commit message"
+   git push origin unstable
+   ```
+
+2. **Automatic validation**: Pushing to `unstable` triggers comprehensive validation:
+   - Flake checks across all systems
+   - App verification (sync, check, import-policy, fetch-license, list-licenses)
+   - Content validation (no TODO/CHANGEME placeholders)
+
+3. **Automatic promotion**: When validation passes:
+   - A PR is automatically created to merge `unstable` → `main`
+   - The PR is auto-approved and merged
+   - The `unstable` tag is updated to track the latest `unstable` branch commit
+
+4. **Stable promotion**: When changes reach `main`:
+   - A stable candidate marker (`.stable-candidate`) is created
+   - The stable promotion workflow is triggered automatically
+   - The `stable` tag is updated for consumer repositories
+
 ## Quick Start
 
 Clone the repo and test that everything works:
@@ -13,6 +50,7 @@ Clone the repo and test that everything works:
 ```bash
 git clone https://github.com/NixLine-org/nixline-baseline.git
 cd nixline-baseline
+git checkout unstable
 nix flake check
 nix run .#sync -- --dry-run
 ```

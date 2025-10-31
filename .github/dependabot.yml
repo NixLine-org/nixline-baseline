@@ -1,0 +1,26 @@
+#
+# Dependabot Configuration (Baseline)
+#
+# Automatically updates GitHub Actions used in workflows to keep them
+# current with security patches and new features. This helps maintain
+# the baseline repository's CI/CD infrastructure.
+#
+# Updates scheduled weekly to balance staying current with stability.
+# All updates create PRs for review before merging.
+#
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
