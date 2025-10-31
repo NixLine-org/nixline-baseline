@@ -126,7 +126,7 @@ let
         # Handle both .eslintrc.json and .eslintrc.js formats
         parsed = if lib.hasPrefix "{" content
                  then parsing-utils.parseJsonFile content
-                 else {}; # TODO: Add JS parsing support
+                 else {}; # Note: JS format parsing not yet implemented
       in {
         extends = parsed.extends or ["eslint:recommended"];
         env = parsed.env or { browser = true; node = true; };

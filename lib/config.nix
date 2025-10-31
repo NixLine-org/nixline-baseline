@@ -135,7 +135,7 @@ let
         let
           parsed = parseOverride override;
           # Simple implementation for common cases
-          # TODO: Implement full path-based override system
+          # Note: Full path-based override system could be added in future
         in
           if lib.length parsed.keyPath == 2 && lib.head parsed.keyPath == "org"
           then
