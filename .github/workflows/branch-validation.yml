@@ -1,0 +1,37 @@
+#
+# Branch Validation Workflow
+#
+# Validates feature branches and manages promotion to main through automated PRs.
+# Uses the reusable branch validation workflow from the .github repository to
+# maintain consistency across the organization.
+#
+# Features:
+# - Always updates unstable tag (immediate testing availability)
+# - Runs comprehensive validation (flake check, apps, content validation)
+# - Creates/updates PRs automatically when validation passes
+# - Creates/updates issues when validation fails (assigned to branch author)
+# - Manages issue lifecycle (auto-close when tests pass)
+#
+# Triggered by: push to any branch except main
+# Purpose: Automated validation and promotion pipeline for development branches
+# Safety: All changes validated before reaching main branch
+#
+
+name: Branch Validation
+
+on:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  validate:
+    uses: NixLine-org/.github/.github/workflows/nixline-branch-validation.yml@stable
+    with:
+      baseline_repo: NixLine-org/nixline-baseline
+      validation_apps: "sync,check,import-policy,fetch-license,list-licenses"
+      issue_labels: "validation-failure,automated"
