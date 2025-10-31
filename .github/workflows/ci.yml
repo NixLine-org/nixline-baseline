@@ -11,9 +11,11 @@
 #
 # Consumer repos use nixline-ci.yml to materialize and validate files FROM baseline.
 # Baseline repos use this workflow to validate the source itself.
+# On successful validation of main branch pushes, automatically updates
+# .stable-candidate and triggers stable tag promotion.
 #
 # Triggered by: push, pull_request
-# Purpose: Validate baseline repository source integrity
+# Purpose: Validate baseline repository source integrity and manage stable promotion
 #
 
 name: Baseline CI
@@ -21,7 +23,8 @@ name: Baseline CI
 on: [push, pull_request]
 
 permissions:
-  contents: read
+  contents: write
+  actions: write
 
 jobs:
   validate-baseline:
@@ -62,3 +65,44 @@ jobs:
               nix eval --file "$pack" --json > /dev/null
             fi
           done
+
+  promote-to-stable:
+    runs-on: ubuntu-latest
+    needs: validate-baseline
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Update stable candidate
+        run: |
+          # Update .stable-candidate with current commit hash
+          echo "${{ github.sha }}" > .stable-candidate
+
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Commit the update
+          git add .stable-candidate
+          git commit -m "Mark ${{ github.sha }} as stable candidate" || exit 0
+          git push origin main
+
+      - name: Trigger stable promotion
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'promote-to-stable.yml',
+              ref: 'main',
+              inputs: {
+                commit_hash: '${{ github.sha }}',
+                promotion_target: 'stable'
+              }
+            });
+
+            console.log('Triggered stable promotion for commit ${{ github.sha }}');
