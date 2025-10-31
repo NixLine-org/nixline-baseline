@@ -128,9 +128,9 @@ USAGE_EOF
       CONFIG_JSON=$(remarshal -if toml -of json < "$CONFIG_FILE" 2>/dev/null || echo "{}")
 
       # Extract organization settings
-      ORG_NAME=$(echo "$CONFIG_JSON" | jq -r '.organization.name // "NixLine-org"')
-      ORG_EMAIL=$(echo "$CONFIG_JSON" | jq -r '.organization.email // .organization.security_email // "security@example.com"')
-      ORG_TEAM=$(echo "$CONFIG_JSON" | jq -r '.organization.default_team // "@NixLine-org/maintainers"')
+      ORG_NAME=$(echo "''${CONFIG_JSON}" | jq -r '.organization.name // "NixLine-org"')
+      ORG_EMAIL=$(echo "''${CONFIG_JSON}" | jq -r '.organization.email // .organization.security_email // "security@example.com"')
+      ORG_TEAM=$(echo "''${CONFIG_JSON}" | jq -r '.organization.default_team // "@NixLine-org/maintainers"')
 
       echo "Organization: $ORG_NAME"
       echo "Security Email: $ORG_EMAIL"
@@ -165,24 +165,50 @@ USAGE_EOF
       esac
     done
 
-    # Determine final pack list
-    NIXLINE_PACKS="$DEFAULT_PACKS"
-
+    # Determine final pack list (simplified approach)
     if [[ -n "$PACKS_ARG" ]]; then
       NIXLINE_PACKS="$PACKS_ARG"
     elif [[ -n "$EXCLUDE_ARG" ]]; then
-      # Apply exclusions
+      # Apply exclusions to default packs
+      NIXLINE_PACKS="$DEFAULT_PACKS"
       for exclude in $(echo "$EXCLUDE_ARG" | tr ',' ' '); do
         NIXLINE_PACKS=$(echo "$NIXLINE_PACKS" | sed "s/\\b$exclude\\b,\\?//g" | sed 's/,,/,/g' | sed 's/^,\\|,$//g')
       done
     else
-      # Check for config file pack list
+      # Check for config file pack list (backwards compatible)
       CONFIG_PACKS=$(echo "$CONFIG_JSON" | jq -r '.packs.enabled[]?' 2>/dev/null | tr '\n' ',' | sed 's/,$//')
       if [[ -n "$CONFIG_PACKS" ]]; then
         NIXLINE_PACKS="$CONFIG_PACKS"
+      else
+        NIXLINE_PACKS="$DEFAULT_PACKS"
       fi
     fi
 
+    # Simple language detection for suggestions
+    echo ""
+    echo "Language detection:"
+    detected_languages=""
+    if [[ -f "setup.py" || -f "pyproject.toml" || -f "requirements.txt" ]]; then
+      detected_languages="$detected_languages python"
+      echo "  Python detected - consider adding: python/flake8, python/bandit"
+    fi
+    if [[ -f "package.json" ]]; then
+      detected_languages="$detected_languages javascript"
+      echo "  JavaScript detected - consider adding: javascript/eslint, javascript/prettier"
+    fi
+    if [[ -f "Cargo.toml" ]]; then
+      detected_languages="$detected_languages rust"
+      echo "  Rust detected - consider adding: rust/clippy, rust/rustfmt"
+    fi
+    if [[ -f "go.mod" ]]; then
+      detected_languages="$detected_languages go"
+      echo "  Go detected - consider adding: go/gofmt, go/golangci-lint"
+    fi
+    if [[ -z "$detected_languages" ]]; then
+      echo "  No specific languages detected"
+    fi
+
+    echo ""
     echo "Packs: $NIXLINE_PACKS"
 
     if [[ "$DRY_RUN" == "true" ]]; then
@@ -195,7 +221,7 @@ USAGE_EOF
       --arg orgName "$ORG_NAME" \
       --arg orgEmail "$ORG_EMAIL" \
       --arg orgTeam "$ORG_TEAM" \
-      --argjson baseConfig "$CONFIG_JSON" \
+      --argjson baseConfig "''${CONFIG_JSON}" \
       '{
         organization: {
           name: $orgName,

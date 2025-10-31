@@ -6,6 +6,12 @@
 # Python code quality and style checking configuration.
 # Enforces PEP8 compliance and detects common Python code issues.
 #
+# Configuration reference:
+# - flake8 documentation: https://flake8.pycqa.org/en/latest/
+# - Configuration guide: https://flake8.pycqa.org/en/latest/user/configuration.html
+# - Error codes: https://flake8.pycqa.org/en/latest/user/error-codes.html
+# - PEP 8 style guide: https://peps.python.org/pep-0008/
+#
 
 let
   cfg = config.flake8 or {};

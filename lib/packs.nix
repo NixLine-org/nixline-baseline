@@ -26,6 +26,14 @@ let
     # JavaScript/Node.js ecosystem packs
     eslint = import ../packs/javascript/eslint-parameterized.nix { inherit pkgs lib config; };
     jest = import ../packs/javascript/jest-parameterized.nix { inherit pkgs lib config; };
+
+    # Rust ecosystem packs
+    "rust/clippy" = import ../packs/rust/clippy.nix { inherit pkgs lib config; };
+    "rust/rustfmt" = import ../packs/rust/rustfmt.nix { inherit pkgs lib config; };
+
+    # Go ecosystem packs
+    "go/gofmt" = import ../packs/go/gofmt.nix { inherit pkgs lib config; };
+    "go/golangci-lint" = import ../packs/go/golangci-lint.nix { inherit pkgs lib config; };
   };
 
   # Load external pack sources (placeholder for future implementation)
