@@ -1738,6 +1738,21 @@ jobs:
 
 This pattern is demonstrated in [nixline-demo3](https://github.com/NixLine-org/nixline-demo3) which showcases pure upstream consumption with zero maintenance overhead.
 
+**Demo3's Minimal CI Approach:**
+```yaml
+# Simple CI that just validates policies are in sync
+jobs:
+  policy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Verify policies are in sync
+        run: nix run github:NixLine-org/nixline-baseline#check
+```
+
+This is the simplest possible NixLine integration - no flake.nix, no templates, just direct validation.
+
 ### Pure Apps in CI
 
 Pure Nix apps for pack creation and policy management can be run in CI workflows for automated governance tasks without requiring file materialization in the repository.
