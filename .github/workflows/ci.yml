@@ -50,7 +50,7 @@ jobs:
 
           # Test import-policy app
           echo "# Test content" > test-file.md
-          nix run .#import-policy -- test-file.md --pack-name test-pack --dry-run
+          nix run .#import-policy -- --file test-file.md --pack-name test-pack --dry-run
           rm test-file.md
 
       - name: Validate pack definitions
