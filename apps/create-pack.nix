@@ -182,6 +182,7 @@ EXAMPLES_EOF
       fi
 
       create_single_pack "$PACK_NAME"
+      validate_pack_input "$PACK_NAME"
     else
       if [[ -z "$FROM_REPO" ]]; then
         echo "Error: Repository URL or path is required with --from-repo" >&2
@@ -423,6 +424,7 @@ EOF
 
         echo "Creating pack: $pack_name from $governance_file"
         create_pack_from_governance_file "$repo_path" "$governance_file" "$pack_name" "$pack_file"
+        validate_pack_input "$pack_name"
         created_packs+=("$pack_name")
       done <<< "$(echo "$direct_packs" | tr ' ' '\n')"
     fi
@@ -549,6 +551,89 @@ EOF
     echo "  3. Test with 'nix run .#sync' to materialize files"
     echo "  4. Validate with 'nix run .#check'"
     echo ""
+  }
+
+  validate_pack_input() {
+    local pack_name="$1"
+    local category
+    category=$(get_pack_category "$pack_name" "")
+    local pack_file="packs/$category/$pack_name.nix"
+
+    echo ""
+    echo "Running input validation for $pack_name..."
+
+    # Check if pack file exists
+    if [[ ! -f "$pack_file" ]]; then
+      echo "Error: Pack file $pack_file not found" >&2
+      exit 1
+    fi
+
+    local validation_issues=0
+
+    # 1. Check for dangerous network operations
+    if grep -q "fetchurl\|fetchGit\|fetchTarball" "$pack_file"; then
+      echo "WARNING: Pack contains network fetch operations"
+      echo "   Review network access patterns for security"
+      validation_issues=$((validation_issues + 1))
+    fi
+
+    # 2. Check for command execution
+    if grep -q "runCommand\|writeShellScript\|system\|exec" "$pack_file"; then
+      echo "WARNING: Pack contains command execution"
+      echo "   Ensure commands are safe and don't use untrusted input"
+      validation_issues=$((validation_issues + 1))
+    fi
+
+    # 3. Check for environment variable usage
+    if grep -q "getEnv\|env\." "$pack_file"; then
+      echo "WARNING: Pack uses environment variables"
+      echo "   Validate that environment access is safe"
+      validation_issues=$((validation_issues + 1))
+    fi
+
+    # 4. Check for file system operations beyond normal pack behavior
+    if grep -q "readFile\|writeFile\|copyFile" "$pack_file"; then
+      echo "INFO: Pack performs file operations"
+      echo "   Verify file access is limited to intended policy files"
+    fi
+
+    # 5. Check for dangerous string interpolation patterns
+    if grep -E '\$\{[^}]*\$\{|\$\([^)]*\$\(' "$pack_file"; then
+      echo "WARNING: Pack contains nested string interpolation"
+      echo "   Review for potential injection vulnerabilities"
+      validation_issues=$((validation_issues + 1))
+    fi
+
+    # 6. Check for hardcoded secrets patterns
+    if grep -iE '(password|secret|key|token|credential).*[=:]\s*"[^"]{8,}"' "$pack_file"; then
+      echo "ERROR: Pack appears to contain hardcoded secrets"
+      echo "   Remove any hardcoded credentials immediately"
+      validation_issues=$((validation_issues + 10))
+    fi
+
+    # 7. Validate Nix syntax
+    if ! nix-instantiate --parse "$pack_file" >/dev/null 2>&1; then
+      echo "ERROR: Pack contains invalid Nix syntax"
+      echo "   Fix syntax errors before using this pack"
+      validation_issues=$((validation_issues + 5))
+    fi
+
+    # Report results
+    echo ""
+    if [[ $validation_issues -eq 0 ]]; then
+      echo "[PASS] Input validation passed - pack appears safe"
+    elif [[ $validation_issues -lt 5 ]]; then
+      echo "[WARN] Input validation completed with warnings"
+      echo "   Review the warnings above before using this pack"
+    else
+      echo "[FAIL] Input validation failed - critical issues found"
+      echo "   Fix critical issues before using this pack"
+      exit 1
+    fi
+
+    echo ""
+    echo "Input validation completed for $pack_name"
+    echo "Remember to review pack content manually for organization-specific policies"
   }
 
   # Main execution
