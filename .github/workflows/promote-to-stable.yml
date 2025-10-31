@@ -29,6 +29,11 @@ on:
           - stable
           - unstable
         default: stable
+      automation_trigger:
+        description: 'Triggered by automation (baseline CI)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -47,7 +52,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     uses: NixLine-org/.github/.github/workflows/nixline-promote-to-stable.yml@stable
     with:
-      promotion_mode: manual
+      promotion_mode: ${{ github.event.inputs.automation_trigger == 'true' && 'automated' || 'manual' }}
       commit_hash: ${{ github.event.inputs.commit_hash }}
       stable_tag: stable
       promotion_target: ${{ github.event.inputs.promotion_target }}

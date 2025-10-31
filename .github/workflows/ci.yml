@@ -101,7 +101,8 @@ jobs:
               ref: 'main',
               inputs: {
                 commit_hash: '${{ github.sha }}',
-                promotion_target: 'stable'
+                promotion_target: 'stable',
+                automation_trigger: 'true'
               }
             });
 
