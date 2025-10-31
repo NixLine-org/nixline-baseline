@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   promote:
@@ -53,13 +54,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Delete existing stable tag
-          git tag -d stable || true
-          git push origin :refs/tags/stable || true
+          # Delete local stable tag if it exists to avoid conflicts
+          git tag -d stable 2>/dev/null || true
 
           # Create new stable tag at validated commit
           git tag -a stable -m "Promote to stable: $COMMIT" $COMMIT
-          git push origin stable
+
+          # Force push the stable tag (safer than remote delete + create)
+          git push --force origin stable
 
           echo "Updated stable tag to $COMMIT"
 
