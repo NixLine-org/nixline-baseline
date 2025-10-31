@@ -1,14 +1,22 @@
 #
-# CI Validation Workflow
+# Baseline CI Validation Workflow
 #
-# Validates the baseline repository on every push and pull request.
-# Ensures flake integrity, tests core apps, and validates baseline functionality.
+# Validates the baseline repository itself on every push and pull request.
+# This is NOT the same as nixline-ci.yml which is for consumer repositories.
+#
+# Baseline repos are the SOURCE of policy packs and should validate:
+# - Flake integrity and buildability
+# - App functionality (dry-run mode only)
+# - Pack definitions are valid
+#
+# Consumer repos use nixline-ci.yml to materialize and validate files FROM baseline.
+# Baseline repos use this workflow to validate the source itself.
 #
 # Triggered by: push, pull_request
-# Purpose: Basic validation and testing of baseline repository changes
+# Purpose: Validate baseline repository source integrity
 #
 
-name: CI
+name: Baseline CI
 
 on: [push, pull_request]
 
@@ -16,9 +24,41 @@ permissions:
   contents: read
 
 jobs:
-  nixline-ci:
-    uses: NixLine-org/.github/.github/workflows/nixline-ci.yml@stable
-    with:
-      channel: stable
-      packs: "editorconfig,codeowners,security,license,precommit,dependabot"
-      sync_mode: "ephemeral"
+  validate-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Validate flake integrity
+        run: nix flake check
+
+      - name: Test baseline apps (dry-run only)
+        run: |
+          # Test sync app with dry-run (no file materialization in baseline itself)
+          nix run .#sync -- --dry-run
+
+          # Test other core apps
+          nix run .#list-licenses
+          nix run .#create-pack -- --list-examples
+
+          # Test import-policy app
+          echo "# Test content" > test-file.md
+          nix run .#import-policy -- test-file.md --pack-name test-pack --dry-run
+          rm test-file.md
+
+      - name: Validate pack definitions
+        run: |
+          # Ensure all pack files are valid nix expressions
+          for pack in packs/*.nix; do
+            if [ -f "$pack" ]; then
+              echo "Validating $pack"
+              nix eval --file "$pack" --json > /dev/null
+            fi
+          done

@@ -603,20 +603,69 @@ nix run github:NixLine-org/nixline-baseline#check -- --packs editorconfig,licens
 NIXLINE_PACKS="editorconfig,license,dependabot" nix run github:NixLine-org/nixline-baseline#sync
 ```
 
-**CI setup for direct consumption:**
+### CI Architecture: Baseline vs Consumer Repositories
+
+**IMPORTANT:** Baseline and consumer repositories require different CI approaches:
+
+#### Baseline Repository CI (this repo)
+Validates the source repository itself - flake integrity, apps, and pack definitions:
+
 ```yaml
-# .github/workflows/ci.yml
+# .github/workflows/ci.yml (baseline repos only)
+name: Baseline CI
+on: [push, pull_request]
+jobs:
+  validate-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
+      - name: Validate flake integrity
+        run: nix flake check
+      - name: Test apps (dry-run only)
+        run: |
+          nix run .#sync -- --dry-run
+          nix run .#list-licenses
+```
+
+**Key Points:**
+- [+] Tests flake and apps work correctly
+- [+] Uses dry-run mode (no file materialization)
+- [-] Does NOT use nixline-ci.yml reusable workflow
+- [-] Does NOT materialize policy files into itself
+
+#### Consumer Repository CI
+Materializes and validates files FROM the baseline:
+
+```yaml
+# .github/workflows/ci.yml (consumer repos only)
 name: CI
 on: [push, pull_request]
 jobs:
   policy-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
-      - name: Verify policies are in sync
-        run: nix run github:NixLine-org/nixline-baseline#check
+    uses: YOUR-ORG/.github/.github/workflows/nixline-ci.yml@stable
+    with:
+      channel: stable
+      packs: "editorconfig,codeowners,license,precommit"
 ```
+
+**Key Points:**
+- [+] Uses nixline-ci.yml reusable workflow
+- [+] Materializes files from baseline and validates them
+- [+] Tests consumer repository compliance
+- [-] NOT suitable for baseline repositories
+
+#### Why This Distinction Matters
+
+**Baseline repositories** are the SOURCE of policy definitions. They should validate that:
+- Flake expressions are valid
+- Apps work correctly (in dry-run mode)
+- Pack definitions are syntactically correct
+
+**Consumer repositories** CONSUME policies from the baseline. They should validate that:
+- Materialized files match baseline expectations
+- Local policies comply with organizational standards
+- All required files are present and correct
 
 See [nixline-demo1](https://github.com/NixLine-org/nixline-demo1) for a complete example.
 
