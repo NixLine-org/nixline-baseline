@@ -25,6 +25,7 @@ on: [push, pull_request]
 permissions:
   contents: write
   actions: write
+  pull-requests: write
 
 jobs:
   validate-baseline:
