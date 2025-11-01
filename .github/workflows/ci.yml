@@ -1,26 +1,53 @@
 #
-# Baseline CI Validation Workflow
+# Baseline CI - Central Automation and Validation Workflow
 #
-# Validates the baseline repository itself on every push and pull request.
-# This is NOT the same as nixline-ci.yml which is for consumer repositories.
+# This workflow serves as the backbone of the NixLine automation pipeline for baseline repositories.
+# It performs comprehensive validation and orchestrates the stable promotion process.
 #
-# Baseline repos are the SOURCE of policy packs and should validate:
-# - Flake integrity and buildability
-# - App functionality (dry-run mode only)
-# - Pack definitions are valid
+# === WHAT THIS WORKFLOW DOES ===
 #
-# Consumer repos use nixline-ci.yml to materialize and validate files FROM baseline.
-# Baseline repos use this workflow to validate the source itself.
-# On successful validation of main branch pushes, automatically updates
-# .stable-candidate and triggers stable tag promotion.
+# 1. VALIDATION (all pushes/PRs):
+#    - Validates Nix flake integrity with `nix flake check`
+#    - Tests baseline apps in dry-run mode (sync, list-licenses, create-pack, import-policy)
+#    - Ensures all policy pack definitions are valid Nix expressions
+#    - Validates baseline repository source integrity
 #
-# Triggered by: push, pull_request
-# Purpose: Validate baseline repository source integrity and manage stable promotion
+# 2. AUTOMATION PIPELINE (main branch pushes only):
+#    - Updates .stable-candidate file tracking which commit should be promoted
+#    - Creates PRs for stable candidate updates with automatic merge
+#    - Triggers stable tag promotion workflow for validated commits
+#    - Updates consumer template flake.lock files
+#    - Implements infinite loop prevention and branch cleanup
+#
+# 3. CONSUMER INTEGRATION:
+#    - When stable tag updates, consumer repositories get policy updates on next sync
+#    - Ensures baseline changes propagate safely through the organization
+#
+# === AUTOMATION FLOW ===
+# Push to main → Validation → Stable Candidate Update → Stable Tag Promotion → Consumer Updates
+#
+# === DIFFERENCE FROM CONSUMER CI ===
+# - Baseline repos (this): Validate the SOURCE of policies and manage stable promotion
+# - Consumer repos (nixline-ci.yml): Materialize and validate policies FROM baseline
+#
+# Triggered by: push, pull_request, workflow_dispatch (manual)
+# Automation: Automatic stable candidate updates and promotion for main branch
+# Manual trigger: Available for validation and optionally force stable updates
+# Purpose: Validate baseline integrity and orchestrate organization-wide policy distribution
 #
 
 name: Baseline CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      force_stable_update:
+        description: 'Force stable candidate update even if on non-main branch'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -70,7 +97,9 @@ jobs:
   update-stable-candidate:
     uses: NixLine-org/.github/.github/workflows/nixline-stable-candidate-update.yml@stable
     needs: validate-baseline
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')) ||
+      (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.event.inputs.force_stable_update == 'true'))
     with:
       commit_hash: ${{ github.sha }}
       branch_prefix: "automation/stable-candidate"
@@ -78,7 +107,9 @@ jobs:
   trigger-stable-promotion:
     runs-on: ubuntu-latest
     needs: update-stable-candidate
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')) ||
+      (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.event.inputs.force_stable_update == 'true'))
     steps:
       - name: Trigger stable promotion
         uses: actions/github-script@v7
