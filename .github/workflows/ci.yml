@@ -112,7 +112,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.event.inputs.force_stable_update == 'true'))
     steps:
       - name: Trigger stable promotion
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.actions.createWorkflowDispatch({
