@@ -76,14 +76,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Update stable candidate
+      - name: Update stable candidate via PR
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Pull latest changes to avoid conflicts
-          git pull origin main --rebase
 
           # Update .stable-candidate with current commit hash
           echo "${{ github.sha }}" > .stable-candidate
@@ -94,25 +93,34 @@ jobs:
             exit 0
           fi
 
+          # Create branch for stable candidate update
+          BRANCH_NAME="update-stable-candidate-$(date +%s)"
+          git checkout -b "$BRANCH_NAME"
+
           # Commit the update
           git add .stable-candidate
           git commit -m "Mark ${{ github.sha }} as stable candidate"
 
-          # Push with retry logic for race conditions
-          for i in {1..3}; do
-            if git push origin main; then
-              echo "Successfully pushed stable candidate update"
-              break
-            else
-              echo "Push failed (attempt $i/3), rebasing and retrying"
-              git pull origin main --rebase
-              if [ $i -eq 3 ]; then
-                echo "Failed to push after 3 attempts"
-                exit 1
-              fi
-              sleep 2
-            fi
-          done
+          # Push branch
+          git push origin "$BRANCH_NAME"
+
+          # Create PR for the stable candidate update
+          gh pr create \
+            --title "Update stable candidate to ${{ github.sha }}" \
+            --body "Automated update of .stable-candidate file to track commit ${{ github.sha }} for stable promotion.
+
+          **Commit:** ${{ github.sha }}
+          **Triggered by:** Baseline CI validation
+
+          This PR will be automatically merged after validation passes." \
+            --base main \
+            --head "$BRANCH_NAME"
+
+          # Auto-merge the PR with admin override
+          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number')
+          gh pr merge "$PR_NUMBER" --admin --squash
+
+          echo "Successfully updated stable candidate via PR"
 
       - name: Trigger stable promotion
         uses: actions/github-script@v7
