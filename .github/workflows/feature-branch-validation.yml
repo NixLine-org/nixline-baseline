@@ -30,4 +30,5 @@ jobs:
       target_branch: unstable
       validation_apps: "sync,check,import-policy,fetch-license,list-licenses"
       require_conventional_commits: true
-      enable_codeql: true
+      enable_codeql: false
+      enable_dependency_scanning: true

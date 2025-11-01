@@ -25,6 +25,7 @@ on: [push, pull_request]
 permissions:
   contents: write
   actions: write
+  pull-requests: write
 
 jobs:
   validate-baseline:
@@ -66,30 +67,19 @@ jobs:
             fi
           done
 
-  promote-to-stable:
-    runs-on: ubuntu-latest
+  update-stable-candidate:
+    uses: NixLine-org/.github/.github/workflows/nixline-stable-candidate-update.yml@stable
     needs: validate-baseline
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')
+    with:
+      commit_hash: ${{ github.sha }}
+      branch_prefix: "automation/stable-candidate"
+
+  trigger-stable-promotion:
+    runs-on: ubuntu-latest
+    needs: update-stable-candidate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Update stable candidate
-        run: |
-          # Update .stable-candidate with current commit hash
-          echo "${{ github.sha }}" > .stable-candidate
-
-          # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Commit the update
-          git add .stable-candidate
-          git commit -m "Mark ${{ github.sha }} as stable candidate" || exit 0
-          git push origin main
-
       - name: Trigger stable promotion
         uses: actions/github-script@v7
         with:
