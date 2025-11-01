@@ -70,7 +70,7 @@ jobs:
   promote-to-stable:
     runs-on: ubuntu-latest
     needs: validate-baseline
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -94,8 +94,8 @@ jobs:
             exit 0
           fi
 
-          # Create branch for stable candidate update
-          BRANCH_NAME="update-stable-candidate-$(date +%s)"
+          # Create branch for stable candidate update (using automation/ prefix to avoid feature branch rules)
+          BRANCH_NAME="automation/stable-candidate-$(date +%s)"
           git checkout -b "$BRANCH_NAME"
 
           # Commit the update
