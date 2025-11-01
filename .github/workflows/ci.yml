@@ -30,14 +30,24 @@
 # - Baseline repos (this): Validate the SOURCE of policies and manage stable promotion
 # - Consumer repos (nixline-ci.yml): Materialize and validate policies FROM baseline
 #
-# Triggered by: push, pull_request
+# Triggered by: push, pull_request, workflow_dispatch (manual)
 # Automation: Automatic stable candidate updates and promotion for main branch
+# Manual trigger: Available for validation and optionally force stable updates
 # Purpose: Validate baseline integrity and orchestrate organization-wide policy distribution
 #
 
 name: Baseline CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      force_stable_update:
+        description: 'Force stable candidate update even if on non-main branch'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -87,7 +97,9 @@ jobs:
   update-stable-candidate:
     uses: NixLine-org/.github/.github/workflows/nixline-stable-candidate-update.yml@stable
     needs: validate-baseline
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')) ||
+      (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.event.inputs.force_stable_update == 'true'))
     with:
       commit_hash: ${{ github.sha }}
       branch_prefix: "automation/stable-candidate"
@@ -95,7 +107,9 @@ jobs:
   trigger-stable-promotion:
     runs-on: ubuntu-latest
     needs: update-stable-candidate
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')) ||
+      (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.event.inputs.force_stable_update == 'true'))
     steps:
       - name: Trigger stable promotion
         uses: actions/github-script@v7
