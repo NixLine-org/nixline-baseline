@@ -67,65 +67,19 @@ jobs:
             fi
           done
 
-  promote-to-stable:
-    runs-on: ubuntu-latest
+  update-stable-candidate:
+    uses: NixLine-org/.github/.github/workflows/nixline-stable-candidate-update.yml@main
     needs: validate-baseline
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')
+    with:
+      commit_hash: ${{ github.sha }}
+      branch_prefix: "automation/stable-candidate"
+
+  trigger-stable-promotion:
+    runs-on: ubuntu-latest
+    needs: update-stable-candidate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Update stable candidate via PR
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Update .stable-candidate with current commit hash
-          echo "${{ github.sha }}" > .stable-candidate
-
-          # Check if there are any changes to commit
-          if git diff --quiet .stable-candidate; then
-            echo "No changes to .stable-candidate file"
-            exit 0
-          fi
-
-          # Create branch for stable candidate update (using automation/ prefix to avoid feature branch rules)
-          BRANCH_NAME="automation/stable-candidate-$(date +%s)"
-          git checkout -b "$BRANCH_NAME"
-
-          # Commit the update
-          git add .stable-candidate
-          git commit -m "Mark ${{ github.sha }} as stable candidate"
-
-          # Push branch
-          git push origin "$BRANCH_NAME"
-
-          # Create PR for the stable candidate update
-          gh pr create \
-            --title "Update stable candidate to ${{ github.sha }}" \
-            --body "Automated update of .stable-candidate file to track commit ${{ github.sha }} for stable promotion.
-
-          **Commit:** ${{ github.sha }}
-          **Triggered by:** Baseline CI validation
-
-          This PR will be automatically merged after validation passes." \
-            --base main \
-            --head "$BRANCH_NAME"
-
-          # Auto-merge the PR with admin override
-          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number')
-          gh pr merge "$PR_NUMBER" --admin --squash
-
-          # Delete the automation branch after successful merge
-          git push origin --delete "$BRANCH_NAME" || echo "Branch already deleted"
-
-          echo "Successfully updated stable candidate via PR and cleaned up branch"
-
       - name: Trigger stable promotion
         uses: actions/github-script@v7
         with:
