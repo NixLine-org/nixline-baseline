@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1761895899,
-        "narHash": "sha256-2+t4GOBN+TKDEQ57hhmBO4MNdZrMfMI2Gpy0gUkUqXg=",
+        "lastModified": 1761965719,
+        "narHash": "sha256-cgJeDLwwQn2lZqsMIAOzU8LOlfun3wDsKRCO33N4upk=",
         "owner": "NixLine-org",
         "repo": "nixline-baseline",
-        "rev": "2b36de7b118c2aec6a5c58d34ac6ba9c7125da83",
+        "rev": "8649e2ef0ce321f1a625102b4c11ecd71f7652f8",
         "type": "github"
       },
       "original": {
