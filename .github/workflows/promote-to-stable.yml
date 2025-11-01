@@ -57,3 +57,11 @@ jobs:
       commit_hash: ${{ github.event.inputs.commit_hash }}
       stable_tag: stable
       promotion_target: ${{ github.event.inputs.promotion_target }}
+
+  sync-unstable-after-promotion:
+    needs: [promote-pr, promote-manual]
+    if: always() && (needs.promote-pr.result == 'success' || needs.promote-manual.result == 'success')
+    uses: NixLine-org/.github/.github/workflows/nixline-sync-unstable.yml@stable
+    with:
+      target_branch: unstable
+      source_branch: main

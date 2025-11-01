@@ -1,0 +1,33 @@
+#
+# Sync Unstable Branch
+#
+# Ensures unstable branch stays ahead of main by merging main into unstable
+# when main is updated. Maintains proper branch hierarchy where unstable
+# is always ahead and main only gets updates through promotion.
+#
+# Triggered when main branch is updated
+#
+
+name: Sync Unstable Branch
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Target unstable branch name'
+        required: false
+        type: string
+        default: 'unstable'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-unstable:
+    uses: NixLine-org/.github/.github/workflows/nixline-sync-unstable.yml@stable
+    with:
+      target_branch: ${{ github.event.inputs.target_branch || 'unstable' }}
+      source_branch: main

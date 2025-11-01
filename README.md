@@ -1,6 +1,5 @@
 # NixLine Baseline
 
-[![Validate Unstable](https://github.com/NixLine-org/nixline-baseline/actions/workflows/validate-unstable.yml/badge.svg)](https://github.com/NixLine-org/nixline-baseline/actions/workflows/validate-unstable.yml)
 [![Update Nixpkgs](https://github.com/NixLine-org/nixline-baseline/actions/workflows/update-nixpkgs.yml/badge.svg)](https://github.com/NixLine-org/nixline-baseline/actions/workflows/update-nixpkgs.yml)
 [![Promote to Stable](https://github.com/NixLine-org/nixline-baseline/actions/workflows/promote-to-stable.yml/badge.svg)](https://github.com/NixLine-org/nixline-baseline/actions/workflows/promote-to-stable.yml)
 
