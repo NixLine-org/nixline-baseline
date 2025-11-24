@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   nixline-ci:
-    uses: NixLine-org/.github/.github/workflows/nixline-ci.yml@stable
+    uses: Lineage-org/.github/.github/workflows/nixline-ci.yml@stable
     with:
       channel: stable
       consumption_pattern: template
