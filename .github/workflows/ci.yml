@@ -95,7 +95,7 @@ jobs:
           done
 
   update-stable-candidate:
-    uses: Lineage-org/.github/.github/workflows/nixline-stable-candidate-update.yml@stable
+    uses: Lineage-org/.github/.github/workflows/lineage-stable-candidate-update.yml@stable
     needs: validate-baseline
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'Mark ') && !contains(github.event.head_commit.message, 'stable candidate')) ||

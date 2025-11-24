@@ -32,9 +32,9 @@ permissions:
 
 jobs:
   validate:
-    uses: Lineage-org/.github/.github/workflows/nixline-branch-validation.yml@stable
+    uses: Lineage-org/.github/.github/workflows/lineage-branch-validation.yml@stable
     with:
-      baseline_repo: Lineage-org/nixline-baseline
+      baseline_repo: Lineage-org/lineage-baseline
       validation_apps: "sync,check,import-policy,fetch-license,list-licenses"
       issue_labels: "validation-failure,automated"
       enable_codeql: true

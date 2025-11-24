@@ -23,7 +23,7 @@ permissions:
 jobs:
   automerge:
     if: github.actor == 'dependabot[bot]'
-    uses: Lineage-org/.github/.github/workflows/nixline-dependabot-automerge.yml@stable
+    uses: Lineage-org/.github/.github/workflows/lineage-dependabot-automerge.yml@stable
     with:
       allow_minor_patch: "true"
       allow_security_updates: "true"
