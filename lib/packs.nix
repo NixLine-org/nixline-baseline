@@ -1,4 +1,4 @@
-# NixLine Packs Library
+# Lineage Packs Library
 #
 # Central registry and loader for all pack modules in the baseline.
 # Manages pack imports, configuration passing, and external pack references.

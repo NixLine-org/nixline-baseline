@@ -6,7 +6,7 @@
 # This pack materializes a LICENSE file into all repositories that enable it.
 #
 # CONFIGURATION:
-# This pack can be customized via .nixline.toml configuration:
+# This pack can be customized via .lineage.toml configuration:
 #
 # [packs.license]
 # type = "Apache-2.0"  # or "MIT", "GPL-3.0", etc.
@@ -19,7 +19,7 @@
 # This ensures reproducibility and allows the pack to work with --no-build validation.
 #
 # To enable automatic fetching of the latest license text from spdx.org:
-# 1. Add fetch_from_source = true to your .nixline.toml [packs.license] section
+# 1. Add fetch_from_source = true to your .lineage.toml [packs.license] section
 # 2. Note: This requires network access during sync and adds a build-time dependency
 #
 # ENVIRONMENT VARIABLES:
@@ -32,7 +32,7 @@ let
   packConfig = config.packs.license or {};
 
   # Organization configuration for fallback
-  orgName = config.organization.name or "NixLine-org";
+  orgName = config.organization.name or "Lineage-org";
 
   # License configuration
   licenseType = packConfig.type or "Apache-2.0";

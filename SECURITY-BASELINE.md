@@ -1,4 +1,4 @@
-# Security Guidelines for NixLine Baseline Repository
+# Security Guidelines for Lineage Baseline Repository
 
 ## Critical Security Requirements
 
@@ -168,7 +168,7 @@ checks = [
 1. **IMMEDIATELY:**
    ```bash
    # Lock down baseline repo
-   gh repo edit YOUR-ORG/nixline-baseline --enable-issues=false --enable-wiki=false
+   gh repo edit YOUR-ORG/lineage-baseline --enable-issues=false --enable-wiki=false
 
    # Disable all policy sync workflows org-wide
    # Use organization Actions settings to disable workflows
@@ -259,8 +259,8 @@ For maximum security, organizations should:
 
 ## Contact
 
-Security issues with NixLine baseline should be reported to:
+Security issues with Lineage baseline should be reported to:
 [YOUR-ORG-SECURITY-EMAIL]
 
-For upstream NixLine security issues:
-Open a security advisory at https://github.com/NixLine-org/nixline-baseline/security/advisories
+For upstream Lineage security issues:
+Open a security advisory at https://github.com/Lineage-org/lineage-baseline/security/advisories

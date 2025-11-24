@@ -5,9 +5,9 @@
 
   Usage:
     Direct Consumption (Recommended):
-      nix run github:ORG/nixline-baseline#check
-      nix run github:ORG/nixline-baseline#check -- --packs editorconfig,license,codeowners
-      nix run github:ORG/nixline-baseline#check -- --exclude security,dependabot
+      nix run github:ORG/lineage-baseline#check
+      nix run github:ORG/lineage-baseline#check -- --packs editorconfig,license,codeowners
+      nix run github:ORG/lineage-baseline#check -- --exclude security,dependabot
 
     Template-Based Consumption:
       nix run .#check
@@ -31,7 +31,7 @@
 */
 
 pkgs.writeShellApplication {
-  name = "nixline-check";
+  name = "lineage-check";
 
   runtimeInputs = [ pkgs.coreutils pkgs.diffutils pkgs.gnused ];
 
@@ -41,13 +41,13 @@ pkgs.writeShellApplication {
     show_usage() {
       cat << 'USAGE_EOF'
 ╔════════════════════════════════════════════════════════════╗
-║                   NixLine Check                            ║
+║                   Lineage Check                            ║
 ╚════════════════════════════════════════════════════════════╝
 
 Validate that policy files in the current repository match the baseline.
 
 Usage:
-  nixline-check [OPTIONS]
+  lineage-check [OPTIONS]
 
 Options:
   --packs <list>   Comma-separated list of packs to check
@@ -55,9 +55,9 @@ Options:
   --help           Show this help message
 
 Examples:
-  nixline-check
-  nixline-check --packs editorconfig,license,codeowners
-  nixline-check --exclude security,dependabot
+  lineage-check
+  lineage-check --packs editorconfig,license,codeowners
+  lineage-check --exclude security,dependabot
 
 Environment Variables:
   NIXLINE_PACKS - Comma-separated list of packs (fallback if no --packs given)
@@ -120,7 +120,7 @@ USAGE_EOF
     fi
 
     echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║                   NixLine Check                            ║"
+    echo "║                   Lineage Check                            ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
 

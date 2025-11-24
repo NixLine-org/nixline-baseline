@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   update:
-    uses: NixLine-org/.github/.github/workflows/nixline-nixpkgs-update.yml@stable
+    uses: Lineage-org/.github/.github/workflows/lineage-nixpkgs-update.yml@stable
     with:
       unstable_tag: unstable
       target_branch: main

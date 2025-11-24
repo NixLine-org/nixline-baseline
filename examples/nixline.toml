@@ -1,9 +1,9 @@
-# Example .nixline.toml configuration file
+# Example .lineage.toml configuration file
 # Place this file in the root of your consumer repository to customize
 # pack behavior without forking the baseline.
 
 [baseline]
-repo = "github:NixLine-org/nixline-baseline"
+repo = "github:Lineage-org/lineage-baseline"
 ref = "stable"
 
 [organization]

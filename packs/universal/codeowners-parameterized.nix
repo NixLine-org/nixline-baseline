@@ -7,7 +7,7 @@
 # When enabled, all repositories receive this CODEOWNERS file.
 #
 # CONFIGURATION:
-# This pack can be customized via .nixline.toml configuration:
+# This pack can be customized via .lineage.toml configuration:
 #
 # [organization]
 # name = "MyCompany"
@@ -32,7 +32,7 @@ let
   # Organization configuration with fallbacks
   orgName =
     if builtins.getEnv "NIXLINE_ORG_NAME" != "" then builtins.getEnv "NIXLINE_ORG_NAME"
-    else config.organization.name or "NixLine-org";
+    else config.organization.name or "Lineage-org";
 
   defaultTeam =
     if builtins.getEnv "NIXLINE_ORG_TEAM" != "" then builtins.getEnv "NIXLINE_ORG_TEAM"
@@ -86,14 +86,14 @@ in
       if customFile != null then
         codeownersContent
       else ''
-      # CODEOWNERS - Generated from nixline-baseline
+      # CODEOWNERS - Generated from lineage-baseline
       # Organization: ${orgName}
       # Default Team: ${defaultTeam}
       #
       # This file is auto-generated. To customize:
-      # 1. Add a .nixline.toml file to your repository root
+      # 1. Add a .lineage.toml file to your repository root
       # 2. Define [packs.codeowners] section with custom rules
-      # 3. Run: nix run github:NixLine-org/nixline-baseline#sync
+      # 3. Run: nix run github:Lineage-org/lineage-baseline#sync
 
       ${codeownersContent}
     '';

@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   validate:
-    uses: NixLine-org/.github/.github/workflows/nixline-nixpkgs-validate.yml@stable
+    uses: Lineage-org/.github/.github/workflows/lineage-nixpkgs-validate.yml@stable
     with:
       tag_to_validate: unstable
       promote_on_success: true

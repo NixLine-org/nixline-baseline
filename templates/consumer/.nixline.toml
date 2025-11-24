@@ -1,4 +1,4 @@
-# NixLine Configuration
+# Lineage Configuration
 # This file configures which packs to sync and their parameters
 # Organizations can customize policies through this configuration
 
@@ -43,8 +43,8 @@ linter = "golangci-lint" # "golangci-lint" (comprehensive)
 
 # External pack sources - add these as flake inputs in flake.nix
 # Example flake inputs:
-#   myorg-security-packs.url = "github:myorg/nixline-security-packs?ref=v1.2.0";
-#   myorg-language-packs.url = "github:myorg/nixline-language-packs?ref=main";
+#   myorg-security-packs.url = "github:myorg/lineage-security-packs?ref=v1.2.0";
+#   myorg-language-packs.url = "github:myorg/lineage-language-packs?ref=main";
 
 [packs]
 # Base packs - always enabled regardless of language

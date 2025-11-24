@@ -4,7 +4,7 @@ pkgs.writeShellApplication {
   name = "list-licenses";
 
   text = ''
-    echo "NixLine License Pack - Supported License Types"
+    echo "Lineage License Pack - Supported License Types"
     echo "=============================================="
     echo ""
     echo "SPDX License Identifiers (fetched from source):"

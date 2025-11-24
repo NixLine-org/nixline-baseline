@@ -1,26 +1,26 @@
 {
-  description = "NixLine consumer repository with TOML configuration and external pack support";
+  description = "Lineage consumer repository with TOML configuration and external pack support";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/08dacfca559e1d7da38f3cf05f1f45ee9bfd213c";
-    nixline-baseline = {
-      url = "github:NixLine-org/nixline-baseline?ref=stable";
+    lineage-baseline = {
+      url = "github:Lineage-org/lineage-baseline?ref=stable";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # External pack sources (add your organization's pack repositories here)
     # Example:
     # myorg-security-packs = {
-    #   url = "github:myorg/nixline-security-packs?ref=v1.2.0";
+    #   url = "github:myorg/lineage-security-packs?ref=v1.2.0";
     #   inputs.nixpkgs.follows = "nixpkgs";
     # };
     # myorg-language-packs = {
-    #   url = "github:myorg/nixline-language-packs?ref=main";
+    #   url = "github:myorg/lineage-language-packs?ref=main";
     #   inputs.nixpkgs.follows = "nixpkgs";
     # };
   };
 
-  outputs = inputs@{ self, nixpkgs, nixline-baseline, ... }:
+  outputs = inputs@{ self, nixpkgs, lineage-baseline, ... }:
     let
       forAllSystems = nixpkgs.lib.genAttrs [
         "x86_64-linux"
@@ -35,11 +35,11 @@
         let
           pkgs = import nixpkgs { inherit system; };
           lib = nixpkgs.lib;
-          baseline = nixline-baseline.lib.${system};
+          baseline = lineage-baseline.lib.${system};
 
           # Collect external pack sources from flake inputs
-          # Filter out standard inputs (self, nixpkgs, nixline-baseline)
-          standardInputs = [ "self" "nixpkgs" "nixline-baseline" ];
+          # Filter out standard inputs (self, nixpkgs, lineage-baseline)
+          standardInputs = [ "self" "nixpkgs" "lineage-baseline" ];
           externalPackInputs = lib.filterAttrs (name: _: !(lib.elem name standardInputs)) inputs;
 
           # Load external pack registries from flake inputs
@@ -84,11 +84,11 @@
 
           # Configuration-driven sync app with external pack support
           sync = pkgs.writeShellApplication {
-            name = "nixline-sync";
+            name = "lineage-sync";
             runtimeInputs = with pkgs; [ jq remarshal ];
             text = ''
               echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║                NixLine Sync (with External Packs)         ║"
+              echo "║                Lineage Sync (with External Packs)         ║"
               echo "╚════════════════════════════════════════════════════════════╝"
               echo ""
 
@@ -104,16 +104,16 @@
 
               # Default configuration and pack list
               DEFAULT_CONFIG='${builtins.toJSON {
-                organization = { name = "NixLine-org"; email = "opensource@example.com"; };
+                organization = { name = "Lineage-org"; email = "opensource@example.com"; };
                 packs = { enabled = [ "editorconfig" "codeowners" "security" "license" "precommit" "dependabot" ]; };
               }}'
 
-              CONFIG_FILE=".nixline.toml"
+              CONFIG_FILE=".lineage.toml"
               if [[ -f "$CONFIG_FILE" ]]; then
                 echo "Using configuration: $CONFIG_FILE"
                 CONFIG_JSON=$(remarshal -if toml -of json < "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_CONFIG")
               else
-                echo "No .nixline.toml found, using defaults"
+                echo "No .lineage.toml found, using defaults"
                 CONFIG_JSON="$DEFAULT_CONFIG"
               fi
 
@@ -160,11 +160,11 @@
 
           # Flake update app - updates flake.lock
           flake-update = pkgs.writeShellApplication {
-            name = "nixline-flake-update";
+            name = "lineage-flake-update";
             runtimeInputs = [ pkgs.git pkgs.gh ];
             text = ''
               echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║                 NixLine Flake Update                       ║"
+              echo "║                 Lineage Flake Update                       ║"
               echo "╚════════════════════════════════════════════════════════════╝"
               echo ""
 
@@ -198,11 +198,11 @@
 
           # Setup hooks app - installs pre-commit hooks
           setup-hooks = pkgs.writeShellApplication {
-            name = "nixline-setup-hooks";
+            name = "lineage-setup-hooks";
             runtimeInputs = [ pkgs.git pkgs.pre-commit ];
             text = ''
               echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║                NixLine Setup Hooks                         ║"
+              echo "║                Lineage Setup Hooks                         ║"
               echo "╚════════════════════════════════════════════════════════════╝"
               echo ""
 
@@ -224,24 +224,24 @@
           # Validates files against baseline using same config as sync
           # Supports passing additional arguments like --override
           check = pkgs.writeShellApplication {
-            name = "nixline-check";
+            name = "lineage-check";
             runtimeInputs = with pkgs; [ jq remarshal ];
             text = ''
               echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║                   NixLine Check                            ║"
+              echo "║                   Lineage Check                            ║"
               echo "╚════════════════════════════════════════════════════════════╝"
               echo ""
 
               # Pass through additional arguments like --override
               ADDITIONAL_ARGS="$@"
 
-              CONFIG_FILE=".nixline.toml"
+              CONFIG_FILE=".lineage.toml"
               if [[ -f "$CONFIG_FILE" ]]; then
                 echo "Using configuration: $CONFIG_FILE"
-                eval "${nixline-baseline.apps.${system}.check.program} --config \"$CONFIG_FILE\" $ADDITIONAL_ARGS"
+                eval "${lineage-baseline.apps.${system}.check.program} --config \"$CONFIG_FILE\" $ADDITIONAL_ARGS"
               else
-                echo "No .nixline.toml found, using default configuration"
-                eval "${nixline-baseline.apps.${system}.check.program} $ADDITIONAL_ARGS"
+                echo "No .lineage.toml found, using default configuration"
+                eval "${lineage-baseline.apps.${system}.check.program} $ADDITIONAL_ARGS"
               fi
             '';
           };
@@ -285,13 +285,13 @@
           # Sync persistent policy files (commit these)
           sync = {
             type = "app";
-            program = "${sync}/bin/nixline-sync";
+            program = "${sync}/bin/lineage-sync";
           };
 
           # Check persistent files match baseline
           check = {
             type = "app";
-            program = "${check}/bin/nixline-check";
+            program = "${check}/bin/lineage-check";
           };
 
           # Pure apps (no file materialization)
@@ -302,12 +302,12 @@
 
           flake-update = {
             type = "app";
-            program = "${flake-update}/bin/nixline-flake-update";
+            program = "${flake-update}/bin/lineage-flake-update";
           };
 
           setup-hooks = {
             type = "app";
-            program = "${setup-hooks}/bin/nixline-setup-hooks";
+            program = "${setup-hooks}/bin/lineage-setup-hooks";
           };
         }
       );

@@ -5,7 +5,7 @@
 
   Usage:
     Single Pack Creation:
-      nix run github:ORG/nixline-baseline#create-pack -- <pack-name>
+      nix run github:ORG/lineage-baseline#create-pack -- <pack-name>
       nix run .#create-pack -- <pack-name>
 
     Batch Creation from Repository:
@@ -17,7 +17,7 @@
       nix run .#create-pack -- --help
 
   The enhanced version can discover governance files from repositories using the
-  NixLine Baseline Importer and create multiple pack files with real content.
+  Lineage Baseline Importer and create multiple pack files with real content.
 
   Examples:
     nix run .#create-pack -- flake8
@@ -26,7 +26,7 @@
 */
 
 pkgs.writeShellApplication {
-  name = "nixline-create-pack";
+  name = "lineage-create-pack";
 
   runtimeInputs = with pkgs; [
     coreutils
@@ -41,10 +41,10 @@ pkgs.writeShellApplication {
       show_usage() {
       cat << 'USAGE_EOF'
 ╔════════════════════════════════════════════════════════════╗
-║                   NixLine Pack Creator                     ║
+║                   Lineage Pack Creator                     ║
 ╚════════════════════════════════════════════════════════════╝
 
-Create policy packs for your NixLine baseline from templates or governance repositories.
+Create policy packs for your Lineage baseline from templates or governance repositories.
 
 Pack files are automatically organized by ecosystem:
   • universal/    - Cross-language packs (editorconfig, license, etc.)
@@ -54,10 +54,10 @@ Pack files are automatically organized by ecosystem:
   • go/           - Go ecosystem packs (future)
 
 Usage:
-  nixline-create-pack <pack-name>                    Create single pack from template
-  nixline-create-pack --from-repo <repo-url>         Import all packs from governance repo
-  nixline-create-pack --from-repo <local-path>       Import all packs from local repo
-  nixline-create-pack --list-examples                Show example pack configurations
+  lineage-create-pack <pack-name>                    Create single pack from template
+  lineage-create-pack --from-repo <repo-url>         Import all packs from governance repo
+  lineage-create-pack --from-repo <local-path>       Import all packs from local repo
+  lineage-create-pack --list-examples                Show example pack configurations
 
 Options:
   <pack-name>           Name of pack to create (e.g., flake8, prettier)
@@ -67,20 +67,20 @@ Options:
 
 Single Pack Examples:
   # Create a flake8 pack from template
-  nixline-create-pack flake8
+  lineage-create-pack flake8
 
   # Create a prettier pack from template
-  nixline-create-pack prettier
+  lineage-create-pack prettier
 
 Batch Import Examples:
   # Import all governance files from CISA lineage
-  nixline-create-pack --from-repo https://github.com/cisagov/lineage
+  lineage-create-pack --from-repo https://github.com/cisagov/lineage
 
   # Import from local governance repository
-  nixline-create-pack --from-repo /path/to/governance-repo
+  lineage-create-pack --from-repo /path/to/governance-repo
 
   # Import from another organization's governance
-  nixline-create-pack --from-repo https://github.com/myorg/governance
+  lineage-create-pack --from-repo https://github.com/myorg/governance
 
 The --from-repo option discovers governance files automatically and creates
 pack files with actual configuration content, not just templates.
@@ -227,7 +227,7 @@ EXAMPLES_EOF
     fi
 
     echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║                Creating NixLine Pack                       ║"
+    echo "║                Creating Lineage Pack                       ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
     echo "Pack name: $pack_name"
@@ -247,7 +247,7 @@ EXAMPLES_EOF
 # This pack provides $pack_name configuration for all repositories that enable it.
 #
 # To enable this pack in a consumer repository:
-# 1. Add "$pack_name" to the enabled packs list in .nixline.toml
+# 1. Add "$pack_name" to the enabled packs list in .lineage.toml
 # 2. Run 'nix run .#sync' to materialize the configuration files
 # 3. Commit the generated files to your repository
 #
@@ -283,7 +283,7 @@ utils.template-utils.createStaticPack {
   ];
 }
 
-# OPTION 2: Parameterized Pack (customizable via .nixline.toml)
+# OPTION 2: Parameterized Pack (customizable via .lineage.toml)
 # Uncomment this and comment out the static pack above if you need customization:
 #
 # utils.template-utils.createParameterizedPack {
@@ -316,7 +316,7 @@ EOF
     echo ""
     echo "Next steps:"
     echo "  1. Edit $pack_file to define your configuration files"
-    echo "  2. Add \"$pack_name\" to enabled packs in .nixline.toml"
+    echo "  2. Add \"$pack_name\" to enabled packs in .lineage.toml"
     echo "  3. Run 'nix run .#sync' in consumer repos to materialize the files"
     echo "  4. Test with 'nix run .#check' to validate the configuration"
     echo ""
@@ -361,10 +361,10 @@ EOF
     fi
 
     # Use the importer to discover governance files
-    echo "Analyzing governance files with NixLine Baseline Importer..."
+    echo "Analyzing governance files with Lineage Baseline Importer..."
 
-    # Use the local importer (assume running from nixline-baseline repo)
-    local importer_path="/Users/jason/code/nixline-org/nixline-baseline/tools/baseline-importer"
+    # Use the local importer (assume running from lineage-baseline repo)
+    local importer_path="/Users/jason/code/Lineage-org/lineage-baseline/tools/baseline-importer"
 
     # Discover governance files using the importer
     local discovery_result
@@ -466,7 +466,7 @@ EOF
 #
 # $(echo "$pack_name" | tr '[:lower:]' '[:upper:]') PACK
 #
-# Generated from $governance_file by NixLine Baseline Importer
+# Generated from $governance_file by Lineage Baseline Importer
 # Original governance repository integration
 #
 
@@ -522,7 +522,7 @@ EOF
     echo ""
 
     if [[ -n "$parameterized_packs" ]]; then
-      echo "Parameterized packs to enable in .nixline.toml:"
+      echo "Parameterized packs to enable in .lineage.toml:"
       echo "  $parameterized_packs"
       echo ""
     fi
@@ -540,13 +540,13 @@ EOF
       echo ""
     fi
 
-    echo "Recommended .nixline.toml configuration:"
+    echo "Recommended .lineage.toml configuration:"
     echo "[packs]"
     echo "enabled = [$(echo "$all_pack_names" | sed 's/ /", "/g' | sed 's/^/"/' | sed 's/$/"/')]"
     echo ""
 
     echo "Next steps:"
-    echo "  1. Copy the recommended configuration to .nixline.toml"
+    echo "  1. Copy the recommended configuration to .lineage.toml"
     echo "  2. Customize parameterized pack settings as needed"
     echo "  3. Test with 'nix run .#sync' to materialize files"
     echo "  4. Validate with 'nix run .#check'"

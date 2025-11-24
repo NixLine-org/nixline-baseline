@@ -1,5 +1,5 @@
 {
-  description = "NixLine Baseline Importer - Library for importing governance repositories";
+  description = "Lineage Baseline Importer - Library for importing governance repositories";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 

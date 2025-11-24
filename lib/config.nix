@@ -1,15 +1,15 @@
 { pkgs, lib }:
 
 /*
-  Configuration library for loading and parsing .nixline.toml files.
+  Configuration library for loading and parsing .lineage.toml files.
 
   This library enables consumers to customize pack behavior without forking
   the baseline by providing a configuration file that overrides defaults.
 
-  Expected .nixline.toml structure:
+  Expected .lineage.toml structure:
 
   [baseline]
-  repo = "github:NixLine-org/nixline-baseline"
+  repo = "github:Lineage-org/lineage-baseline"
   ref = "stable"
 
   [organization]
@@ -18,8 +18,8 @@
   default_team = "@MyCompany/maintainers"
 
   [external_sources]
-  "@myorg/security-packs" = { url = "github:myorg/nixline-security-packs", ref = "v1.2.0" }
-  "@myorg/language-packs" = { url = "github:myorg/nixline-language-packs", ref = "main" }
+  "@myorg/security-packs" = { url = "github:myorg/lineage-security-packs", ref = "v1.2.0" }
+  "@myorg/language-packs" = { url = "github:myorg/lineage-language-packs", ref = "main" }
 
   [packs]
   enabled = ["editorconfig", "codeowners", "@myorg/security-packs/custom-security"]
@@ -42,17 +42,17 @@
 */
 
 let
-  # Default configuration when no .nixline.toml exists
+  # Default configuration when no .lineage.toml exists
   defaultConfig = {
     baseline = {
-      repo = "github:NixLine-org/nixline-baseline";
+      repo = "github:Lineage-org/lineage-baseline";
       ref = "stable";
     };
 
     organization = {
-      name = "NixLine-org";
+      name = "Lineage-org";
       security_email = "security@example.com";
-      default_team = "@NixLine-org/maintainers";
+      default_team = "@Lineage-org/maintainers";
     };
 
     packs = {
@@ -72,7 +72,7 @@ let
     in
       lib.importJSON jsonFile;
 
-  # Load configuration from .nixline.toml file
+  # Load configuration from .lineage.toml file
   loadConfig = configPath:
     if builtins.pathExists configPath
     then
@@ -85,7 +85,7 @@ let
       defaultConfig;
 
   # Load configuration from current directory
-  loadLocalConfig = loadConfig ./.nixline.toml;
+  loadLocalConfig = loadConfig ./.lineage.toml;
 
   # Get pack list from configuration, respecting CLI overrides
   getPacksFromConfig = config: packsArg: excludeArg:

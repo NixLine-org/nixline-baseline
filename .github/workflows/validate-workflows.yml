@@ -25,4 +25,4 @@ permissions:
 
 jobs:
   validate:
-    uses: NixLine-org/.github/.github/workflows/validate-workflows.yml@stable
+    uses: Lineage-org/.github/.github/workflows/validate-workflows.yml@stable

@@ -1,10 +1,10 @@
-# NixLine Consumer Template
+# Lineage Consumer Template
 
-This template provides a complete NixLine consumer repository with TOML configuration and external pack support.
+This template provides a complete Lineage consumer repository with TOML configuration and external pack support.
 
 ## Features
 
-- **Configuration-driven**: Use `.nixline.toml` to customize packs and settings
+- **Configuration-driven**: Use `.lineage.toml` to customize packs and settings
 - **Upstream consumption**: Consume baseline directly without forking
 - **External pack support**: Add your organization's custom packs via flake inputs
 - **Version pinning**: Flake.lock ensures reproducible builds
@@ -14,11 +14,11 @@ This template provides a complete NixLine consumer repository with TOML configur
 
 ```bash
 # Initialize from template
-nix flake new -t github:NixLine-org/nixline-baseline my-repo
+nix flake new -t github:Lineage-org/lineage-baseline my-repo
 cd my-repo
 
 # Customize configuration
-vim .nixline.toml
+vim .lineage.toml
 
 # Sync policy files
 nix run .#sync
@@ -32,7 +32,7 @@ nix run .#flake-update
 
 ## Configuration
 
-The `.nixline.toml` file controls pack selection and customization:
+The `.lineage.toml` file controls pack selection and customization:
 
 ```toml
 [organization]
@@ -57,13 +57,13 @@ Add your organization's custom packs by modifying `flake.nix`:
 inputs = {
   # ... existing inputs ...
   myorg-security-packs = {
-    url = "github:myorg/nixline-security-packs?ref=v1.2.0";
+    url = "github:myorg/lineage-security-packs?ref=v1.2.0";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 };
 ```
 
-Then reference them in `.nixline.toml`:
+Then reference them in `.lineage.toml`:
 
 ```toml
 [packs]
@@ -84,16 +84,16 @@ enabled = [
 
 ## GitHub Actions Integration
 
-The template works seamlessly with NixLine GitHub workflows:
+The template works seamlessly with Lineage GitHub workflows:
 
 ```yaml
 # .github/workflows/ci.yml
 jobs:
-  nixline-ci:
-    uses: NixLine-org/.github/.github/workflows/nixline-ci.yml@stable
+  lineage-ci:
+    uses: Lineage-org/.github/.github/workflows/lineage-ci.yml@stable
     with:
       consumption_pattern: template
-      config_file: .nixline.toml
+      config_file: .lineage.toml
 ```
 
 ## Benefits

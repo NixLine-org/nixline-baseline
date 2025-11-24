@@ -89,7 +89,7 @@ in
     description = "ESLint configuration for JavaScript/TypeScript projects";
     homepage = "https://eslint.org/";
     example = ''
-      # Configuration in .nixline.toml:
+      # Configuration in .lineage.toml:
       [packs.eslint]
       typescript = true
       react = true

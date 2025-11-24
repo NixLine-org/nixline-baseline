@@ -5,8 +5,8 @@
 
   Usage:
     Direct Consumption:
-      nix run github:ORG/nixline-baseline#fetch-license -- <license-id> --year YYYY [--holder "Name"]
-      nix run github:ORG/nixline-baseline#fetch-license -- --list
+      nix run github:ORG/lineage-baseline#fetch-license -- <license-id> --year YYYY [--holder "Name"]
+      nix run github:ORG/lineage-baseline#fetch-license -- --list
 
     Template-Based Consumption:
       nix run .#fetch-license -- <license-id> --year YYYY [--holder "Name"]
@@ -21,7 +21,7 @@
 */
 
 pkgs.writeShellApplication {
-  name = "nixline-fetch-license";
+  name = "lineage-fetch-license";
 
   runtimeInputs = [ pkgs.curl pkgs.jq ];
 
@@ -31,14 +31,14 @@ pkgs.writeShellApplication {
     show_usage() {
       cat << 'USAGE_EOF'
 ╔════════════════════════════════════════════════════════════╗
-║              NixLine License Fetcher                       ║
+║              Lineage License Fetcher                       ║
 ╚════════════════════════════════════════════════════════════╝
 
 Fetch license text from SPDX and generate license pack.
 
 Usage:
-  nixline-fetch-license <license-id> --year YYYY [--holder "Name"]
-  nixline-fetch-license --list
+  lineage-fetch-license <license-id> --year YYYY [--holder "Name"]
+  lineage-fetch-license --list
 
 Options:
   <license-id>     SPDX license identifier (e.g., Apache-2.0, MIT, GPL-3.0)
@@ -48,13 +48,13 @@ Options:
 
 Examples:
   # Fetch Apache 2.0 license
-  nixline-fetch-license Apache-2.0 --holder "My Company" --year 2025
+  lineage-fetch-license Apache-2.0 --holder "My Company" --year 2025
 
   # Fetch MIT license
-  nixline-fetch-license MIT --holder "ACME Corp"
+  lineage-fetch-license MIT --holder "ACME Corp"
 
   # List common licenses
-  nixline-fetch-license --list
+  lineage-fetch-license --list
 
 Output:
   Generated pack file is written to packs/license.nix
@@ -119,7 +119,7 @@ LIST_EOF
 
     if [[ -z "$COPYRIGHT_YEAR" ]]; then
       echo "Error: --year is required" >&2
-      echo "Example: nixline-fetch-license Apache-2.0 --holder \"ACME Corp\" --year 2025" >&2
+      echo "Example: lineage-fetch-license Apache-2.0 --holder \"ACME Corp\" --year 2025" >&2
       exit 1
     fi
 
@@ -157,7 +157,7 @@ LIST_EOF
 #
 PACK_HEADER
 
-      echo "# Generated using: nixline-fetch-license $LICENSE_ID"
+      echo "# Generated using: lineage-fetch-license $LICENSE_ID"
       echo "# License: $LICENSE_ID"
       echo "# Copyright Holder: $COPYRIGHT_HOLDER"
       echo "# Copyright Year: $COPYRIGHT_YEAR"

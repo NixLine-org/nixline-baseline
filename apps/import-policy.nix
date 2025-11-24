@@ -5,15 +5,15 @@
 
   Usage:
     Direct Consumption:
-      nix run github:ORG/nixline-baseline#import-policy -- --file <path>
-      nix run github:ORG/nixline-baseline#import-policy -- --auto
+      nix run github:ORG/lineage-baseline#import-policy -- --file <path>
+      nix run github:ORG/lineage-baseline#import-policy -- --auto
 
     Template-Based Consumption:
       nix run .#import-policy -- --file <path>
       nix run .#import-policy -- --auto
 
   This utility helps baseline maintainers convert existing policy files into
-  NixLine packs. It recognizes common policy files (LICENSE, SECURITY.md,
+  Lineage packs. It recognizes common policy files (LICENSE, SECURITY.md,
   .editorconfig, CODEOWNERS, dependabot.yml) and generates corresponding pack
   files in packs/ directory.
 
@@ -22,7 +22,7 @@
 */
 
 pkgs.writeShellApplication {
-  name = "nixline-import-policy";
+  name = "lineage-import-policy";
 
   runtimeInputs = [ pkgs.coreutils ];
 
@@ -50,15 +50,15 @@ pkgs.writeShellApplication {
     show_usage() {
       cat << EOF
 ╔════════════════════════════════════════════════════════════╗
-║              NixLine Policy Importer                       ║
+║              Lineage Policy Importer                       ║
 ╚════════════════════════════════════════════════════════════╝
 
-Import existing policy files into NixLine pack format.
+Import existing policy files into Lineage pack format.
 
 Usage:
-  nixline-import-policy --file <path>
-  nixline-import-policy --pack <name> --file <path>
-  nixline-import-policy --auto
+  lineage-import-policy --file <path>
+  lineage-import-policy --pack <name> --file <path>
+  lineage-import-policy --auto
 
 Options:
   --file PATH    Path to existing policy file
@@ -74,13 +74,13 @@ Supported files:
 
 Examples:
   # Import specific file (auto-detect pack)
-  nixline-import-policy --file .editorconfig
+  lineage-import-policy --file .editorconfig
 
   # Import with explicit pack name
-  nixline-import-policy --pack editorconfig --file .editorconfig
+  lineage-import-policy --pack editorconfig --file .editorconfig
 
   # Auto-import all recognized files
-  nixline-import-policy --auto
+  lineage-import-policy --auto
 
 Output:
   Generated pack files are written to packs/ directory

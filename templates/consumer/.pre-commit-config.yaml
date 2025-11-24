@@ -1,5 +1,5 @@
 # Pre-commit configuration
-# After syncing NixLine policies, run: nix run .#setup-hooks
+# After syncing Lineage policies, run: nix run .#setup-hooks
 #
 # Customize this file for your project's needs.
 # See https://pre-commit.com for more hooks.

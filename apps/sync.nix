@@ -5,7 +5,7 @@
 */
 
 pkgs.writeShellApplication {
-  name = "nixline-sync";
+  name = "lineage-sync";
 
   runtimeInputs = with pkgs; [
     coreutils
@@ -21,27 +21,27 @@ pkgs.writeShellApplication {
     show_usage() {
       cat << 'USAGE_EOF'
 ╔════════════════════════════════════════════════════════════╗
-║                    NixLine Sync (Enhanced)                ║
+║                    Lineage Sync (Enhanced)                ║
 ╚════════════════════════════════════════════════════════════╝
 
 Materialize policy files from the baseline with configuration support.
 
 Usage:
-  nixline-sync [OPTIONS]
+  lineage-sync [OPTIONS]
 
 Options:
   --packs <list>       Comma-separated list of packs to materialize
   --exclude <list>     Comma-separated list of packs to exclude from defaults
-  --config <file>      Load configuration from TOML file (default: .nixline.toml)
+  --config <file>      Load configuration from TOML file (default: .lineage.toml)
   --override <key=val> Override configuration values (e.g., org.name=MyCompany)
   --dry-run           Show what would be done without making changes
   --help              Show this help message
 
 Examples:
-  nixline-sync
-  nixline-sync --config my-config.toml
-  nixline-sync --packs editorconfig,license --override org.name=TestCorp
-  nixline-sync --dry-run
+  lineage-sync
+  lineage-sync --config my-config.toml
+  lineage-sync --packs editorconfig,license --override org.name=TestCorp
+  lineage-sync --dry-run
 
 USAGE_EOF
     }
@@ -52,7 +52,7 @@ USAGE_EOF
     # Parse command line arguments
     PACKS_ARG=""
     EXCLUDE_ARG=""
-    CONFIG_FILE=".nixline.toml"
+    CONFIG_FILE=".lineage.toml"
     OVERRIDES=()
     DRY_RUN=false
 
@@ -111,15 +111,15 @@ USAGE_EOF
     done
 
     echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║                 NixLine Sync (Enhanced)                   ║"
+    echo "║                 Lineage Sync (Enhanced)                   ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
 
     # Load and parse configuration
     CONFIG_JSON="{}"
-    ORG_NAME="NixLine-org"
+    ORG_NAME="Lineage-org"
     ORG_EMAIL="security@example.com"
-    ORG_TEAM="@NixLine-org/maintainers"
+    ORG_TEAM="@Lineage-org/maintainers"
 
     if [[ -f "$CONFIG_FILE" ]]; then
       echo "Loading configuration from: $CONFIG_FILE"
@@ -128,9 +128,9 @@ USAGE_EOF
       CONFIG_JSON=$(remarshal -if toml -of json < "$CONFIG_FILE" 2>/dev/null || echo "{}")
 
       # Extract organization settings
-      ORG_NAME=$(echo "''${CONFIG_JSON}" | jq -r '.organization.name // "NixLine-org"')
+      ORG_NAME=$(echo "''${CONFIG_JSON}" | jq -r '.organization.name // "Lineage-org"')
       ORG_EMAIL=$(echo "''${CONFIG_JSON}" | jq -r '.organization.email // .organization.security_email // "security@example.com"')
-      ORG_TEAM=$(echo "''${CONFIG_JSON}" | jq -r '.organization.default_team // "@NixLine-org/maintainers"')
+      ORG_TEAM=$(echo "''${CONFIG_JSON}" | jq -r '.organization.default_team // "@Lineage-org/maintainers"')
 
       echo "Organization: $ORG_NAME"
       echo "Security Email: $ORG_EMAIL"
