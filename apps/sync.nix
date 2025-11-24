@@ -117,9 +117,9 @@ USAGE_EOF
 
     # Load and parse configuration
     CONFIG_JSON="{}"
-    ORG_NAME="NixLine-org"
+    ORG_NAME="Lineage-org"
     ORG_EMAIL="security@example.com"
-    ORG_TEAM="@NixLine-org/maintainers"
+    ORG_TEAM="@Lineage-org/maintainers"
 
     if [[ -f "$CONFIG_FILE" ]]; then
       echo "Loading configuration from: $CONFIG_FILE"
@@ -128,9 +128,9 @@ USAGE_EOF
       CONFIG_JSON=$(remarshal -if toml -of json < "$CONFIG_FILE" 2>/dev/null || echo "{}")
 
       # Extract organization settings
-      ORG_NAME=$(echo "''${CONFIG_JSON}" | jq -r '.organization.name // "NixLine-org"')
+      ORG_NAME=$(echo "''${CONFIG_JSON}" | jq -r '.organization.name // "Lineage-org"')
       ORG_EMAIL=$(echo "''${CONFIG_JSON}" | jq -r '.organization.email // .organization.security_email // "security@example.com"')
-      ORG_TEAM=$(echo "''${CONFIG_JSON}" | jq -r '.organization.default_team // "@NixLine-org/maintainers"')
+      ORG_TEAM=$(echo "''${CONFIG_JSON}" | jq -r '.organization.default_team // "@Lineage-org/maintainers"')
 
       echo "Organization: $ORG_NAME"
       echo "Security Email: $ORG_EMAIL"

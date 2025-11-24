@@ -5,9 +5,9 @@
 
   Usage:
     Direct Consumption (Recommended):
-      nix run github:ORG/nixline-baseline#check
-      nix run github:ORG/nixline-baseline#check -- --packs editorconfig,license,codeowners
-      nix run github:ORG/nixline-baseline#check -- --exclude security,dependabot
+      nix run github:ORG/lineage-baseline#check
+      nix run github:ORG/lineage-baseline#check -- --packs editorconfig,license,codeowners
+      nix run github:ORG/lineage-baseline#check -- --exclude security,dependabot
 
     Template-Based Consumption:
       nix run .#check

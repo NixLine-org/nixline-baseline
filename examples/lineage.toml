@@ -3,7 +3,7 @@
 # pack behavior without forking the baseline.
 
 [baseline]
-repo = "github:NixLine-org/nixline-baseline"
+repo = "github:Lineage-org/lineage-baseline"
 ref = "stable"
 
 [organization]

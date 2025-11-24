@@ -8,8 +8,8 @@
 
   Usage:
     Direct Consumption:
-      nix run github:ORG/nixline-baseline#migrate-governance -- --governance-repo /path/to/repo
-      nix run github:ORG/nixline-baseline#migrate-governance -- --help
+      nix run github:ORG/lineage-baseline#migrate-governance -- --governance-repo /path/to/repo
+      nix run github:ORG/lineage-baseline#migrate-governance -- --help
 
     Template-Based Consumption:
       nix run .#migrate-governance -- --governance-repo /path/to/repo
@@ -44,7 +44,7 @@ pkgs.writeShellApplication {
     ORG_EMAIL="admin@example.com"
     SECURITY_EMAIL=""
     DEFAULT_TEAM="@CHANGEME/maintainers"
-    BASELINE_REF="github:NixLine-org/nixline-baseline"
+    BASELINE_REF="github:Lineage-org/lineage-baseline"
     VERBOSE=false
     DRY_RUN=false
 
@@ -69,7 +69,7 @@ Options:
   --org-email EMAIL         Organization email (default: admin@example.com)
   --security-email EMAIL    Security contact (default: same as org-email)
   --default-team TEAM       Default team handle (default: @CHANGEME/maintainers)
-  --baseline-ref REF        NixLine baseline reference (default: github:NixLine-org/nixline-baseline)
+  --baseline-ref REF        NixLine baseline reference (default: github:Lineage-org/lineage-baseline)
   --verbose                 Enable verbose output
   --dry-run                 Show what would be done without making changes
   --help                    Show this help
@@ -696,7 +696,7 @@ EOF
 
     if [[ "$DRY_RUN" == false ]]; then
       # Use nix to get the baseline files
-      baseline_path=$(nix eval --raw --impure --expr "builtins.fetchGit { url = \"https://github.com/NixLine-org/nixline-baseline\"; }")
+      baseline_path=$(nix eval --raw --impure --expr "builtins.fetchGit { url = \"https://github.com/Lineage-org/lineage-baseline\"; }")
 
       cp "$baseline_path/flake.nix" "$OUTPUT_DIR/"
       cp -r "$baseline_path/lib" "$OUTPUT_DIR/"

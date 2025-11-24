@@ -171,7 +171,7 @@ let
     else
       # Generate from standards and configuration
       ''
-        # EditorConfig - Generated from nixline-baseline
+        # EditorConfig - Generated from lineage-baseline
         # This file defines consistent coding styles for this repository
         # See: https://editorconfig.org/
 

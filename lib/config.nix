@@ -9,7 +9,7 @@
   Expected .lineage.toml structure:
 
   [baseline]
-  repo = "github:NixLine-org/nixline-baseline"
+  repo = "github:Lineage-org/lineage-baseline"
   ref = "stable"
 
   [organization]
@@ -45,14 +45,14 @@ let
   # Default configuration when no .lineage.toml exists
   defaultConfig = {
     baseline = {
-      repo = "github:NixLine-org/nixline-baseline";
+      repo = "github:Lineage-org/lineage-baseline";
       ref = "stable";
     };
 
     organization = {
-      name = "NixLine-org";
+      name = "Lineage-org";
       security_email = "security@example.com";
-      default_team = "@NixLine-org/maintainers";
+      default_team = "@Lineage-org/maintainers";
     };
 
     packs = {

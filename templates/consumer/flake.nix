@@ -3,8 +3,8 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/08dacfca559e1d7da38f3cf05f1f45ee9bfd213c";
-    nixline-baseline = {
-      url = "github:NixLine-org/nixline-baseline?ref=stable";
+    lineage-baseline = {
+      url = "github:Lineage-org/lineage-baseline?ref=stable";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -20,7 +20,7 @@
     # };
   };
 
-  outputs = inputs@{ self, nixpkgs, nixline-baseline, ... }:
+  outputs = inputs@{ self, nixpkgs, lineage-baseline, ... }:
     let
       forAllSystems = nixpkgs.lib.genAttrs [
         "x86_64-linux"
@@ -35,11 +35,11 @@
         let
           pkgs = import nixpkgs { inherit system; };
           lib = nixpkgs.lib;
-          baseline = nixline-baseline.lib.${system};
+          baseline = lineage-baseline.lib.${system};
 
           # Collect external pack sources from flake inputs
-          # Filter out standard inputs (self, nixpkgs, nixline-baseline)
-          standardInputs = [ "self" "nixpkgs" "nixline-baseline" ];
+          # Filter out standard inputs (self, nixpkgs, lineage-baseline)
+          standardInputs = [ "self" "nixpkgs" "lineage-baseline" ];
           externalPackInputs = lib.filterAttrs (name: _: !(lib.elem name standardInputs)) inputs;
 
           # Load external pack registries from flake inputs
@@ -104,7 +104,7 @@
 
               # Default configuration and pack list
               DEFAULT_CONFIG='${builtins.toJSON {
-                organization = { name = "NixLine-org"; email = "opensource@example.com"; };
+                organization = { name = "Lineage-org"; email = "opensource@example.com"; };
                 packs = { enabled = [ "editorconfig" "codeowners" "security" "license" "precommit" "dependabot" ]; };
               }}'
 
@@ -238,10 +238,10 @@
               CONFIG_FILE=".lineage.toml"
               if [[ -f "$CONFIG_FILE" ]]; then
                 echo "Using configuration: $CONFIG_FILE"
-                eval "${nixline-baseline.apps.${system}.check.program} --config \"$CONFIG_FILE\" $ADDITIONAL_ARGS"
+                eval "${lineage-baseline.apps.${system}.check.program} --config \"$CONFIG_FILE\" $ADDITIONAL_ARGS"
               else
                 echo "No .lineage.toml found, using default configuration"
-                eval "${nixline-baseline.apps.${system}.check.program} $ADDITIONAL_ARGS"
+                eval "${lineage-baseline.apps.${system}.check.program} $ADDITIONAL_ARGS"
               fi
             '';
           };

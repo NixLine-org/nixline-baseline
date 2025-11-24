@@ -17,7 +17,7 @@
 #
 # To enable this pack in a consumer repository:
 # 1. Add "precommit" to the enabled packs list in .lineage.toml
-# 2. Run 'nix run github:ORG/nixline-baseline#sync' to materialize the configuration files
+# 2. Run 'nix run github:ORG/lineage-baseline#sync' to materialize the configuration files
 # 3. Commit the generated .pre-commit-config.yaml file to your repository
 #
 

@@ -5,8 +5,8 @@
 
   Usage:
     Direct Consumption:
-      nix run github:ORG/nixline-baseline#fetch-license -- <license-id> --year YYYY [--holder "Name"]
-      nix run github:ORG/nixline-baseline#fetch-license -- --list
+      nix run github:ORG/lineage-baseline#fetch-license -- <license-id> --year YYYY [--holder "Name"]
+      nix run github:ORG/lineage-baseline#fetch-license -- --list
 
     Template-Based Consumption:
       nix run .#fetch-license -- <license-id> --year YYYY [--holder "Name"]

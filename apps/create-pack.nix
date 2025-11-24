@@ -5,7 +5,7 @@
 
   Usage:
     Single Pack Creation:
-      nix run github:ORG/nixline-baseline#create-pack -- <pack-name>
+      nix run github:ORG/lineage-baseline#create-pack -- <pack-name>
       nix run .#create-pack -- <pack-name>
 
     Batch Creation from Repository:
@@ -363,8 +363,8 @@ EOF
     # Use the importer to discover governance files
     echo "Analyzing governance files with NixLine Baseline Importer..."
 
-    # Use the local importer (assume running from nixline-baseline repo)
-    local importer_path="/Users/jason/code/nixline-org/nixline-baseline/tools/baseline-importer"
+    # Use the local importer (assume running from lineage-baseline repo)
+    local importer_path="/Users/jason/code/nixline-org/lineage-baseline/tools/baseline-importer"
 
     # Discover governance files using the importer
     local discovery_result

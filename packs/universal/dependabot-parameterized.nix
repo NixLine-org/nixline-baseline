@@ -91,7 +91,7 @@ in
       if customFile != null then
         dependabotContent
       else ''
-      # Dependabot configuration - Generated from nixline-baseline
+      # Dependabot configuration - Generated from lineage-baseline
       # To customize, edit .lineage.toml [packs.dependabot] section
 
       version: 2

@@ -5,8 +5,8 @@
 
   Usage:
     Direct Consumption:
-      nix run github:ORG/nixline-baseline#import-policy -- --file <path>
-      nix run github:ORG/nixline-baseline#import-policy -- --auto
+      nix run github:ORG/lineage-baseline#import-policy -- --file <path>
+      nix run github:ORG/lineage-baseline#import-policy -- --auto
 
     Template-Based Consumption:
       nix run .#import-policy -- --file <path>

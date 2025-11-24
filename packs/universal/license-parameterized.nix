@@ -32,7 +32,7 @@ let
   packConfig = config.packs.license or {};
 
   # Organization configuration for fallback
-  orgName = config.organization.name or "NixLine-org";
+  orgName = config.organization.name or "Lineage-org";
 
   # License configuration
   licenseType = packConfig.type or "Apache-2.0";

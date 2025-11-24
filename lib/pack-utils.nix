@@ -16,10 +16,10 @@ let
 
     # Extract organization configuration with fallbacks
     getOrgConfig = config: {
-      name = config.organization.name or "NixLine-org";
+      name = config.organization.name or "Lineage-org";
       email = config.organization.email or "security@example.com";
       security_email = config.organization.security_email or config.organization.email or "security@example.com";
-      default_team = config.organization.default_team or "@NixLine-org/maintainers";
+      default_team = config.organization.default_team or "@Lineage-org/maintainers";
     };
 
     # Handle custom file overrides (file reading moved to app layer)
@@ -154,7 +154,7 @@ let
       pack_name = packName;
       ecosystem = ecosystem;
       parameterized = parameterized;
-      generated_by = "nixline-baseline";
+      generated_by = "lineage-baseline";
       version = "1.0";
     };
 
