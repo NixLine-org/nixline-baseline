@@ -27,7 +27,7 @@ jobs:
       (github.event_name == 'push' && github.ref == 'refs/tags/stable') ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
        contains(github.event.head_commit.modified, 'templates/consumer/flake.nix'))
-    uses: NixLine-org/.github/.github/workflows/nixline-flake-lock-update.yml@stable
+    uses: Lineage-org/.github/.github/workflows/nixline-flake-lock-update.yml@stable
     with:
       flake-directory: 'templates/consumer'
       commit-message: 'Update consumer template flake.lock'

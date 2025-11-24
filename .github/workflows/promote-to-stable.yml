@@ -44,14 +44,14 @@ permissions:
 jobs:
   promote-pr:
     if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'promote-to-stable')
-    uses: NixLine-org/.github/.github/workflows/nixline-promote-to-stable.yml@stable
+    uses: Lineage-org/.github/.github/workflows/nixline-promote-to-stable.yml@stable
     with:
       promotion_mode: pr-based
       stable_tag: stable
 
   promote-manual:
     if: github.event_name == 'workflow_dispatch'
-    uses: NixLine-org/.github/.github/workflows/nixline-promote-to-stable.yml@stable
+    uses: Lineage-org/.github/.github/workflows/nixline-promote-to-stable.yml@stable
     with:
       promotion_mode: ${{ github.event.inputs.automation_trigger == 'true' && 'automated' || 'manual' }}
       commit_hash: ${{ github.event.inputs.commit_hash }}
@@ -61,7 +61,7 @@ jobs:
   sync-unstable-after-promotion:
     needs: [promote-pr, promote-manual]
     if: always() && (needs.promote-pr.result == 'success' || needs.promote-manual.result == 'success')
-    uses: NixLine-org/.github/.github/workflows/nixline-sync-unstable.yml@stable
+    uses: Lineage-org/.github/.github/workflows/nixline-sync-unstable.yml@stable
     with:
       target_branch: unstable
       source_branch: main
