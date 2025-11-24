@@ -21,7 +21,7 @@ pkgs.writeShellApplication {
     show_usage() {
       cat << 'USAGE_EOF'
 ╔════════════════════════════════════════════════════════════╗
-║                    NixLine Sync (Enhanced)                ║
+║                    Lineage Sync (Enhanced)                ║
 ╚════════════════════════════════════════════════════════════╝
 
 Materialize policy files from the baseline with configuration support.
@@ -111,7 +111,7 @@ USAGE_EOF
     done
 
     echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║                 NixLine Sync (Enhanced)                   ║"
+    echo "║                 Lineage Sync (Enhanced)                   ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
 

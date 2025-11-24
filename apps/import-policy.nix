@@ -50,7 +50,7 @@ pkgs.writeShellApplication {
     show_usage() {
       cat << EOF
 ╔════════════════════════════════════════════════════════════╗
-║              NixLine Policy Importer                       ║
+║              Lineage Policy Importer                       ║
 ╚════════════════════════════════════════════════════════════╝
 
 Import existing policy files into NixLine pack format.

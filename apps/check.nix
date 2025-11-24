@@ -40,9 +40,18 @@ pkgs.writeShellApplication {
 
     show_usage() {
       cat << 'USAGE_EOF'
-╔════════════════════════════════════════════════════════════╗
-║                   NixLine Check                            ║
-╚════════════════════════════════════════════════════════════╝
+          \
+       \   |   /
+        \  |  /
+    ------ + ------
+        /  |  \
+       /   |   \
+          /
+
+      LINEAGE
+  Policy Governance via Nix
+
+           ── Lineage Check ──
 
 Validate that policy files in the current repository match the baseline.
 
@@ -119,9 +128,18 @@ USAGE_EOF
       NIXLINE_PACKS="''${NIXLINE_PACKS:-$DEFAULT_PACKS}"
     fi
 
-    echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║                   NixLine Check                            ║"
-    echo "╚════════════════════════════════════════════════════════════╝"
+    echo "          \\"
+    echo "       \\   |   /"
+    echo "        \\  |  /"
+    echo "    ------ + ------"
+    echo "        /  |  \\"
+    echo "       /   |   \\"
+    echo "          /"
+    echo ""
+    echo "      LINEAGE"
+    echo "  Policy Governance via Nix"
+    echo ""
+    echo "       ── Lineage Check ──"
     echo ""
 
     echo "Validating packs: $NIXLINE_PACKS"

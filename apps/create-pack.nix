@@ -41,7 +41,7 @@ pkgs.writeShellApplication {
       show_usage() {
       cat << 'USAGE_EOF'
 ╔════════════════════════════════════════════════════════════╗
-║                   NixLine Pack Creator                     ║
+║                   Lineage Pack Creator                     ║
 ╚════════════════════════════════════════════════════════════╝
 
 Create policy packs for your NixLine baseline from templates or governance repositories.

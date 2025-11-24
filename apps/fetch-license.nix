@@ -31,7 +31,7 @@ pkgs.writeShellApplication {
     show_usage() {
       cat << 'USAGE_EOF'
 ╔════════════════════════════════════════════════════════════╗
-║              NixLine License Fetcher                       ║
+║              Lineage License Fetcher                       ║
 ╚════════════════════════════════════════════════════════════╝
 
 Fetch license text from SPDX and generate license pack.

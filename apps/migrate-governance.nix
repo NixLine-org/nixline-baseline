@@ -51,7 +51,7 @@ pkgs.writeShellApplication {
     show_usage() {
       cat << 'EOF'
 ╔════════════════════════════════════════════════════════════╗
-║              NixLine Governance Migration                  ║
+║              Lineage Governance Migration                  ║
 ╚════════════════════════════════════════════════════════════╝
 
 Migrate existing governance repositories to NixLine baseline format.
