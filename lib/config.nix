@@ -18,8 +18,8 @@
   default_team = "@MyCompany/maintainers"
 
   [external_sources]
-  "@myorg/security-packs" = { url = "github:myorg/nixline-security-packs", ref = "v1.2.0" }
-  "@myorg/language-packs" = { url = "github:myorg/nixline-language-packs", ref = "main" }
+  "@myorg/security-packs" = { url = "github:myorg/lineage-security-packs", ref = "v1.2.0" }
+  "@myorg/language-packs" = { url = "github:myorg/lineage-language-packs", ref = "main" }
 
   [packs]
   enabled = ["editorconfig", "codeowners", "@myorg/security-packs/custom-security"]

@@ -1,5 +1,5 @@
 {
-  description = "NixLine consumer repository with TOML configuration and external pack support";
+  description = "Lineage consumer repository with TOML configuration and external pack support";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/08dacfca559e1d7da38f3cf05f1f45ee9bfd213c";
@@ -11,11 +11,11 @@
     # External pack sources (add your organization's pack repositories here)
     # Example:
     # myorg-security-packs = {
-    #   url = "github:myorg/nixline-security-packs?ref=v1.2.0";
+    #   url = "github:myorg/lineage-security-packs?ref=v1.2.0";
     #   inputs.nixpkgs.follows = "nixpkgs";
     # };
     # myorg-language-packs = {
-    #   url = "github:myorg/nixline-language-packs?ref=main";
+    #   url = "github:myorg/lineage-language-packs?ref=main";
     #   inputs.nixpkgs.follows = "nixpkgs";
     # };
   };
@@ -84,11 +84,11 @@
 
           # Configuration-driven sync app with external pack support
           sync = pkgs.writeShellApplication {
-            name = "nixline-sync";
+            name = "lineage-sync";
             runtimeInputs = with pkgs; [ jq remarshal ];
             text = ''
               echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║                NixLine Sync (with External Packs)         ║"
+              echo "║                Lineage Sync (with External Packs)         ║"
               echo "╚════════════════════════════════════════════════════════════╝"
               echo ""
 
@@ -160,11 +160,11 @@
 
           # Flake update app - updates flake.lock
           flake-update = pkgs.writeShellApplication {
-            name = "nixline-flake-update";
+            name = "lineage-flake-update";
             runtimeInputs = [ pkgs.git pkgs.gh ];
             text = ''
               echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║                 NixLine Flake Update                       ║"
+              echo "║                 Lineage Flake Update                       ║"
               echo "╚════════════════════════════════════════════════════════════╝"
               echo ""
 
@@ -198,11 +198,11 @@
 
           # Setup hooks app - installs pre-commit hooks
           setup-hooks = pkgs.writeShellApplication {
-            name = "nixline-setup-hooks";
+            name = "lineage-setup-hooks";
             runtimeInputs = [ pkgs.git pkgs.pre-commit ];
             text = ''
               echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║                NixLine Setup Hooks                         ║"
+              echo "║                Lineage Setup Hooks                         ║"
               echo "╚════════════════════════════════════════════════════════════╝"
               echo ""
 
@@ -224,11 +224,11 @@
           # Validates files against baseline using same config as sync
           # Supports passing additional arguments like --override
           check = pkgs.writeShellApplication {
-            name = "nixline-check";
+            name = "lineage-check";
             runtimeInputs = with pkgs; [ jq remarshal ];
             text = ''
               echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║                   NixLine Check                            ║"
+              echo "║                   Lineage Check                            ║"
               echo "╚════════════════════════════════════════════════════════════╝"
               echo ""
 
@@ -285,13 +285,13 @@
           # Sync persistent policy files (commit these)
           sync = {
             type = "app";
-            program = "${sync}/bin/nixline-sync";
+            program = "${sync}/bin/lineage-sync";
           };
 
           # Check persistent files match baseline
           check = {
             type = "app";
-            program = "${check}/bin/nixline-check";
+            program = "${check}/bin/lineage-check";
           };
 
           # Pure apps (no file materialization)
@@ -302,12 +302,12 @@
 
           flake-update = {
             type = "app";
-            program = "${flake-update}/bin/nixline-flake-update";
+            program = "${flake-update}/bin/lineage-flake-update";
           };
 
           setup-hooks = {
             type = "app";
-            program = "${setup-hooks}/bin/nixline-setup-hooks";
+            program = "${setup-hooks}/bin/lineage-setup-hooks";
           };
         }
       );

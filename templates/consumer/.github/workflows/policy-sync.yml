@@ -14,8 +14,8 @@ permissions:
 
 jobs:
   sync:
-    uses: Lineage-org/.github/.github/workflows/nixline-policy-sync-smart.yml@stable
+    uses: Lineage-org/.github/.github/workflows/lineage-policy-sync-smart.yml@stable
     with:
       consumption_pattern: direct
-      baseline_repo: Lineage-org/nixline-baseline
+      baseline_repo: Lineage-org/lineage-baseline
       baseline_ref: stable

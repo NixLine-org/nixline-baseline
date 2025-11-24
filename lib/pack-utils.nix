@@ -1,7 +1,7 @@
 { pkgs, lib }:
 
 #
-# NIXLINE PACK UTILITIES LIBRARY
+# LINEAGE PACK UTILITIES LIBRARY
 #
 # Shared utilities to eliminate DRY violations across pack definitions.
 # This library provides common patterns for configuration parsing,

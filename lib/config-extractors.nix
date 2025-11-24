@@ -4,7 +4,7 @@
 # CONFIGURATION EXTRACTORS LIBRARY
 #
 # Utilities for extracting configuration from existing files and converting
-# them to NixLine pack configuration format. This enables importing existing
+# them to Lineage pack configuration format. This enables importing existing
 # project configurations into parameterized packs.
 #
 

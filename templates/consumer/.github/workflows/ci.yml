@@ -6,8 +6,8 @@ permissions:
   contents: read
 
 jobs:
-  nixline-ci:
-    uses: Lineage-org/.github/.github/workflows/nixline-ci.yml@stable
+  lineage-ci:
+    uses: Lineage-org/.github/.github/workflows/lineage-ci.yml@stable
     with:
       channel: stable
       consumption_pattern: template

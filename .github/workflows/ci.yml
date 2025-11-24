@@ -1,7 +1,7 @@
 #
 # Baseline CI - Central Automation and Validation Workflow
 #
-# This workflow serves as the backbone of the NixLine automation pipeline for baseline repositories.
+# This workflow serves as the backbone of the Lineage automation pipeline for baseline repositories.
 # It performs comprehensive validation and orchestrates the stable promotion process.
 #
 # === WHAT THIS WORKFLOW DOES ===
@@ -28,7 +28,7 @@
 #
 # === DIFFERENCE FROM CONSUMER CI ===
 # - Baseline repos (this): Validate the SOURCE of policies and manage stable promotion
-# - Consumer repos (nixline-ci.yml): Materialize and validate policies FROM baseline
+# - Consumer repos (lineage-ci.yml): Materialize and validate policies FROM baseline
 #
 # Triggered by: push, pull_request, workflow_dispatch (manual)
 # Automation: Automatic stable candidate updates and promotion for main branch
