@@ -19,11 +19,12 @@ This baseline provides organization-wide policy management with comprehensive va
 ## Table of Contents
 
 - [Security Requirements](#security-requirements)
-- [What is NixLine?](#what-is-nixline)
+- [What is Lineage?](#what-is-lineage)
   - [Key Benefits](#key-benefits)
-  - [Why NixLine?](#why-nixline)
+  - [Why Lineage?](#why-lineage)
 - [Consumption Patterns](#consumption-patterns)
 - [Purpose](#purpose)
+- [External Pack Development](#external-pack-development)
 - [Architecture](#architecture)
 - [Workflow Dependencies](#workflow-dependencies)
 - [Usage](#usage)
@@ -47,7 +48,7 @@ This baseline provides organization-wide policy management with comprehensive va
 - [Supply Chain Security - Nixpkgs Updates](#supply-chain-security---nixpkgs-updates)
 - [Baseline Promotion Workflow](#baseline-promotion-workflow)
 - [Stable Candidate Coordination](#stable-candidate-coordination)
-- [NixLine vs Traditional Policy Distribution](#nixline-vs-traditional-policy-distribution)
+- [Lineage vs Traditional Policy Distribution](#lineage-vs-traditional-policy-distribution)
 - [Importance of the Baseline](#importance-of-the-baseline)
 
 ---
@@ -68,16 +69,16 @@ See [SECURITY-BASELINE.md](SECURITY-BASELINE.md) for detailed security guideline
 
 ---
 
-## What is NixLine?
+## What is Lineage?
 
-**NixLine** provides organization-wide CI governance and policy enforcement through Nix flakes with **configuration-driven consumption** that eliminates the need for forking or maintaining your own baseline.
+**Lineage** provides organization-wide CI governance and policy enforcement through Nix flakes with **configuration-driven consumption** that eliminates the need for forking or maintaining your own baseline.
 
 ### Key Benefits
 
-- **Pure Upstream Consumption**: Use NixLine baseline directly without forking
+- **Pure Upstream Consumption**: Use Lineage baseline directly without forking
 - **Zero Maintenance Overhead**: Consume as pure upstream, receive improvements automatically
 - **Configuration-Driven**: Full customization through `.nixline.toml` files and CLI overrides
-- **Governance Migration**: Automatic conversion of existing governance repositories to NixLine format
+- **Governance Migration**: Automatic conversion of existing governance repositories to Lineage format
 - **Workflow Automation**: Pre-validated CI/CD workflows with auto-merge support
 - **Script Packaging**: Automatic detection and distribution of organization-specific scripts
 - **Immediate Updates**: Receive baseline improvements instantly without manual intervention
@@ -86,11 +87,11 @@ See [SECURITY-BASELINE.md](SECURITY-BASELINE.md) for detailed security guideline
 - **External Pack Support**: Add organization-specific packs via template pattern
 - **Reproducible**: All dependencies pinned, configuration separated from logic
 
-### Why NixLine?
+### Why Lineage?
 
 **The Problem**: Organizations managing hundreds of repositories face a critical challenge - when security policies change, licenses are adopted or coding standards are updated, those changes must propagate to every repository. Traditional governance systems create individual pull requests to each repository, requiring manual review and merge. For an organization with 500 repositories, a single policy change creates 500 separate pull requests requiring human attention.
 
-**The Solution**: NixLine eliminates the pull request bottleneck through Nix-based materialization. Policies propagate instantly through flake updates while maintaining audit trails through optional PR workflows with auto-merge. Organizations receive:
+**The Solution**: Lineage eliminates the pull request bottleneck through Nix-based materialization. Policies propagate instantly through flake updates while maintaining audit trails through optional PR workflows with auto-merge. Organizations receive:
 
 - **Instant Policy Updates**: Changes materialize immediately without PR bottlenecks
 - **Governance Migration**: Convert existing governance repositories automatically
@@ -102,7 +103,7 @@ See [SECURITY-BASELINE.md](SECURITY-BASELINE.md) for detailed security guideline
 
 ## Consumption Patterns
 
-NixLine offers three consumption patterns to match different organizational needs:
+Lineage offers three consumption patterns to match different organizational needs:
 
 ```mermaid
 graph TB
@@ -112,7 +113,7 @@ graph TB
     B -->|Organization Branding| D[Configuration-Driven]
     B -->|+ External Packs| E[Template-Based]
 
-    C --> C1[nix run github:NixLine-org/nixline-baseline#sync]
+    C --> C1[nix run github:Lineage-org/nixline-baseline#sync]
     C --> C2[✅ Zero configuration]
     C --> C3[✅ Default policies only]
     C --> C4[❌ No customization]
@@ -137,11 +138,11 @@ graph TB
 
 ### Pattern 1: Direct Consumption (Default)
 
-**Best for**: Quick start with default NixLine policies.
+**Best for**: Quick start with default Lineage policies.
 
 ```bash
 # No configuration required - uses defaults
-nix run github:NixLine-org/nixline-baseline#sync
+nix run github:Lineage-org/nixline-baseline#sync
 ```
 
 ### Pattern 2: Configuration-Driven (Recommended)
@@ -150,7 +151,7 @@ nix run github:NixLine-org/nixline-baseline#sync
 
 ```bash
 # Create configuration file, then sync
-nix run github:NixLine-org/nixline-baseline#sync -- --config .nixline.toml
+nix run github:Lineage-org/nixline-baseline#sync -- --config .nixline.toml
 ```
 
 **Configuration-Driven Architecture**:
@@ -195,7 +196,7 @@ line_length = 100
 
 ```bash
 # Initialize from template
-nix flake new -t github:NixLine-org/nixline-baseline my-repo
+nix flake new -t github:Lineage-org/nixline-baseline my-repo
 cd my-repo
 
 # Add external packs to flake.nix, then sync
@@ -229,7 +230,7 @@ flowchart TD
 
 ## Purpose
 
-NixLine uses a **hybrid architecture** with two types of governance:
+Lineage uses a **hybrid architecture** with two types of governance:
 
 ### 1. Persistent Policies (Committed)
 Files like `LICENSE`, `SECURITY.md`, `.editorconfig` are materialized and committed to consumer repos for visibility and GitHub integration.
@@ -241,7 +242,7 @@ Apps like pack creation and policy import tools run via `nix run .#app` with no 
 
 ## External Pack Development
 
-Organizations can create their own pack repositories to extend NixLine functionality:
+Organizations can create their own pack repositories to extend Lineage functionality:
 
 ### External Pack Repository Structure
 
@@ -303,7 +304,7 @@ enabled = [
 ]
 ```
 
-The [nixline-demo1](https://github.com/NixLine-org/nixline-demo1) demonstrates **direct consumption**, while [nixline-demo2](https://github.com/NixLine-org/nixline-demo2) shows **configuration-driven** patterns.
+The [nixline-demo1](https://github.com/Lineage-org/nixline-demo1) demonstrates **direct consumption**, while [nixline-demo2](https://github.com/Lineage-org/nixline-demo2) shows **configuration-driven** patterns.
 
 ---
 
@@ -313,7 +314,7 @@ The [nixline-demo1](https://github.com/NixLine-org/nixline-demo1) demonstrates *
 
 ```mermaid
 graph LR
-    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;NixLine Baseline Repository&nbsp;&nbsp;&nbsp;&nbsp;"]
+    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;Lineage Baseline Repository&nbsp;&nbsp;&nbsp;&nbsp;"]
         B1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes apps & packs&nbsp;&nbsp;"]
         B2["&nbsp;&nbsp;packs/ (parameterized)&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Built-in Policy Definitions&nbsp;&nbsp;"]
         B3["&nbsp;&nbsp;apps/sync.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Enhanced with TOML support&nbsp;&nbsp;"]
@@ -346,7 +347,7 @@ graph LR
 
 ```mermaid
 graph TD
-    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;NixLine Baseline Repository&nbsp;&nbsp;&nbsp;&nbsp;"]
+    subgraph baseline["&nbsp;&nbsp;&nbsp;&nbsp;Lineage Baseline Repository&nbsp;&nbsp;&nbsp;&nbsp;"]
         B1["&nbsp;&nbsp;flake.nix&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Exposes apps & packs&nbsp;&nbsp;"]
         B2["&nbsp;&nbsp;packs/ (parameterized)&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Built-in Policy Definitions&nbsp;&nbsp;"]
         B3["&nbsp;&nbsp;templates/consumer/&nbsp;&nbsp;<br/>&nbsp;<br/>&nbsp;&nbsp;Template with External Pack Support&nbsp;&nbsp;"]
@@ -387,7 +388,7 @@ graph TD
 
 ### Repository Types
 
-1. **`.github` Repository** ([NixLine-org/.github](https://github.com/NixLine-org/.github))
+1. **`.github` Repository** ([Lineage-org/.github](https://github.com/Lineage-org/.github))
    - Contains reusable GitHub Actions workflows
    - Referenced via `uses: YOUR-ORG/.github/.github/workflows/nixline-ci.yml@stable`
 
@@ -398,7 +399,7 @@ graph TD
    - Provides consumer template via `nix flake init -t`
    - Organizations fork this to create their own governance baseline
 
-3. **Consumer Repositories** ([nixline-demo1](https://github.com/NixLine-org/nixline-demo1))
+3. **Consumer Repositories** ([nixline-demo1](https://github.com/Lineage-org/nixline-demo1))
    - Your actual projects
    - Reference baseline as a flake input
    - Run `nix run .#sync` to materialize persistent policies
@@ -408,13 +409,13 @@ graph TD
 
 ## Workflow Dependencies
 
-The NixLine architecture follows a clean dependency pattern where baseline repositories exclusively use reusable workflows from the `.github` repository, rather than calling GitHub Actions directly.
+The Lineage architecture follows a clean dependency pattern where baseline repositories exclusively use reusable workflows from the `.github` repository, rather than calling GitHub Actions directly.
 
 ### Proper Dependency Architecture
 
 ```mermaid
 graph TD
-    subgraph "NixLine Organization"
+    subgraph "Lineage Organization"
         subgraph ".github Repository"
             A[Reusable Workflows]
             A1[nixline-ci.yml]
@@ -477,7 +478,7 @@ graph TD
 - Easier to audit and manage dependencies
 
 **Consistent Patterns:**
-- Same approach across all NixLine repositories
+- Same approach across all Lineage repositories
 - Predictable workflow structure
 - Better developer experience
 
@@ -489,7 +490,7 @@ Current baseline workflows should only call reusable workflows:
 ```yaml
 jobs:
   ci:
-    uses: NixLine-org/.github/.github/workflows/nixline-ci.yml@stable
+    uses: Lineage-org/.github/.github/workflows/nixline-ci.yml@stable
 ```
 
 [-] **Avoid Direct Action Calls:**
@@ -499,7 +500,7 @@ steps:
   - uses: cachix/install-nix-action@v31
 ```
 
-Organizations forking NixLine should maintain this pattern by:
+Organizations forking Lineage should maintain this pattern by:
 1. Forking both `.github` and `nixline-baseline` repositories
 2. Updating workflow references to point to their organization
 3. Never calling actions directly from baseline workflows
@@ -515,44 +516,44 @@ The sync app now features **runtime configuration passing** following nix.dev be
 **Basic Usage:**
 ```bash
 # Default policies (no configuration)
-nix run github:NixLine-org/nixline-baseline#sync
+nix run github:Lineage-org/nixline-baseline#sync
 
 # Configuration-driven (organization branding)
-nix run github:NixLine-org/nixline-baseline#sync -- --config .nixline.toml
+nix run github:Lineage-org/nixline-baseline#sync -- --config .nixline.toml
 
 # Preview changes without applying
-nix run github:NixLine-org/nixline-baseline#sync -- --dry-run
+nix run github:Lineage-org/nixline-baseline#sync -- --dry-run
 
 # Select specific packs
-nix run github:NixLine-org/nixline-baseline#sync -- --packs editorconfig,license,codeowners
+nix run github:Lineage-org/nixline-baseline#sync -- --packs editorconfig,license,codeowners
 
 # Exclude packs from defaults
-nix run github:NixLine-org/nixline-baseline#sync -- --exclude security,dependabot
+nix run github:Lineage-org/nixline-baseline#sync -- --exclude security,dependabot
 
 # CLI overrides (runtime customization)
-nix run github:NixLine-org/nixline-baseline#sync -- --override org.name=MyCompany
-nix run github:NixLine-org/nixline-baseline#sync -- --override org.email=security@mycompany.com
+nix run github:Lineage-org/nixline-baseline#sync -- --override org.name=MyCompany
+nix run github:Lineage-org/nixline-baseline#sync -- --override org.email=security@mycompany.com
 
 # Combine options
-nix run github:NixLine-org/nixline-baseline#sync -- --config .nixline.toml --override org.name=TestCorp --dry-run
+nix run github:Lineage-org/nixline-baseline#sync -- --config .nixline.toml --override org.name=TestCorp --dry-run
 ```
 
 **Other Apps:**
 ```bash
 # Validate policies match baseline
-nix run github:NixLine-org/nixline-baseline#check
+nix run github:Lineage-org/nixline-baseline#check
 
 # Import existing policy files
-nix run github:NixLine-org/nixline-baseline#import-policy -- --auto
+nix run github:Lineage-org/nixline-baseline#import-policy -- --auto
 
 # List supported license types
-nix run github:NixLine-org/nixline-baseline#list-licenses
+nix run github:Lineage-org/nixline-baseline#list-licenses
 
 # Fetch license from SPDX
-nix run github:NixLine-org/nixline-baseline#fetch-license -- Apache-2.0 --holder "ACME Corp"
+nix run github:Lineage-org/nixline-baseline#fetch-license -- Apache-2.0 --holder "ACME Corp"
 
 # Create a new pack
-nix run github:NixLine-org/nixline-baseline#create-pack flake8
+nix run github:Lineage-org/nixline-baseline#create-pack flake8
 ```
 
 **Template-based (after `nix flake init -t`):**
@@ -575,36 +576,36 @@ Choose from three consumption patterns:
 
 #### Option 1: Direct Consumption (Default Policies)
 
-For quick start with default NixLine policies:
+For quick start with default Lineage policies:
 
 ```bash
 # Sync default policies
-nix run github:NixLine-org/nixline-baseline#sync
+nix run github:Lineage-org/nixline-baseline#sync
 
 # Verify policies are in sync
-nix run github:NixLine-org/nixline-baseline#check
+nix run github:Lineage-org/nixline-baseline#check
 
 # Commit the materialized policy files
 git add LICENSE SECURITY.md .editorconfig .github/
-git commit -m "add NixLine policies"
+git commit -m "add Lineage policies"
 ```
 
 **Customize packs with command line arguments:**
 ```bash
 # Include only specific packs
-nix run github:NixLine-org/nixline-baseline#sync -- --packs editorconfig,license,codeowners
+nix run github:Lineage-org/nixline-baseline#sync -- --packs editorconfig,license,codeowners
 
 # Exclude specific packs from defaults
-nix run github:NixLine-org/nixline-baseline#sync -- --exclude security,dependabot
+nix run github:Lineage-org/nixline-baseline#sync -- --exclude security,dependabot
 
 # Check only specific packs
-nix run github:NixLine-org/nixline-baseline#check -- --packs editorconfig,license
+nix run github:Lineage-org/nixline-baseline#check -- --packs editorconfig,license
 ```
 
 **Or use environment variable (fallback):**
 ```bash
 # Environment variable approach
-NIXLINE_PACKS="editorconfig,license,dependabot" nix run github:NixLine-org/nixline-baseline#sync
+NIXLINE_PACKS="editorconfig,license,dependabot" nix run github:Lineage-org/nixline-baseline#sync
 ```
 
 ### CI Architecture: Baseline vs Consumer Repositories
@@ -671,7 +672,7 @@ jobs:
 - Local policies comply with organizational standards
 - All required files are present and correct
 
-See [nixline-demo1](https://github.com/NixLine-org/nixline-demo1) for a complete example.
+See [nixline-demo1](https://github.com/Lineage-org/nixline-demo1) for a complete example.
 
 #### Option 2: Configuration-Driven (Recommended)
 
@@ -702,16 +703,16 @@ line_length = 100
 **Sync with configuration:**
 ```bash
 # Use configuration file
-nix run github:NixLine-org/nixline-baseline#sync
+nix run github:Lineage-org/nixline-baseline#sync
 
 # Preview changes
-nix run github:NixLine-org/nixline-baseline#sync -- --dry-run
+nix run github:Lineage-org/nixline-baseline#sync -- --dry-run
 
 # Override specific values
-nix run github:NixLine-org/nixline-baseline#sync -- --override org.name=AnotherCompany
+nix run github:Lineage-org/nixline-baseline#sync -- --override org.name=AnotherCompany
 
 # Use custom config file
-nix run github:NixLine-org/nixline-baseline#sync -- --config my-config.toml
+nix run github:Lineage-org/nixline-baseline#sync -- --config my-config.toml
 ```
 
 **Generated files will include:**
@@ -734,7 +735,7 @@ The enhanced sync app follows nix.dev best practices by:
 - Maintaining reproducibility through explicit dependencies
 - Supporting both TOML configuration and CLI overrides
 
-See [nixline-demo2](https://github.com/NixLine-org/nixline-demo2) for a complete example.
+See [nixline-demo2](https://github.com/Lineage-org/nixline-demo2) for a complete example.
 
 #### Option 3: Template-Based (Full Featured)
 
@@ -742,7 +743,7 @@ For organizations that need local flake customization and additional apps:
 
 ```bash
 # Initialize from template
-nix flake init -t github:NixLine-org/nixline-baseline
+nix flake init -t github:Lineage-org/nixline-baseline
 ```
 
 This copies files from the baseline's `templates/consumer/` directory into your current directory, giving you a ready-to-use consumer repository.
@@ -790,7 +791,7 @@ nix run .#check
 
 # Commit the materialized policy files
 git add LICENSE SECURITY.md .editorconfig .github/CODEOWNERS .github/dependabot.yml
-git commit -m "add NixLine policies"
+git commit -m "add Lineage policies"
 ```
 
 **Important:** CI will fail until you run `nix run .#sync` and commit the policy files. This is expected behavior for new consumer repositories.
@@ -820,7 +821,7 @@ The policy sync workflow runs automatically weekly on Sunday at 2 PM UTC, checki
 
 ## Policy Packs
 
-NixLine uses two types of policy packs with different architectural approaches and capabilities:
+Lineage uses two types of policy packs with different architectural approaches and capabilities:
 
 ### Pack Types Overview
 
@@ -969,7 +970,7 @@ year = "2024"
 
 ### Organization Script Packs
 
-**Organization Script Packs** are a special type of pack that provides the distribution mechanism for organization-specific scripts and tooling. During governance migration, NixLine detects executable scripts and common tool files in the governance repository and automatically creates script packs for them.
+**Organization Script Packs** are a special type of pack that provides the distribution mechanism for organization-specific scripts and tooling. During governance migration, Lineage detects executable scripts and common tool files in the governance repository and automatically creates script packs for them.
 
 #### The "Delivery Mechanism" Concept
 
@@ -1037,13 +1038,13 @@ Script packs might seem like overhead since scripts remain unchanged, but they p
 |--------|---------------|-------------------|
 | **Distribution** | Manual copying required | Automatic via `nix run baseline#sync` |
 | **Validation** | No verification scripts deployed | Automated checks for presence/permissions |
-| **Integration** | Outside NixLine ecosystem | Full integration with policy workflow |
+| **Integration** | Outside Lineage ecosystem | Full integration with policy workflow |
 | **Customization** | No deployment control | Pack-level configuration possible |
 | **Consistency** | Ad-hoc script management | Standardized deployment mechanism |
 
 #### Example: Organization Scripts
 
-When migrating a governance repository with organization-specific tooling, NixLine detects and creates packs for scripts like:
+When migrating a governance repository with organization-specific tooling, Lineage detects and creates packs for scripts like:
 
 - `bump-version` → `script-bump-version.nix`
 - `setup-env` → `script-setup-env.nix`
@@ -1102,13 +1103,13 @@ The [`examples/packs/`](examples/packs/) directory contains reference implementa
 
 ```bash
 # Create a new pack with template (direct consumption)
-nix run github:NixLine-org/nixline-baseline#create-pack mypack
+nix run github:Lineage-org/nixline-baseline#create-pack mypack
 
 # Or if using template-based approach
 nix run .#create-pack mypack
 
 # List example pack ideas
-nix run github:NixLine-org/nixline-baseline#create-pack -- --list-examples
+nix run github:Lineage-org/nixline-baseline#create-pack -- --list-examples
 ```
 
 This generates `packs/mypack.nix` with a template structure. Edit the file to define your pack files and configuration:
@@ -1182,13 +1183,13 @@ The pack will now be included in automated policy sync across all consumer repos
 
 ### .nixline.toml Structure
 
-NixLine supports configuration-driven customization via `.nixline.toml` files. This enables organization-specific branding and policy customization without forking the baseline.
+Lineage supports configuration-driven customization via `.nixline.toml` files. This enables organization-specific branding and policy customization without forking the baseline.
 
 Configuration parsing is handled by [`lib/config.nix`](./lib/config.nix) which supports TOML loading, parameter validation and CLI override integration.
 
 ```toml
 [baseline]
-repo = "github:NixLine-org/nixline-baseline"
+repo = "github:Lineage-org/nixline-baseline"
 ref = "stable"
 
 [organization]
@@ -1341,21 +1342,21 @@ See [`examples/nixline.toml`](./examples/nixline.toml) for a complete configurat
 
 ## Governance Migration
 
-Organizations can migrate their existing governance repositories to create custom NixLine baselines automatically using Nix's deterministic fetching capabilities.
+Organizations can migrate their existing governance repositories to create custom Lineage baselines automatically using Nix's deterministic fetching capabilities.
 
 ### Complete Governance Migration
 
 **Migrate entire governance repository:**
 
 ```bash
-nix run github:NixLine-org/nixline-baseline#migrate-governance -- \
+nix run github:Lineage-org/nixline-baseline#migrate-governance -- \
   --governance-repo https://github.com/yourorg/governance \
   --org-name "Your Organization" \
   --org-email "admin@yourorg.com" \
   --security-email "security@yourorg.com"
 ```
 
-This will fetch the governance repository using Nix's deterministic fetchGit, analyze it for languages and existing policies, generate appropriate .nixline.toml configuration, import supported governance files as NixLine packs and create a complete baseline directory structure ready for deployment.
+This will fetch the governance repository using Nix's deterministic fetchGit, analyze it for languages and existing policies, generate appropriate .nixline.toml configuration, import supported governance files as Lineage packs and create a complete baseline directory structure ready for deployment.
 
 ### Migration Architecture
 
@@ -1380,7 +1381,7 @@ The governance migration uses a **Nix-idiomatic approach** for repository fetchi
 **For dry-run analysis:**
 
 ```bash
-nix run github:NixLine-org/nixline-baseline#migrate-governance -- \
+nix run github:Lineage-org/nixline-baseline#migrate-governance -- \
   --governance-repo https://github.com/yourorg/governance \
   --org-name "Your Organization" \
   --dry-run
@@ -1392,7 +1393,7 @@ Use the reusable workflow to automate governance migration in CI:
 
 ```yaml
 # .github/workflows/migrate-to-nixline.yml
-name: Migrate to NixLine
+name: Migrate to Lineage
 
 on:
   workflow_dispatch:
@@ -1408,7 +1409,7 @@ on:
 
 jobs:
   migrate:
-    uses: NixLine-org/.github/.github/workflows/migrate-governance.yml@stable
+    uses: Lineage-org/.github/.github/workflows/migrate-governance.yml@stable
     with:
       governance-repo: ${{ github.server_url }}/${{ github.repository }}
       organization-name: ${{ inputs.organization-name }}
@@ -1416,20 +1417,20 @@ jobs:
       output-mode: 'artifact'
 ```
 
-This workflow uses Nix's deterministic fetchGit to analyze your repository for governance files and project languages, generate a complete NixLine baseline with organization-specific configuration, create downloadable artifacts with the generated baseline and provide migration reports with next-step instructions.
+This workflow uses Nix's deterministic fetchGit to analyze your repository for governance files and project languages, generate a complete Lineage baseline with organization-specific configuration, create downloadable artifacts with the generated baseline and provide migration reports with next-step instructions.
 
 ### Import Individual Policy Files
 
 **Auto-import all recognized files:**
 
 ```bash
-nix run github:NixLine-org/nixline-baseline#import-policy -- --auto
+nix run github:Lineage-org/nixline-baseline#import-policy -- --auto
 ```
 
 **Import specific file:**
 
 ```bash
-nix run github:NixLine-org/nixline-baseline#import-policy -- --file .editorconfig
+nix run github:Lineage-org/nixline-baseline#import-policy -- --file .editorconfig
 ```
 
 **Supported policy files:**
@@ -1444,19 +1445,19 @@ nix run github:NixLine-org/nixline-baseline#import-policy -- --file .editorconfi
 **Fetch Apache 2.0 license:**
 
 ```bash
-nix run github:NixLine-org/nixline-baseline#fetch-license -- Apache-2.0 --holder "My Company" --year 2025
+nix run github:Lineage-org/nixline-baseline#fetch-license -- Apache-2.0 --holder "My Company" --year 2025
 ```
 
 **Fetch MIT license:**
 
 ```bash
-nix run github:NixLine-org/nixline-baseline#fetch-license -- MIT --holder "ACME Corp"
+nix run github:Lineage-org/nixline-baseline#fetch-license -- MIT --holder "ACME Corp"
 ```
 
 **List common licenses:**
 
 ```bash
-nix run github:NixLine-org/nixline-baseline#fetch-license -- --list
+nix run github:Lineage-org/nixline-baseline#fetch-license -- --list
 ```
 
 The import and fetch tools will:
@@ -1473,7 +1474,7 @@ Before migrating your organization's governance, test the process:
 #### Pre-Migration Testing
 ```bash
 # Test migration compatibility (dry-run)
-nix run github:NixLine-org/nixline-baseline#migrate-governance -- \
+nix run github:Lineage-org/nixline-baseline#migrate-governance -- \
   --governance-repo https://github.com/yourorg/governance \
   --org-name "Your Organization" \
   --org-email "admin@yourorg.com" \
@@ -1485,7 +1486,7 @@ Add this workflow to your governance repository to test migration readiness:
 
 ```yaml
 # .github/workflows/test-nixline-migration.yml
-name: Test NixLine Governance Migration
+name: Test Lineage Governance Migration
 
 on:
   workflow_dispatch:
@@ -1497,7 +1498,7 @@ on:
 
 jobs:
   test-migration:
-    uses: NixLine-org/.github/.github/workflows/test-governance-migration.yml@stable
+    uses: Lineage-org/.github/.github/workflows/test-governance-migration.yml@stable
     with:
       organization-name: ${{ inputs.organization-name }}
       organization-email: "test@example.com"
@@ -1512,7 +1513,7 @@ flowchart TD
     A[Governance Repository] --> B[Add test-nixline-migration.yml]
     B --> C[Run Workflow Manually]
     C --> D[GitHub Actions Checkout]
-    D --> E[NixLine Migration Analysis]
+    D --> E[Lineage Migration Analysis]
 
     E --> F{Analysis Results}
     F -->|Success| G[✓ Compatible - Ready for Migration]
@@ -1540,7 +1541,7 @@ Successful tests complete dry-runs with detected languages and governance files.
 #### Edge Case Testing
 The migration tool gracefully handles empty repositories by creating universal packs only, skips binary files with warnings, provides clear error messages for permission issues and handles malformed config files without failing.
 
-See the [test-governance-migration.yml reusable workflow](https://github.com/NixLine-org/.github/blob/main/.github/workflows/test-governance-migration.yml) for a complete test workflow implementation.
+See the [test-governance-migration.yml reusable workflow](https://github.com/Lineage-org/.github/blob/main/.github/workflows/test-governance-migration.yml) for a complete test workflow implementation.
 
 ### Demo Repository
 
@@ -1563,7 +1564,7 @@ This is the key difference from traditional policy distribution systems that use
 
 ### Automated Policy Sync
 
-NixLine provides two policy sync workflows to match different organizational governance requirements:
+Lineage provides two policy sync workflows to match different organizational governance requirements:
 
 #### Option 1: Direct Commit (Default - Maximum Automation)
 
@@ -1888,7 +1889,7 @@ jobs:
       require_checks: true
 ```
 
-This pattern is demonstrated in [nixline-demo3](https://github.com/NixLine-org/nixline-demo3) which showcases pure upstream consumption with zero maintenance overhead.
+This pattern is demonstrated in [nixline-demo3](https://github.com/Lineage-org/nixline-demo3) which showcases pure upstream consumption with zero maintenance overhead.
 
 **Demo3's Minimal CI Approach:**
 ```yaml
@@ -1900,10 +1901,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v31
       - name: Verify policies are in sync
-        run: nix run github:NixLine-org/nixline-baseline#check
+        run: nix run github:Lineage-org/nixline-baseline#check
 ```
 
-This is the simplest possible NixLine integration - no flake.nix, no templates, just direct validation.
+This is the simplest possible Lineage integration - no flake.nix, no templates, just direct validation.
 
 ### Pure Apps in CI
 
@@ -1917,7 +1918,7 @@ When you fork this baseline for your organization, follow this checklist to cust
 
 ### Before You Start
 
-- [ ] Fork both [`.github`](https://github.com/NixLine-org/.github) and [`nixline-baseline`](https://github.com/NixLine-org/nixline-baseline) repositories to your organization
+- [ ] Fork both [`.github`](https://github.com/Lineage-org/.github) and [`nixline-baseline`](https://github.com/Lineage-org/nixline-baseline) repositories to your organization
 - [ ] Clone your forked `nixline-baseline` locally
 - [ ] Have your organization details ready (name, copyright holder, security contact)
 
@@ -2056,14 +2057,14 @@ nix flake init -t github:YOUR-ORG/nixline-baseline
 # Then sync and commit
 nix run .#sync
 git add LICENSE SECURITY.md .editorconfig .github/
-git commit -m "feat: add NixLine policies"
+git commit -m "feat: add Lineage policies"
 ```
 
 ---
 
 ## Tagging Policy
 
-This repository is versioned via the `stable` tag to provide a consistent reference point for NixLine workflows.
+This repository is versioned via the `stable` tag to provide a consistent reference point for Lineage workflows.
 
 To update the tag after any change:
 
@@ -2085,7 +2086,7 @@ The baseline repository implements automated nixpkgs dependency updates with val
 
 ### Update Strategy
 
-NixLine uses a three-stage strategy for managing both baseline changes and nixpkgs dependencies:
+Lineage uses a three-stage strategy for managing both baseline changes and nixpkgs dependencies:
 
 **unstable branch** - Primary development branch containing latest baseline changes and nixpkgs updates. Unstable tag automatically tracks this branch for immediate testing availability.
 
@@ -2346,11 +2347,11 @@ This architecture ensures that stable promotions are both automated and traceabl
 
 ---
 
-## NixLine vs Traditional Policy Distribution
+## Lineage vs Traditional Policy Distribution
 
 Traditional policy distribution systems use automated pull requests to propagate policy updates across repositories. When a baseline changes, the system creates PRs in every consumer repository, requiring manual review and merge.
 
-| Feature | Traditional (PR-based) | NixLine (Flake-based) |
+| Feature | Traditional (PR-based) | Lineage (Flake-based) |
 |---------|------------------------|------------------------|
 | **Distribution** | Automated PRs | Direct Nix materialization |
 | **Review Process** | Manual PR review required | No PRs needed |
@@ -2365,8 +2366,8 @@ Traditional policy distribution systems use automated pull requests to propagate
 
 ## Importance of the Baseline
 
-This repository serves as the **official baseline** for NixLine.
+This repository serves as the **official baseline** for Lineage.
 It defines how organizational workflows interpret and apply shared policy, serving as the root of consistency and traceability for all consumer repositories.
 
-When another organization forks NixLine, this repository is where they establish **their own governance baseline** - defining what policies, governance and automation rules will apply across their environment.
-By maintaining and versioning this baseline, each organization can evolve its own standards while still inheriting the reproducible and declarative structure that NixLine provides.
+When another organization forks Lineage, this repository is where they establish **their own governance baseline** - defining what policies, governance and automation rules will apply across their environment.
+By maintaining and versioning this baseline, each organization can evolve its own standards while still inheriting the reproducible and declarative structure that Lineage provides.
