@@ -7,7 +7,7 @@
 # Based on industry standards from Microsoft, Node.js, and GitHub's recommendations.
 #
 # CONFIGURATION:
-# This pack can be customized via .nixline.toml configuration:
+# This pack can be customized via .lineage.toml configuration:
 #
 # [organization]
 # security_email = "security@mycompany.com"

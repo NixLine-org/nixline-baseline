@@ -7,7 +7,7 @@
 # Prevents sensitive files, build artifacts, and environment-specific files
 # from being committed to version control.
 #
-# Configuration via .nixline.toml:
+# Configuration via .lineage.toml:
 #   [packs.gitignore]
 #   ecosystems = ["python", "nodejs", "rust", "go"]
 #   additional_patterns = ["*.local", ".myorg/"]
@@ -250,7 +250,7 @@ in
     description = "Ecosystem-aware .gitignore file with security patterns";
     homepage = "https://git-scm.com/docs/gitignore";
     example = ''
-      # Configuration in .nixline.toml:
+      # Configuration in .lineage.toml:
       [packs.gitignore]
       ecosystems = ["python", "nodejs"]
       additional_patterns = ["*.local", ".myorg/"]

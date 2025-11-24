@@ -90,7 +90,7 @@ in
     description = "YAML linting configuration with customizable rules";
     homepage = "https://yamllint.readthedocs.io/";
     example = ''
-      # Configuration in .nixline.toml:
+      # Configuration in .lineage.toml:
       [packs.yamllint]
       line_length = 120
       indent_spaces = 4

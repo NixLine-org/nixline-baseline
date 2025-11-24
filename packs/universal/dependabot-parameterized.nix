@@ -7,7 +7,7 @@
 # When enabled, all repositories receive Dependabot configuration.
 #
 # CONFIGURATION:
-# This pack can be customized via .nixline.toml configuration:
+# This pack can be customized via .lineage.toml configuration:
 #
 # [packs.dependabot]
 # schedule = "weekly"  # daily, weekly, monthly
@@ -92,7 +92,7 @@ in
         dependabotContent
       else ''
       # Dependabot configuration - Generated from nixline-baseline
-      # To customize, edit .nixline.toml [packs.dependabot] section
+      # To customize, edit .lineage.toml [packs.dependabot] section
 
       version: 2
 

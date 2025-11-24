@@ -7,7 +7,7 @@
 # When enabled, all repositories receive this CODEOWNERS file.
 #
 # CONFIGURATION:
-# This pack can be customized via .nixline.toml configuration:
+# This pack can be customized via .lineage.toml configuration:
 #
 # [organization]
 # name = "MyCompany"
@@ -91,7 +91,7 @@ in
       # Default Team: ${defaultTeam}
       #
       # This file is auto-generated. To customize:
-      # 1. Add a .nixline.toml file to your repository root
+      # 1. Add a .lineage.toml file to your repository root
       # 2. Define [packs.codeowners] section with custom rules
       # 3. Run: nix run github:NixLine-org/nixline-baseline#sync
 

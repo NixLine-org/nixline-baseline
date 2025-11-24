@@ -247,7 +247,7 @@ EXAMPLES_EOF
 # This pack provides $pack_name configuration for all repositories that enable it.
 #
 # To enable this pack in a consumer repository:
-# 1. Add "$pack_name" to the enabled packs list in .nixline.toml
+# 1. Add "$pack_name" to the enabled packs list in .lineage.toml
 # 2. Run 'nix run .#sync' to materialize the configuration files
 # 3. Commit the generated files to your repository
 #
@@ -283,7 +283,7 @@ utils.template-utils.createStaticPack {
   ];
 }
 
-# OPTION 2: Parameterized Pack (customizable via .nixline.toml)
+# OPTION 2: Parameterized Pack (customizable via .lineage.toml)
 # Uncomment this and comment out the static pack above if you need customization:
 #
 # utils.template-utils.createParameterizedPack {
@@ -316,7 +316,7 @@ EOF
     echo ""
     echo "Next steps:"
     echo "  1. Edit $pack_file to define your configuration files"
-    echo "  2. Add \"$pack_name\" to enabled packs in .nixline.toml"
+    echo "  2. Add \"$pack_name\" to enabled packs in .lineage.toml"
     echo "  3. Run 'nix run .#sync' in consumer repos to materialize the files"
     echo "  4. Test with 'nix run .#check' to validate the configuration"
     echo ""
@@ -522,7 +522,7 @@ EOF
     echo ""
 
     if [[ -n "$parameterized_packs" ]]; then
-      echo "Parameterized packs to enable in .nixline.toml:"
+      echo "Parameterized packs to enable in .lineage.toml:"
       echo "  $parameterized_packs"
       echo ""
     fi
@@ -540,13 +540,13 @@ EOF
       echo ""
     fi
 
-    echo "Recommended .nixline.toml configuration:"
+    echo "Recommended .lineage.toml configuration:"
     echo "[packs]"
     echo "enabled = [$(echo "$all_pack_names" | sed 's/ /", "/g' | sed 's/^/"/' | sed 's/$/"/')]"
     echo ""
 
     echo "Next steps:"
-    echo "  1. Copy the recommended configuration to .nixline.toml"
+    echo "  1. Copy the recommended configuration to .lineage.toml"
     echo "  2. Customize parameterized pack settings as needed"
     echo "  3. Test with 'nix run .#sync' to materialize files"
     echo "  4. Validate with 'nix run .#check'"

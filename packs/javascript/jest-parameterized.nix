@@ -87,7 +87,7 @@ in
     description = "Jest testing framework configuration for JavaScript/TypeScript";
     homepage = "https://jestjs.io/";
     example = ''
-      # Configuration in .nixline.toml:
+      # Configuration in .lineage.toml:
       [packs.jest]
       typescript = true
       react = true

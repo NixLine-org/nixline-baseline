@@ -89,7 +89,7 @@ in
     description = "Python code quality checking with flake8";
     homepage = "https://flake8.pycqa.org/";
     example = ''
-      # Configuration in .nixline.toml:
+      # Configuration in .lineage.toml:
       [packs.flake8]
       max_line_length = 100
       max_complexity = 15

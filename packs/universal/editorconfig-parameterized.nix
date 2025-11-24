@@ -7,7 +7,7 @@
 # based on widely-adopted community standards.
 #
 # CONFIGURATION:
-# This pack can be customized via .nixline.toml configuration:
+# This pack can be customized via .lineage.toml configuration:
 #
 # [packs.editorconfig]
 # indent_size = 2

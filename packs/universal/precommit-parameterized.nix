@@ -6,7 +6,7 @@
 # This pack provides pre-commit configuration for all repositories that enable it.
 #
 # CONFIGURATION:
-# This pack can be customized via .nixline.toml configuration:
+# This pack can be customized via .lineage.toml configuration:
 #
 # [packs.precommit]
 # hooks = ["trailing-whitespace", "black", "flake8", "prettier"]
@@ -16,7 +16,7 @@
 # custom_file = "path/to/custom-precommit.yaml"  # Use custom pre-commit config file
 #
 # To enable this pack in a consumer repository:
-# 1. Add "precommit" to the enabled packs list in .nixline.toml
+# 1. Add "precommit" to the enabled packs list in .lineage.toml
 # 2. Run 'nix run github:ORG/nixline-baseline#sync' to materialize the configuration files
 # 3. Commit the generated .pre-commit-config.yaml file to your repository
 #

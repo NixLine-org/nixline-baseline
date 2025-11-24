@@ -2,7 +2,7 @@
 #
 # Library for importing governance repositories and converting them to NixLine packs.
 # Discovers governance files, detects project ecosystems, and generates appropriate
-# pack configurations with .nixline.toml integration.
+# pack configurations with .lineage.toml integration.
 
 { pkgs, lib ? pkgs.lib }:
 
@@ -283,7 +283,7 @@ let
 
     in configs.${packName} or {};
 
-  # Generate enhanced .nixline.toml with ecosystem awareness
+  # Generate enhanced .lineage.toml with ecosystem awareness
   generateNixlineConfig = packNames: governanceRepoSrc: ecosystems:
     let
       enabledList = lib.concatStringsSep ", " (map (name: ''"${name}"'') packNames);
@@ -391,7 +391,7 @@ ${packConfigs}
         };
       };
 
-  # Import with automatic .nixline.toml generation
+  # Import with automatic .lineage.toml generation
   importWithConfig = governanceRepoSrc:
     let
       packs = importFromSource governanceRepoSrc;
@@ -404,16 +404,16 @@ ${packConfigs}
 
       nixlineTomlPack = { pkgs, lib, config ? {} }: {
         files = {
-          ".nixline.toml" = nixlineConfig;
+          ".lineage.toml" = nixlineConfig;
         };
         checks = [
           {
             name = "nixline-config-present";
             check = ''
-              if [[ -f ".nixline.toml" ]]; then
-                echo "[+] .nixline.toml found"
+              if [[ -f ".lineage.toml" ]]; then
+                echo "[+] .lineage.toml found"
               else
-                echo "[-] .nixline.toml missing"
+                echo "[-] .lineage.toml missing"
                 exit 1
               fi
             '';

@@ -39,7 +39,7 @@ utils.template-utils.createStaticPack {
 #   ecosystem = "universal";
 #   description = "Example with organization customization";
 #
-#   # Default configuration values (overridable via .nixline.toml)
+#   # Default configuration values (overridable via .lineage.toml)
 #   configDefaults = {
 #     setting1 = "default_value";
 #     setting2 = true;

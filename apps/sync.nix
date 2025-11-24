@@ -32,7 +32,7 @@ Usage:
 Options:
   --packs <list>       Comma-separated list of packs to materialize
   --exclude <list>     Comma-separated list of packs to exclude from defaults
-  --config <file>      Load configuration from TOML file (default: .nixline.toml)
+  --config <file>      Load configuration from TOML file (default: .lineage.toml)
   --override <key=val> Override configuration values (e.g., org.name=MyCompany)
   --dry-run           Show what would be done without making changes
   --help              Show this help message
@@ -52,7 +52,7 @@ USAGE_EOF
     # Parse command line arguments
     PACKS_ARG=""
     EXCLUDE_ARG=""
-    CONFIG_FILE=".nixline.toml"
+    CONFIG_FILE=".lineage.toml"
     OVERRIDES=()
     DRY_RUN=false
 

@@ -110,7 +110,7 @@
             type = "app";
             program = "${extractConfigApp}/bin/nixline-extract-config";
             meta = {
-              description = "Extract configuration from existing files to generate .nixline.toml sections";
+              description = "Extract configuration from existing files to generate .lineage.toml sections";
               license = lib.licenses.asl20;
             };
           };

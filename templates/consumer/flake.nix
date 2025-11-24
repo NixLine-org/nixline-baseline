@@ -108,12 +108,12 @@
                 packs = { enabled = [ "editorconfig" "codeowners" "security" "license" "precommit" "dependabot" ]; };
               }}'
 
-              CONFIG_FILE=".nixline.toml"
+              CONFIG_FILE=".lineage.toml"
               if [[ -f "$CONFIG_FILE" ]]; then
                 echo "Using configuration: $CONFIG_FILE"
                 CONFIG_JSON=$(remarshal -if toml -of json < "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_CONFIG")
               else
-                echo "No .nixline.toml found, using defaults"
+                echo "No .lineage.toml found, using defaults"
                 CONFIG_JSON="$DEFAULT_CONFIG"
               fi
 
@@ -235,12 +235,12 @@
               # Pass through additional arguments like --override
               ADDITIONAL_ARGS="$@"
 
-              CONFIG_FILE=".nixline.toml"
+              CONFIG_FILE=".lineage.toml"
               if [[ -f "$CONFIG_FILE" ]]; then
                 echo "Using configuration: $CONFIG_FILE"
                 eval "${nixline-baseline.apps.${system}.check.program} --config \"$CONFIG_FILE\" $ADDITIONAL_ARGS"
               else
-                echo "No .nixline.toml found, using default configuration"
+                echo "No .lineage.toml found, using default configuration"
                 eval "${nixline-baseline.apps.${system}.check.program} $ADDITIONAL_ARGS"
               fi
             '';
