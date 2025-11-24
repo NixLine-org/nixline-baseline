@@ -1,4 +1,4 @@
-# Security Guidelines for NixLine Baseline Repository
+# Security Guidelines for Lineage Baseline Repository
 
 ## Critical Security Requirements
 
@@ -259,8 +259,8 @@ For maximum security, organizations should:
 
 ## Contact
 
-Security issues with NixLine baseline should be reported to:
+Security issues with Lineage baseline should be reported to:
 [YOUR-ORG-SECURITY-EMAIL]
 
-For upstream NixLine security issues:
-Open a security advisory at https://github.com/NixLine-org/nixline-baseline/security/advisories
+For upstream Lineage security issues:
+Open a security advisory at https://github.com/Lineage-org/nixline-baseline/security/advisories
