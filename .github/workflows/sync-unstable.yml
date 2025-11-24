@@ -27,7 +27,7 @@ permissions:
 
 jobs:
   sync-unstable:
-    uses: NixLine-org/.github/.github/workflows/nixline-sync-unstable.yml@stable
+    uses: Lineage-org/.github/.github/workflows/lineage-sync-unstable.yml@stable
     with:
       target_branch: ${{ github.event.inputs.target_branch || 'unstable' }}
       source_branch: main
