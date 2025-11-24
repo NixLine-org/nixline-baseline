@@ -1,15 +1,6 @@
-```
-          \
-       \   |   /
-        \  |  /
-    ------ + ------
-        /  |  \
-       /   |   \
-          /
-
-      LINEAGE
-  Policy Governance via Nix
-```
+<p align="center">
+  <img src="assets/lineage_banner.png" alt="Lineage — Policy Governance via Nix" width="70%">
+</p>
 
 # Lineage Baseline
 
