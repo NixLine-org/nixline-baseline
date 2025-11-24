@@ -1,6 +1,6 @@
-# Contributing to NixLine Baseline
+# Contributing to Lineage Baseline
 
-Thanks for contributing to NixLine! This is the baseline repository that defines the core policy packs and apps.
+Thanks for contributing to Lineage! This is the baseline repository that defines the core policy packs and apps.
 
 ## Prerequisites
 
@@ -48,8 +48,8 @@ This repository uses an automated branching workflow:
 Clone the repo and test that everything works:
 
 ```bash
-git clone https://github.com/NixLine-org/nixline-baseline.git
-cd nixline-baseline
+git clone https://github.com/Lineage-org/lineage-baseline.git
+cd lineage-baseline
 git checkout unstable
 nix flake check
 nix run .#sync -- --dry-run
@@ -57,13 +57,13 @@ nix run .#sync -- --dry-run
 
 ## Project Structure
 
-The `packs/` directory contains the core policy definitions that all NixLine consumers can use. The `examples/packs/` directory has language-specific examples like Python and JavaScript tooling that organizations can copy if needed.
+The `packs/` directory contains the core policy definitions that all Lineage consumers can use. The `examples/packs/` directory has language-specific examples like Python and JavaScript tooling that organizations can copy if needed.
 
 Apps in `apps/` provide the sync, check and utility functionality. The `templates/` directory contains the consumer repository template.
 
 ## Adding New Packs
 
-If you want to add a new core pack that all NixLine users should have access to, create it in `packs/` with parameterization support and add it to `lib/packs.nix`. Use the existing packs as examples.
+If you want to add a new core pack that all Lineage users should have access to, create it in `packs/` with parameterization support and add it to `lib/packs.nix`. Use the existing packs as examples.
 
 For language-specific tools, consider adding them to `examples/packs/` instead so organizations can pick what they need.
 

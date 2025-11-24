@@ -168,7 +168,7 @@ checks = [
 1. **IMMEDIATELY:**
    ```bash
    # Lock down baseline repo
-   gh repo edit YOUR-ORG/nixline-baseline --enable-issues=false --enable-wiki=false
+   gh repo edit YOUR-ORG/lineage-baseline --enable-issues=false --enable-wiki=false
 
    # Disable all policy sync workflows org-wide
    # Use organization Actions settings to disable workflows
@@ -263,4 +263,4 @@ Security issues with Lineage baseline should be reported to:
 [YOUR-ORG-SECURITY-EMAIL]
 
 For upstream Lineage security issues:
-Open a security advisory at https://github.com/Lineage-org/nixline-baseline/security/advisories
+Open a security advisory at https://github.com/Lineage-org/lineage-baseline/security/advisories
