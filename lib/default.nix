@@ -9,9 +9,9 @@ rec {
   # Write a file to disk (used by sync)
   writeFile = path: content: pkgs.writeShellScript "write-${baseNameOf path}" ''
     mkdir -p "$(dirname "${path}")"
-    cat > "${path}" << 'NIXLINE_EOF'
+    cat > "${path}" << 'LINEAGE_EOF'
     ${content}
-    NIXLINE_EOF
+    LINEAGE_EOF
     echo "✓ Wrote ${path}"
   '';
 
@@ -19,9 +19,9 @@ rec {
   materializeFiles = files: pkgs.writeShellScript "materialize-files" ''
     ${pkgs.lib.concatStringsSep "\n" (pkgs.lib.mapAttrsToList (path: content: ''
       mkdir -p "$(dirname "${path}")"
-      cat > "${path}" << 'NIXLINE_EOF'
+      cat > "${path}" << 'LINEAGE_EOF'
 ${content}
-NIXLINE_EOF
+LINEAGE_EOF
       echo "✓ Materialized ${path}"
     '') files)}
   '';
@@ -33,9 +33,9 @@ NIXLINE_EOF
       exit 1
     fi
 
-    if ! diff -q "${path}" <(cat << 'NIXLINE_EOF'
+    if ! diff -q "${path}" <(cat << 'LINEAGE_EOF'
 ${expectedContent}
-NIXLINE_EOF
+LINEAGE_EOF
     ) >/dev/null 2>&1; then
       echo "✗ Out of sync: ${path}"
       exit 1
@@ -51,9 +51,9 @@ NIXLINE_EOF
       if [[ ! -f "${path}" ]]; then
         echo "✗ Missing: ${path}"
         failed=1
-      elif ! diff -q "${path}" <(cat << 'NIXLINE_EOF'
+      elif ! diff -q "${path}" <(cat << 'LINEAGE_EOF'
 ${content}
-NIXLINE_EOF
+LINEAGE_EOF
       ) >/dev/null 2>&1; then
         echo "✗ Out of sync: ${path}"
         failed=1

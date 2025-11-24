@@ -605,7 +605,7 @@ nix run github:Lineage-org/lineage-baseline#check -- --packs editorconfig,licens
 **Or use environment variable (fallback):**
 ```bash
 # Environment variable approach
-NIXLINE_PACKS="editorconfig,license,dependabot" nix run github:Lineage-org/lineage-baseline#sync
+LINEAGE_PACKS="editorconfig,license,dependabot" nix run github:Lineage-org/lineage-baseline#sync
 ```
 
 ### CI Architecture: Baseline vs Consumer Repositories

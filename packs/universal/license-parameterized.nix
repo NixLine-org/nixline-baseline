@@ -24,7 +24,7 @@
 #
 # ENVIRONMENT VARIABLES:
 # Can also be customized via environment variables from enhanced sync app:
-# - NIXLINE_ORG_NAME: Used as fallback for copyright holder
+# - LINEAGE_ORG_NAME: Used as fallback for copyright holder
 #
 
 let

@@ -59,7 +59,7 @@ let
     then []
     else lib.splitString "," packsEnv;
 
-  # Select packs based on NIXLINE_PACKS environment variable
+  # Select packs based on LINEAGE_PACKS environment variable
   selectPacks = packsEnv:
     let
       requestedPacks = parsePackList packsEnv;

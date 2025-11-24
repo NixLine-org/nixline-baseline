@@ -22,8 +22,8 @@
 #
 # ENVIRONMENT VARIABLES:
 # Can also be customized via environment variables from enhanced sync app:
-# - NIXLINE_ORG_NAME: Organization name
-# - NIXLINE_ORG_TEAM: Default team
+# - LINEAGE_ORG_NAME: Organization name
+# - LINEAGE_ORG_TEAM: Default team
 #
 # See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 #
@@ -31,11 +31,11 @@
 let
   # Organization configuration with fallbacks
   orgName =
-    if builtins.getEnv "NIXLINE_ORG_NAME" != "" then builtins.getEnv "NIXLINE_ORG_NAME"
+    if builtins.getEnv "LINEAGE_ORG_NAME" != "" then builtins.getEnv "LINEAGE_ORG_NAME"
     else config.organization.name or "Lineage-org";
 
   defaultTeam =
-    if builtins.getEnv "NIXLINE_ORG_TEAM" != "" then builtins.getEnv "NIXLINE_ORG_TEAM"
+    if builtins.getEnv "LINEAGE_ORG_TEAM" != "" then builtins.getEnv "LINEAGE_ORG_TEAM"
     else config.organization.default_team or "@${orgName}/maintainers";
 
   # Pack-specific configuration with defaults

@@ -143,9 +143,9 @@
                     lib.concatStringsSep "\n" (lib.mapAttrsToList (path: content: ''
                       if [[ ",$ENABLED_PACKS," == *",${packName},"* ]]; then
                         mkdir -p "$(dirname "${path}")"
-                        cat > "${path}" << 'NIXLINE_EOF'
+                        cat > "${path}" << 'LINEAGE_EOF'
                       ${content}
-                      NIXLINE_EOF
+                      LINEAGE_EOF
                         echo "✓ ${path} (from ${packName})"
                       fi
                     '') packFiles);

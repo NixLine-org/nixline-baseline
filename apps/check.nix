@@ -20,7 +20,7 @@
     --help           Show this help message
 
   Environment Variables:
-    NIXLINE_PACKS - Comma-separated list of packs to check (fallback)
+    LINEAGE_PACKS - Comma-separated list of packs to check (fallback)
                     Default: editorconfig,codeowners,security,license,precommit,dependabot
 
   Exit Codes:
@@ -69,7 +69,7 @@ Examples:
   nixline-check --exclude security,dependabot
 
 Environment Variables:
-  NIXLINE_PACKS - Comma-separated list of packs (fallback if no --packs given)
+  LINEAGE_PACKS - Comma-separated list of packs (fallback if no --packs given)
                   Default: editorconfig,codeowners,security,license,precommit,dependabot
 USAGE_EOF
     }
@@ -116,16 +116,16 @@ USAGE_EOF
     # Determine final pack list
     if [[ -n "$PACKS_ARG" ]]; then
       # Use explicit --packs argument
-      NIXLINE_PACKS="$PACKS_ARG"
+      LINEAGE_PACKS="$PACKS_ARG"
     elif [[ -n "$EXCLUDE_ARG" ]]; then
       # Start with defaults and exclude specified packs
-      NIXLINE_PACKS="$DEFAULT_PACKS"
+      LINEAGE_PACKS="$DEFAULT_PACKS"
       for exclude in ''${EXCLUDE_ARG//,/ }; do
-        NIXLINE_PACKS="$(echo "$NIXLINE_PACKS" | sed "s/\b$exclude\b//g" | sed 's/,,*/,/g' | sed 's/^,\|,$//g')"
+        LINEAGE_PACKS="$(echo "$LINEAGE_PACKS" | sed "s/\b$exclude\b//g" | sed 's/,,*/,/g' | sed 's/^,\|,$//g')"
       done
     else
       # Use environment variable or default
-      NIXLINE_PACKS="''${NIXLINE_PACKS:-$DEFAULT_PACKS}"
+      LINEAGE_PACKS="''${LINEAGE_PACKS:-$DEFAULT_PACKS}"
     fi
 
     echo "          \\"
@@ -142,7 +142,7 @@ USAGE_EOF
     echo "       ── Lineage Check ──"
     echo ""
 
-    echo "Validating packs: $NIXLINE_PACKS"
+    echo "Validating packs: $LINEAGE_PACKS"
     echo ""
 
     failed=0
@@ -150,13 +150,13 @@ USAGE_EOF
     ${lib.concatStringsSep "\n" (lib.mapAttrsToList (packName: pack:
       let
         checksScript = lib.concatStringsSep "\n" (lib.mapAttrsToList (path: content: ''
-          if echo "$NIXLINE_PACKS" | grep -qw "${packName}"; then
+          if echo "$LINEAGE_PACKS" | grep -qw "${packName}"; then
             if [[ ! -f "${path}" ]]; then
               echo "[-] ${packName}: Missing ${path}"
               failed=1
-            elif ! diff -q "${path}" <(cat << 'NIXLINE_EOF'
+            elif ! diff -q "${path}" <(cat << 'LINEAGE_EOF'
 ${content}
-NIXLINE_EOF
+LINEAGE_EOF
             ) >/dev/null 2>&1; then
               echo "[-] ${packName}: Out of sync ${path}"
               failed=1

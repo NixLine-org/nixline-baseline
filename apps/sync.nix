@@ -167,20 +167,20 @@ USAGE_EOF
 
     # Determine final pack list (simplified approach)
     if [[ -n "$PACKS_ARG" ]]; then
-      NIXLINE_PACKS="$PACKS_ARG"
+      LINEAGE_PACKS="$PACKS_ARG"
     elif [[ -n "$EXCLUDE_ARG" ]]; then
       # Apply exclusions to default packs
-      NIXLINE_PACKS="$DEFAULT_PACKS"
+      LINEAGE_PACKS="$DEFAULT_PACKS"
       for exclude in $(echo "$EXCLUDE_ARG" | tr ',' ' '); do
-        NIXLINE_PACKS=$(echo "$NIXLINE_PACKS" | sed "s/\\b$exclude\\b,\\?//g" | sed 's/,,/,/g' | sed 's/^,\\|,$//g')
+        LINEAGE_PACKS=$(echo "$LINEAGE_PACKS" | sed "s/\\b$exclude\\b,\\?//g" | sed 's/,,/,/g' | sed 's/^,\\|,$//g')
       done
     else
       # Check for config file pack list (backwards compatible)
       CONFIG_PACKS=$(echo "$CONFIG_JSON" | jq -r '.packs.enabled[]?' 2>/dev/null | tr '\n' ',' | sed 's/,$//')
       if [[ -n "$CONFIG_PACKS" ]]; then
-        NIXLINE_PACKS="$CONFIG_PACKS"
+        LINEAGE_PACKS="$CONFIG_PACKS"
       else
-        NIXLINE_PACKS="$DEFAULT_PACKS"
+        LINEAGE_PACKS="$DEFAULT_PACKS"
       fi
     fi
 
@@ -209,7 +209,7 @@ USAGE_EOF
     fi
 
     echo ""
-    echo "Packs: $NIXLINE_PACKS"
+    echo "Packs: $LINEAGE_PACKS"
 
     if [[ "$DRY_RUN" == "true" ]]; then
       echo "DRY RUN: No files will be modified"
@@ -255,7 +255,7 @@ let
   packsLib = import $BASELINE_PATH/lib/packs.nix { inherit pkgs lib config; };
 
   # Parse pack list and get selected packs
-  packList = lib.filter (x: x != "") (lib.splitString "," "$NIXLINE_PACKS");
+  packList = lib.filter (x: x != "") (lib.splitString "," "$LINEAGE_PACKS");
   selectedPacks = lib.filterAttrs (name: _: lib.elem name packList) packsLib.packModules;
 
   # Get all files from selected packs
@@ -283,7 +283,7 @@ let
   packsLib = import $BASELINE_PATH/lib/packs.nix { inherit pkgs lib config; };
 
   # Parse pack list and get selected packs
-  packList = lib.filter (x: x != "") (lib.splitString "," "$NIXLINE_PACKS");
+  packList = lib.filter (x: x != "") (lib.splitString "," "$LINEAGE_PACKS");
   selectedPacks = lib.filterAttrs (name: _: lib.elem name packList) packsLib.packModules;
 
   # Get all files from selected packs
