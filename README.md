@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/lineage_banner.png" alt="Lineage — Policy Governance via Nix" width="70%">
+  <img src="assets/lineage_banner.png" alt="Lineage — Policy Governance via Nix" width="80%">
 </p>
 
 # Lineage Baseline
