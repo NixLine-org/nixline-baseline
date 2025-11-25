@@ -5,7 +5,7 @@
 */
 
 pkgs.writeShellApplication {
-  name = "nixline-sync";
+  name = "lineage-sync";
 
   runtimeInputs = with pkgs; [
     coreutils
@@ -27,7 +27,7 @@ pkgs.writeShellApplication {
 Materialize policy files from the baseline with configuration support.
 
 Usage:
-  nixline-sync [OPTIONS]
+  lineage-sync [OPTIONS]
 
 Options:
   --packs <list>       Comma-separated list of packs to materialize
@@ -38,10 +38,10 @@ Options:
   --help              Show this help message
 
 Examples:
-  nixline-sync
-  nixline-sync --config my-config.toml
-  nixline-sync --packs editorconfig,license --override org.name=TestCorp
-  nixline-sync --dry-run
+  lineage-sync
+  lineage-sync --config my-config.toml
+  lineage-sync --packs editorconfig,license --override org.name=TestCorp
+  lineage-sync --dry-run
 
 USAGE_EOF
     }

@@ -26,7 +26,7 @@
 */
 
 pkgs.writeShellApplication {
-  name = "nixline-create-pack";
+  name = "lineage-create-pack";
 
   runtimeInputs = with pkgs; [
     coreutils
@@ -54,10 +54,10 @@ Pack files are automatically organized by ecosystem:
   • go/           - Go ecosystem packs (future)
 
 Usage:
-  nixline-create-pack <pack-name>                    Create single pack from template
-  nixline-create-pack --from-repo <repo-url>         Import all packs from governance repo
-  nixline-create-pack --from-repo <local-path>       Import all packs from local repo
-  nixline-create-pack --list-examples                Show example pack configurations
+  lineage-create-pack <pack-name>                    Create single pack from template
+  lineage-create-pack --from-repo <repo-url>         Import all packs from governance repo
+  lineage-create-pack --from-repo <local-path>       Import all packs from local repo
+  lineage-create-pack --list-examples                Show example pack configurations
 
 Options:
   <pack-name>           Name of pack to create (e.g., flake8, prettier)
@@ -67,20 +67,20 @@ Options:
 
 Single Pack Examples:
   # Create a flake8 pack from template
-  nixline-create-pack flake8
+  lineage-create-pack flake8
 
   # Create a prettier pack from template
-  nixline-create-pack prettier
+  lineage-create-pack prettier
 
 Batch Import Examples:
   # Import all governance files from CISA lineage
-  nixline-create-pack --from-repo https://github.com/cisagov/lineage
+  lineage-create-pack --from-repo https://github.com/cisagov/lineage
 
   # Import from local governance repository
-  nixline-create-pack --from-repo /path/to/governance-repo
+  lineage-create-pack --from-repo /path/to/governance-repo
 
   # Import from another organization's governance
-  nixline-create-pack --from-repo https://github.com/myorg/governance
+  lineage-create-pack --from-repo https://github.com/myorg/governance
 
 The --from-repo option discovers governance files automatically and creates
 pack files with actual configuration content, not just templates.
@@ -364,7 +364,7 @@ EOF
     echo "Analyzing governance files with NixLine Baseline Importer..."
 
     # Use the local importer (assume running from lineage-baseline repo)
-    local importer_path="/Users/jason/code/nixline-org/lineage-baseline/tools/baseline-importer"
+    local importer_path="/Users/jason/code/lineage-org/lineage-baseline/tools/baseline-importer"
 
     # Discover governance files using the importer
     local discovery_result

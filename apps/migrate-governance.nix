@@ -25,7 +25,7 @@
 */
 
 pkgs.writeShellApplication {
-  name = "nixline-migrate-governance";
+  name = "lineage-migrate-governance";
 
   runtimeInputs = with pkgs; [
     coreutils
@@ -57,7 +57,7 @@ pkgs.writeShellApplication {
 Migrate existing governance repositories to NixLine baseline format.
 
 Usage:
-  nixline-migrate-governance --governance-repo <url|path> [options]
+  lineage-migrate-governance --governance-repo <url|path> [options]
 
 Required:
   --governance-repo URL     URL or path to existing governance repository
@@ -76,14 +76,14 @@ Options:
 
 Examples:
   # Migrate CISAGOV lineage repository from GitHub
-  nixline-migrate-governance \
+  lineage-migrate-governance \
     --governance-repo https://github.com/cisagov/lineage \
     --org-name "CISA" \
     --org-email "vulnerability@cisa.dhs.gov" \
     --output-dir ./cisa-baseline
 
   # Migrate from local governance repository
-  nixline-migrate-governance \
+  lineage-migrate-governance \
     --governance-repo ./local-governance \
     --org-name "Example Corp" \
     --org-email "admin@example.com" \
