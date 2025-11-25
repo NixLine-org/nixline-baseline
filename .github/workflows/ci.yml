@@ -56,43 +56,10 @@ permissions:
 
 jobs:
   validate-baseline:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-
-      - name: Validate flake integrity
-        run: nix flake check
-
-      - name: Test baseline apps (dry-run only)
-        run: |
-          # Test sync app with dry-run (no file materialization in baseline itself)
-          nix run .#sync -- --dry-run
-
-          # Test other core apps
-          nix run .#list-licenses
-          nix run .#create-pack -- --list-examples
-
-          # Test import-policy app (basic validation only)
-          echo "# Test content" > test-file.md
-          nix run .#import-policy -- --help > /dev/null
-          rm test-file.md
-
-      - name: Validate pack definitions
-        run: |
-          # Ensure all pack files are valid nix expressions
-          for pack in packs/*.nix; do
-            if [ -f "$pack" ]; then
-              echo "Validating $pack"
-              nix eval --file "$pack" --json > /dev/null
-            fi
-          done
+    uses: Lineage-org/.github/.github/workflows/lineage-baseline-test.yml@stable
+    with:
+      test_with_config: true
+      validate_content: true
 
   update-stable-candidate:
     uses: Lineage-org/.github/.github/workflows/lineage-stable-candidate-update.yml@stable
