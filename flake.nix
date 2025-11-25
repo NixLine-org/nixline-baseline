@@ -91,7 +91,7 @@
 
           fetch-license = {
             type = "app";
-            program = "${fetchLicenseApp}/bin/nixline-fetch-license";
+            program = "${fetchLicenseApp}/bin/lineage-fetch-license";
             meta = {
               description = "Fetch license text from SPDX and generate license pack";
               license = lib.licenses.asl20;
