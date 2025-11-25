@@ -4,35 +4,26 @@
 # This workflow serves as the backbone of the Lineage automation pipeline for baseline repositories.
 # It performs comprehensive validation and orchestrates the stable promotion process.
 #
-# === WHAT THIS WORKFLOW DOES ===
+# Features:
+# - Validates Nix flake integrity with `nix flake check`
+# - Tests baseline apps in dry-run mode (sync, list-licenses, create-pack, import-policy)
+# - Ensures all policy pack definitions are valid Nix expressions
+# - Validates baseline repository source integrity
+# - Updates .stable-candidate file tracking which commit should be promoted
+# - Creates PRs for stable candidate updates with automatic merge
+# - Triggers stable tag promotion workflow for validated commits
+# - Updates consumer template flake.lock files
+# - Implements infinite loop prevention and branch cleanup
+# - Propagates baseline changes to consumer repositories via stable tag
 #
-# 1. VALIDATION (all pushes/PRs):
-#    - Validates Nix flake integrity with `nix flake check`
-#    - Tests baseline apps in dry-run mode (sync, list-licenses, create-pack, import-policy)
-#    - Ensures all policy pack definitions are valid Nix expressions
-#    - Validates baseline repository source integrity
-#
-# 2. AUTOMATION PIPELINE (main branch pushes only):
-#    - Updates .stable-candidate file tracking which commit should be promoted
-#    - Creates PRs for stable candidate updates with automatic merge
-#    - Triggers stable tag promotion workflow for validated commits
-#    - Updates consumer template flake.lock files
-#    - Implements infinite loop prevention and branch cleanup
-#
-# 3. CONSUMER INTEGRATION:
-#    - When stable tag updates, consumer repositories get policy updates on next sync
-#    - Ensures baseline changes propagate safely through the organization
-#
-# === AUTOMATION FLOW ===
+# Automation Flow:
 # Push to main → Validation → Stable Candidate Update → Stable Tag Promotion → Consumer Updates
 #
-# === DIFFERENCE FROM CONSUMER CI ===
+# Difference from Consumer CI:
 # - Baseline repos (this): Validate the SOURCE of policies and manage stable promotion
 # - Consumer repos (lineage-ci.yml): Materialize and validate policies FROM baseline
 #
-# Triggered by: push, pull_request, workflow_dispatch (manual)
-# Automation: Automatic stable candidate updates and promotion for main branch
-# Manual trigger: Available for validation and optionally force stable updates
+# Called by: push, pull_request, workflow_dispatch (manual)
 # Purpose: Validate baseline integrity and orchestrate organization-wide policy distribution
 #
 
@@ -56,43 +47,10 @@ permissions:
 
 jobs:
   validate-baseline:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-
-      - name: Validate flake integrity
-        run: nix flake check
-
-      - name: Test baseline apps (dry-run only)
-        run: |
-          # Test sync app with dry-run (no file materialization in baseline itself)
-          nix run .#sync -- --dry-run
-
-          # Test other core apps
-          nix run .#list-licenses
-          nix run .#create-pack -- --list-examples
-
-          # Test import-policy app (basic validation only)
-          echo "# Test content" > test-file.md
-          nix run .#import-policy -- --help > /dev/null
-          rm test-file.md
-
-      - name: Validate pack definitions
-        run: |
-          # Ensure all pack files are valid nix expressions
-          for pack in packs/*.nix; do
-            if [ -f "$pack" ]; then
-              echo "Validating $pack"
-              nix eval --file "$pack" --json > /dev/null
-            fi
-          done
+    uses: Lineage-org/.github/.github/workflows/lineage-baseline-test.yml@stable
+    with:
+      test_with_config: true
+      validate_content: true
 
   update-stable-candidate:
     uses: Lineage-org/.github/.github/workflows/lineage-stable-candidate-update.yml@stable

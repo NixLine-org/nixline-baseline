@@ -31,7 +31,7 @@
 */
 
 pkgs.writeShellApplication {
-  name = "nixline-check";
+  name = "lineage-check";
 
   runtimeInputs = [ pkgs.coreutils pkgs.diffutils pkgs.gnused ];
 
@@ -56,7 +56,7 @@ pkgs.writeShellApplication {
 Validate that policy files in the current repository match the baseline.
 
 Usage:
-  nixline-check [OPTIONS]
+  lineage-check [OPTIONS]
 
 Options:
   --packs <list>   Comma-separated list of packs to check
@@ -64,9 +64,9 @@ Options:
   --help           Show this help message
 
 Examples:
-  nixline-check
-  nixline-check --packs editorconfig,license,codeowners
-  nixline-check --exclude security,dependabot
+  lineage-check
+  lineage-check --packs editorconfig,license,codeowners
+  lineage-check --exclude security,dependabot
 
 Environment Variables:
   LINEAGE_PACKS - Comma-separated list of packs (fallback if no --packs given)

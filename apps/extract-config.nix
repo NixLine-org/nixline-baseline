@@ -1,7 +1,7 @@
 { pkgs, lib }:
 
 pkgs.writeShellApplication {
-  name = "nixline-extract-config";
+  name = "lineage-extract-config";
 
   runtimeInputs = with pkgs; [
     coreutils
@@ -22,10 +22,10 @@ Extract configuration from existing files and generate .lineage.toml sections
 for seamless migration to parameterized packs.
 
 Usage:
-  nixline-extract-config <file>              Extract config from specific file
-  nixline-extract-config --auto              Auto-discover and extract all configs
-  nixline-extract-config --list              List supported file types
-  nixline-extract-config --examples          Show example configurations
+  lineage-extract-config <file>              Extract config from specific file
+  lineage-extract-config --auto              Auto-discover and extract all configs
+  lineage-extract-config --list              List supported file types
+  lineage-extract-config --examples          Show example configurations
 
 Options:
   <file>         Path to configuration file to extract from
@@ -37,16 +37,16 @@ Options:
 
 Examples:
   # Extract from specific file
-  nixline-extract-config .editorconfig
+  lineage-extract-config .editorconfig
 
   # Auto-discover all configs in current directory
-  nixline-extract-config --auto
+  lineage-extract-config --auto
 
   # Generate example configurations for all packs
-  nixline-extract-config --examples
+  lineage-extract-config --examples
 
   # Save to configuration file
-  nixline-extract-config --auto --output .lineage.toml
+  lineage-extract-config --auto --output .lineage.toml
 
 The extracted configuration can be used in .lineage.toml to customize
 parameterized packs with your existing settings.

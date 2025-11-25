@@ -22,7 +22,7 @@
 */
 
 pkgs.writeShellApplication {
-  name = "nixline-import-policy";
+  name = "lineage-import-policy";
 
   runtimeInputs = [ pkgs.coreutils ];
 
@@ -56,9 +56,9 @@ pkgs.writeShellApplication {
 Import existing policy files into NixLine pack format.
 
 Usage:
-  nixline-import-policy --file <path>
-  nixline-import-policy --pack <name> --file <path>
-  nixline-import-policy --auto
+  lineage-import-policy --file <path>
+  lineage-import-policy --pack <name> --file <path>
+  lineage-import-policy --auto
 
 Options:
   --file PATH    Path to existing policy file
@@ -74,13 +74,13 @@ Supported files:
 
 Examples:
   # Import specific file (auto-detect pack)
-  nixline-import-policy --file .editorconfig
+  lineage-import-policy --file .editorconfig
 
   # Import with explicit pack name
-  nixline-import-policy --pack editorconfig --file .editorconfig
+  lineage-import-policy --pack editorconfig --file .editorconfig
 
   # Auto-import all recognized files
-  nixline-import-policy --auto
+  lineage-import-policy --auto
 
 Output:
   Generated pack files are written to packs/ directory

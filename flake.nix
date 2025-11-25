@@ -64,7 +64,7 @@
         {
           sync = {
             type = "app";
-            program = "${syncApp}/bin/nixline-sync";
+            program = "${syncApp}/bin/lineage-sync";
             meta = {
               description = "Materialize policy files from baseline with configuration support";
               license = lib.licenses.asl20;
@@ -73,7 +73,7 @@
 
           check = {
             type = "app";
-            program = "${checkApp}/bin/nixline-check";
+            program = "${checkApp}/bin/lineage-check";
             meta = {
               description = "Validate that policy files match baseline";
               license = lib.licenses.asl20;
@@ -82,7 +82,7 @@
 
           import-policy = {
             type = "app";
-            program = "${importPolicyApp}/bin/nixline-import-policy";
+            program = "${importPolicyApp}/bin/lineage-import-policy";
             meta = {
               description = "Import existing policy files into pack format";
               license = lib.licenses.asl20;
@@ -91,7 +91,7 @@
 
           fetch-license = {
             type = "app";
-            program = "${fetchLicenseApp}/bin/nixline-fetch-license";
+            program = "${fetchLicenseApp}/bin/lineage-fetch-license";
             meta = {
               description = "Fetch license text from SPDX and generate license pack";
               license = lib.licenses.asl20;
@@ -108,7 +108,7 @@
           };
           extract-config = {
             type = "app";
-            program = "${extractConfigApp}/bin/nixline-extract-config";
+            program = "${extractConfigApp}/bin/lineage-extract-config";
             meta = {
               description = "Extract configuration from existing files to generate .lineage.toml sections";
               license = lib.licenses.asl20;
@@ -116,7 +116,7 @@
           };
           migrate-governance = {
             type = "app";
-            program = "${migrateGovernanceApp}/bin/nixline-migrate-governance";
+            program = "${migrateGovernanceApp}/bin/lineage-migrate-governance";
             meta = {
               description = "Migrate existing governance repositories to create custom NixLine baselines";
               license = lib.licenses.asl20;
@@ -125,7 +125,7 @@
 
           create-pack = {
             type = "app";
-            program = "${createPackApp}/bin/nixline-create-pack";
+            program = "${createPackApp}/bin/lineage-create-pack";
             meta = {
               description = "Create a new policy pack with template structure";
               license = lib.licenses.asl20;
