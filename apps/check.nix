@@ -204,7 +204,7 @@ USAGE_EOF
     TEMP_NIX=$(mktemp)
     cat > "$TEMP_NIX" << EOF
 let
-  pkgs = (builtins.getFlake "$BASELINE_PATH").inputs.nixpkgs.legacyPackages.\\\''${builtins.currentSystem};
+  pkgs = (builtins.getFlake "$BASELINE_PATH").inputs.nixpkgs.legacyPackages.\\''${builtins.currentSystem};
   lib = pkgs.lib;
   config = builtins.fromJSON '''$FINAL_CONFIG''';
 
