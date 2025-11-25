@@ -201,10 +201,11 @@ USAGE_EOF
 
     # Generate expected files using nix eval with configuration
     BASELINE_PATH="${toString ./..}"
+    CURRENT_SYSTEM=$(nix eval --impure --expr 'builtins.currentSystem' --raw)
     TEMP_NIX=$(mktemp)
     cat > "$TEMP_NIX" << EOF
 let
-  pkgs = (builtins.getFlake "$BASELINE_PATH").inputs.nixpkgs.legacyPackages.\\''${builtins.currentSystem};
+  pkgs = (builtins.getFlake "$BASELINE_PATH").inputs.nixpkgs.legacyPackages.$CURRENT_SYSTEM;
   lib = pkgs.lib;
   config = builtins.fromJSON '''$FINAL_CONFIG''';
 
