@@ -447,9 +447,9 @@ graph TD
 
         subgraph "GitHub Actions Marketplace"
             C[Actions]
-            C1[actions/checkout@v4]
-            C2[cachix/install-nix-action@v31]
-            C3[github-script@v7]
+            C1["actions/checkout@v4"]
+            C2["cachix/install-nix-action@v31"]
+            C3["github-script@v7"]
             C --> C1
             C --> C2
             C --> C3
