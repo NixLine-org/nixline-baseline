@@ -12,6 +12,13 @@
 The **Lineage Baseline** defines the foundational Nix expressions and policies used by all repositories in the [Lineage-org](https://github.com/Lineage-org) organization.
 It provides the shared Nix logic, governance rules and automation logic that all Lineage consumer repositories rely on.
 
+> **⚠️ Development Status**: Lineage is under active development.
+>
+> - **For production use**: Pin to the `stable` tag: `github:Lineage-org/lineage-baseline?ref=stable`
+> - **For testing/contributing**: Use `unstable` branch or `main`
+> - **Breaking changes** may occur in unstable without notice
+> - The `stable` tag provides a tested, stable reference point (not semantic versioning)
+
 ## Security & Configuration
 
 This baseline provides organization-wide policy management with comprehensive validation. See [SECURITY-BASELINE.md](SECURITY-BASELINE.md) for security best practices and recommended branch protection settings.
