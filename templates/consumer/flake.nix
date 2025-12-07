@@ -30,6 +30,49 @@
       ];
     in
     {
+      # Expose pack loader for the sync app to use via nix eval
+      lib = {
+        mkCombinedPacks = { pkgs, lib, config }:
+          let
+            system = pkgs.system;
+            baseline = lineage-baseline.lib.${system};
+            
+            # Re-initialize packs with the provided configuration
+            # This ensures that parameterized packs get the runtime config
+            baselinePacks = import "${lineage-baseline}/lib/packs.nix" { inherit pkgs lib config; };
+
+            # Collect external pack sources from flake inputs
+            # Filter out standard inputs (self, nixpkgs, lineage-baseline)
+            standardInputs = [ "self" "nixpkgs" "lineage-baseline" ];
+            externalPackInputs = lib.filterAttrs (name: _: !(lib.elem name standardInputs)) inputs;
+
+            # Load external pack registries from flake inputs
+            loadExternalPackRegistry = inputName: input:
+              let
+                # Assume external pack flakes expose lib.${system}.packs
+                externalLib = input.lib.${system} or {};
+                externalPacks = externalLib.packs or {};
+              in
+                # Prefix pack names with input name for namespacing
+                lib.mapAttrs' (packName: pack: {
+                  name = "${inputName}/${packName}";
+                  # Re-apply config if the external pack is a function
+                  value = if builtins.isFunction pack 
+                          then pack { inherit pkgs lib config; }
+                          else pack; 
+                }) externalPacks;
+
+            # Combine all external pack registries
+            allExternalPacks = lib.foldl' (acc: inputPair:
+              acc // (loadExternalPackRegistry inputPair.name inputPair.value)
+            ) {} (lib.mapAttrsToList (name: value: { inherit name value; }) externalPackInputs);
+
+            # Combined pack registry (baseline + external)
+            combinedPacks = baselinePacks.packModules // allExternalPacks;
+          in
+            combinedPacks;
+      };
+
       # Expose apps from baseline with TOML configuration support
       apps = forAllSystems (system:
         let
@@ -37,125 +80,15 @@
           lib = nixpkgs.lib;
           baseline = lineage-baseline.lib.${system};
 
-          # Collect external pack sources from flake inputs
-          # Filter out standard inputs (self, nixpkgs, lineage-baseline)
-          standardInputs = [ "self" "nixpkgs" "lineage-baseline" ];
-          externalPackInputs = lib.filterAttrs (name: _: !(lib.elem name standardInputs)) inputs;
-
-          # Load external pack registries from flake inputs
-          loadExternalPackRegistry = inputName: input:
-            let
-              # Assume external pack flakes expose lib.${system}.packs
-              externalLib = input.lib.${system} or {};
-              externalPacks = externalLib.packs or {};
-            in
-              # Prefix pack names with input name for namespacing
-              lib.mapAttrs' (packName: pack: {
-                name = "${inputName}/${packName}";
-                value = pack;
-              }) externalPacks;
-
-          # Combine all external pack registries
-          allExternalPacks = lib.foldl' (acc: inputPair:
-            acc // (loadExternalPackRegistry inputPair.name inputPair.value)
-          ) {} (lib.mapAttrsToList (name: value: { inherit name value; }) externalPackInputs);
-
-          # Combined pack registry (baseline + external)
-          combinedPacks = baseline.packs // allExternalPacks;
-
-          # Generate pack files with configuration support
-          generatePackFiles = config: enabledPackNames:
-            let
-              # Parse pack list and filter available packs
-              packList = if builtins.isList enabledPackNames then enabledPackNames else lib.splitString "," enabledPackNames;
-              availablePacks = lib.filterAttrs (name: _: lib.elem name packList) combinedPacks;
-
-              # Apply configuration to each pack and get files
-              applyConfigToPack = packName: pack:
-                if builtins.isFunction pack
-                then (pack { inherit pkgs lib config; }).files or {}
-                else pack.files or {};
-
-              # Merge all files from selected packs
-              allFiles = lib.foldl' (acc: packFiles: acc // packFiles) {}
-                         (lib.mapAttrsToList applyConfigToPack availablePacks);
-            in
-              allFiles;
-
           # Configuration-driven sync app with external pack support
-          sync = pkgs.writeShellApplication {
+          # Uses the robust factory from baseline to ensure feature parity
+          sync = baseline.mkSyncApp {
+            inherit pkgs lib;
             name = "lineage-sync";
-            runtimeInputs = with pkgs; [ jq remarshal ];
-            text = ''
-              echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║                Lineage Sync (with External Packs)         ║"
-              echo "╚════════════════════════════════════════════════════════════╝"
-              echo ""
-
-              # Show available packs
-              echo "Available packs:"
-              echo "  Built-in packs:"
-              ${lib.concatStringsSep "\n" (map (name: "echo \"    - ${name}\"") (lib.attrNames baseline.packs))}
-              ${lib.optionalString (allExternalPacks != {}) ''
-                echo "  External packs:"
-                ${lib.concatStringsSep "\n" (map (name: "echo \"    - ${name}\"") (lib.attrNames allExternalPacks))}
-              ''}
-              echo ""
-
-              # Default configuration and pack list
-              DEFAULT_CONFIG='${builtins.toJSON {
-                organization = { name = "Lineage-org"; email = "opensource@example.com"; };
-                packs = { enabled = [ "editorconfig" "codeowners" "security" "license" "precommit" "dependabot" ]; };
-              }}'
-
-              CONFIG_FILE=".lineage.toml"
-              if [[ -f "$CONFIG_FILE" ]]; then
-                echo "Using configuration: $CONFIG_FILE"
-                CONFIG_JSON=$(remarshal -if toml -of json < "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_CONFIG")
-              else
-                echo "No .lineage.toml found, using defaults"
-                CONFIG_JSON="$DEFAULT_CONFIG"
-              fi
-
-              # Extract enabled packs
-              ENABLED_PACKS=$(echo "$CONFIG_JSON" | jq -r '.packs.enabled[]?' | tr '\n' ',' | sed 's/,$//')
-              if [[ -z "$ENABLED_PACKS" ]]; then
-                ENABLED_PACKS="editorconfig,codeowners,security,license,precommit,dependabot"
-              fi
-
-              echo "Enabled packs: $ENABLED_PACKS"
-              echo ""
-
-              # Generate and materialize files
-              ${let
-                # Generate files for all possible pack combinations
-                allPossiblePacks = lib.attrNames combinedPacks;
-                maxConfig = { organization = { name = "TemplateOrg"; email = "test@example.com"; }; packs = {}; };
-
-                # Generate materialization script for each pack
-                materializeScript = packName: pack:
-                  let
-                    # Get pack files with template config
-                    packFiles = if builtins.isFunction pack
-                               then (pack { inherit pkgs lib; config = maxConfig; }).files or {}
-                               else pack.files or {};
-                  in
-                    lib.concatStringsSep "\n" (lib.mapAttrsToList (path: content: ''
-                      if [[ ",$ENABLED_PACKS," == *",${packName},"* ]]; then
-                        mkdir -p "$(dirname "${path}")"
-                        cat > "${path}" << 'LINEAGE_EOF'
-                      ${content}
-                      LINEAGE_EOF
-                        echo "✓ ${path} (from ${packName})"
-                      fi
-                    '') packFiles);
-
-              in lib.concatStringsSep "\n" (lib.mapAttrsToList materializeScript combinedPacks)}
-
-              echo ""
-              echo "Sync complete! Files have been materialized."
-              echo "Run 'git add .' to stage the changes."
-            '';
+            
+            # Use the consumer's flake context to access combined packs
+            pkgsExpression = "(builtins.getFlake (toString ./.)).inputs.nixpkgs.legacyPackages.$CURRENT_SYSTEM";
+            packsLoaderSnippet = "(builtins.getFlake (toString ./.)).lib.mkCombinedPacks { inherit pkgs lib config; }";
           };
 
           # Flake update app - updates flake.lock
@@ -175,7 +108,8 @@
               echo ""
 
               # Check if there are changes
-              if ! git diff --quiet flake.lock; then
+              if ! git diff --quiet flake.lock;
+              then
                 echo "Changes detected, creating branch and PR..."
 
                 BRANCH="automated/flake-update-$(date +%Y%m%d-%H%M%S)"
@@ -223,27 +157,13 @@
           # Configuration-driven check app
           # Validates files against baseline using same config as sync
           # Supports passing additional arguments like --override
-          check = pkgs.writeShellApplication {
+          check = baseline.mkCheckApp {
+            inherit pkgs lib;
             name = "lineage-check";
-            runtimeInputs = with pkgs; [ jq remarshal ];
-            text = ''
-              echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║                   Lineage Check                            ║"
-              echo "╚════════════════════════════════════════════════════════════╝"
-              echo ""
-
-              # Pass through additional arguments like --override
-              ADDITIONAL_ARGS="$@"
-
-              CONFIG_FILE=".lineage.toml"
-              if [[ -f "$CONFIG_FILE" ]]; then
-                echo "Using configuration: $CONFIG_FILE"
-                eval "${lineage-baseline.apps.${system}.check.program} --config \"$CONFIG_FILE\" $ADDITIONAL_ARGS"
-              else
-                echo "No .lineage.toml found, using default configuration"
-                eval "${lineage-baseline.apps.${system}.check.program} $ADDITIONAL_ARGS"
-              fi
-            '';
+            
+            # Use the consumer's flake context to access combined packs
+            pkgsExpression = "(builtins.getFlake (toString ./.)).inputs.nixpkgs.legacyPackages.$CURRENT_SYSTEM";
+            packsLoaderSnippet = "(builtins.getFlake (toString ./.)).lib.mkCombinedPacks { inherit pkgs lib config; }";
           };
 
           # SBOM app - pure Nix app (no file materialization)
