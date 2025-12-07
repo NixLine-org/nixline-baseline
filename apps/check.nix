@@ -3,6 +3,17 @@
 /*
   Validates that policy files in the current repository match the baseline.
   Uses the shared mkCheckApp factory.
+
+  Usage:
+    Direct Consumption (Recommended):
+      nix run github:ORG/lineage-baseline#check
+      nix run github:ORG/lineage-baseline#check -- --packs editorconfig,license
+      nix run github:ORG/lineage-baseline#check -- --exclude security
+
+    Template-Based Consumption:
+      nix run .#check
+      nix run .#check -- --packs editorconfig,license
+      nix run .#check -- --config .lineage.toml
 */
 
 let
