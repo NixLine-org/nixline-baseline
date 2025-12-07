@@ -5,6 +5,7 @@ pkgs.writeShellApplication {
 
   runtimeInputs = with pkgs; [
     coreutils
+    diffutils
     gnused
     remarshal
     jq
@@ -228,13 +229,51 @@ in
   allFiles
 EOF
 
-    if [[ "$DRY_RUN" == "true" ]]; then
-      echo "DRY RUN: Would generate the following files:"
-      nix eval --no-warn-dirty --impure --file "$TEMP_NIX" --json | jq -r 'keys[]' | while read -r file;
-        do
-          echo "[DRY] $file"
-        done
-    else
+        if [[ "$DRY_RUN" == "true" ]]; then
+
+          echo "DRY RUN: Checking for changes..."
+
+          nix eval --no-warn-dirty --impure --file "$TEMP_NIX" --json | jq -r 'to_entries[] | @base64' | while IFS= read -r entry; do
+
+            decoded=$(echo "$entry" | base64 -d)
+
+            file=$(echo "$decoded" | jq -r '.key')
+
+            content=$(echo "$decoded" | jq -r '.value')
+
+    
+
+            if [[ -f "$file" ]]; then
+
+                # Check if content differs
+
+                if ! echo "$content" | diff -u "$file" - >/dev/null 2>&1; then
+
+                    echo "--- $file (current)"
+
+                    echo "+++ $file (new)"
+
+                    echo "$content" | diff -u "$file" - || true
+
+                else
+
+                    echo "[UNCHANGED] $file"
+
+                fi
+
+            else
+
+                echo "[NEW] $file"
+
+                echo "Note: New file content not shown in full to save space, use normal sync to create."
+
+            fi
+
+          done
+
+        else
+
+    
       echo "Generating files..."
       nix eval --no-warn-dirty --impure --file "$TEMP_NIX" --json | jq -r 'to_entries[] | @base64' | while IFS= read -r entry;
         do
