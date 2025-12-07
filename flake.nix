@@ -1,7 +1,7 @@
 {
   description = "NixLine baseline - organization-wide CI governance and policy enforcement";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/2fad6eac6077f03fe109c4d4eb171cf96791faa4";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/f61125a668a320878494449750330ca58b78c557";
 
   outputs = { self, nixpkgs }:
     let
