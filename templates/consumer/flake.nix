@@ -87,7 +87,7 @@
             name = "lineage-sync";
             
             # Use the consumer's flake context to access combined packs
-            pkgsExpression = "(builtins.getFlake (toString ./.)).inputs.nixpkgs.legacyPackages.${system}";
+            pkgsExpression = "(builtins.getFlake (toString ./.)).inputs.nixpkgs.legacyPackages.$CURRENT_SYSTEM";
             packsLoaderSnippet = "(builtins.getFlake (toString ./.)).lib.mkCombinedPacks { inherit pkgs lib config; }";
           };
 
@@ -162,7 +162,7 @@
             name = "lineage-check";
             
             # Use the consumer's flake context to access combined packs
-            pkgsExpression = "(builtins.getFlake (toString ./.)).inputs.nixpkgs.legacyPackages.${system}";
+            pkgsExpression = "(builtins.getFlake (toString ./.)).inputs.nixpkgs.legacyPackages.$CURRENT_SYSTEM";
             packsLoaderSnippet = "(builtins.getFlake (toString ./.)).lib.mkCombinedPacks { inherit pkgs lib config; }";
           };
 

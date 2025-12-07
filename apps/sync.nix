@@ -25,7 +25,7 @@ mkSyncApp {
   name = "lineage-sync";
 
   # Use the pinned nixpkgs from the flake
-  pkgsExpression = "(builtins.getFlake \"${baselinePath}\").inputs.nixpkgs.legacyPackages.\${builtins.currentSystem}";
+  pkgsExpression = "(builtins.getFlake \"${baselinePath}\").inputs.nixpkgs.legacyPackages.$CURRENT_SYSTEM";
 
   # Load packs from the baseline library
   packsLoaderSnippet = "(import ${baselinePath}/lib/packs.nix { inherit pkgs lib config; }).packModules";

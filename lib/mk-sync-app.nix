@@ -3,8 +3,13 @@
 pkgs.writeShellApplication {
   inherit name;
 
-  runtimeInputs = with pkgs;
-    [ coreutils gnused remarshal jq nix ];
+  runtimeInputs = with pkgs; [
+    coreutils
+    gnused
+    remarshal
+    jq
+    nix
+  ];
 
   text = ''
     set -euo pipefail
@@ -193,21 +198,14 @@ USAGE_EOF
     fi
     echo ""
 
-    # Create final configuration JSON for Nix evaluation
-    FINAL_CONFIG=$(jq -n \
-      --arg orgName "$ORG_NAME" \
-      --arg orgEmail "$ORG_EMAIL" \
-      --arg orgTeam "$ORG_TEAM" \
-      --argjson baseConfig "''${CONFIG_JSON}" \
-      '{ 
-        organization: { 
-          name: $orgName,
-          email: $orgEmail,
-          security_email: $orgEmail,
-          default_team: $orgTeam
-        },
-        packs: ($baseConfig.packs // {})
-      }')
+        # Create final configuration JSON for Nix evaluation
+        FINAL_CONFIG=$(jq -n --arg orgName "$ORG_NAME" --arg orgEmail "$ORG_EMAIL" --arg orgTeam "$ORG_TEAM" --argjson baseConfig "''${CONFIG_JSON}" '{ organization: { name: $orgName, email: $orgEmail, security_email: $orgEmail, default_team: $orgTeam }, packs: ($baseConfig.packs // {}) }')
+        echo "Final configuration for pack generation:"
+    echo "$FINAL_CONFIG" | jq .
+    echo ""
+
+    # Get current system for flake usage
+    CURRENT_SYSTEM=$(nix eval --impure --expr 'builtins.currentSystem' --raw)
 
     # Create temporary Nix file for file generation
     TEMP_NIX=$(mktemp)

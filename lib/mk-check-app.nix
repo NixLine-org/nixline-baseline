@@ -3,8 +3,7 @@
 pkgs.writeShellApplication {
   inherit name;
 
-  runtimeInputs = with pkgs;
-    [ coreutils diffutils gnused remarshal jq nix ];
+  runtimeInputs = with pkgs; [ coreutils diffutils gnused remarshal jq nix ];
 
   text = ''
     set -euo pipefail
@@ -107,18 +106,20 @@ USAGE_EOF
       esac
     done
 
-    echo "          \"
-    echo "       \   |   /"
-    echo "        \  |  /"
-    echo "    ------ + ------"
-    echo "        /  |  \"
-    echo "       /   |   \"
-    echo "          /"
-    echo ""
-    echo "      LINEAGE"
-    echo "  Policy Governance via Nix"
-    echo ""
-    echo "       ── Lineage Check ──"
+    cat << 'BANNER'
+          \
+       \   |   /
+        \  |  /
+    ------ + ------
+        /  |  \
+       /   |   \
+          /
+
+      LINEAGE
+  Policy Governance via Nix
+
+           ── Lineage Check ──
+BANNER
     echo ""
 
     # Load and parse configuration
@@ -161,7 +162,7 @@ USAGE_EOF
     elif [[ -n "$EXCLUDE_ARG" ]]; then
       LINEAGE_PACKS="$DEFAULT_PACKS"
       for exclude in $(echo "$EXCLUDE_ARG" | tr ',' ' '); do
-        LINEAGE_PACKS=$(echo "$LINEAGE_PACKS" | sed "s/\b$exclude\b,\?//g" | sed 's/,,/,/g' | sed 's/^,\|,$//g')
+        LINEAGE_PACKS=$(echo "$LINEAGE_PACKS" | sed "s/\\b$exclude\\b,\?//g" | sed 's/,,/,/g' | sed 's/^,\|,$//g')
       done
     else
       # Check for config file pack list
@@ -173,77 +174,122 @@ USAGE_EOF
       fi
     fi
 
-    echo "Validating packs: $LINEAGE_PACKS"
-    echo ""
+        echo "Validating packs: $LINEAGE_PACKS"
 
-    # Create final configuration JSON for Nix evaluation
-    FINAL_CONFIG=$(jq -n \
-      --arg orgName "$ORG_NAME" \
-      --arg orgEmail "$ORG_EMAIL" \
-      --arg orgTeam "$ORG_TEAM" \
-      --argjson baseConfig "''${CONFIG_JSON}" \
-      '{ 
-        organization: {
-          name: $orgName,
-          email: $orgEmail,
-          security_email: $orgEmail,
-          default_team: $orgTeam
-        },
-        packs: ($baseConfig.packs // {})
-      }')
+        echo ""
 
-    # Generate expected files using nix eval with configuration
-    TEMP_NIX=$(mktemp)
-    cat > "$TEMP_NIX" << EOF
-let
-  pkgs = ${pkgsExpression};
-  lib = pkgs.lib;
+    
+
+            # Create final configuration JSON for Nix evaluation
+
+    
+
+            FINAL_CONFIG=$(jq -n --arg orgName "$ORG_NAME" --arg orgEmail "$ORG_EMAIL" --arg orgTeam "$ORG_TEAM" --argjson baseConfig "''${CONFIG_JSON}" '{ organization: { name: $orgName, email: $orgEmail, security_email: $orgEmail, default_team: $orgTeam }, packs: ($baseConfig.packs // {}) }')
+
+    
+
+        
+
+    
+
+        # Get current system for flake usage
+
+        CURRENT_SYSTEM=$(nix eval --impure --expr 'builtins.currentSystem' --raw)
+    
+
+        # Generate expected files using nix eval with configuration
+
+        TEMP_NIX=$(mktemp)
+
+        cat > "$TEMP_NIX" << EOF
+    let
+
+      pkgs = ${pkgsExpression};
+
+      lib = pkgs.lib;
+    
   config = builtins.fromJSON '''$FINAL_CONFIG''';
 
   # Import the packs library with configuration
+
   packModules = ${packsLoaderSnippet};
 
   # Parse pack list and get selected packs
+
   packList = lib.filter (x: x != "") (lib.splitString "," "$LINEAGE_PACKS");
+
   selectedPacks = lib.filterAttrs (name: _: lib.elem name packList) packModules;
 
   # Get all files from selected packs
+
   allFiles = lib.foldl' (acc: pack: acc // (pack.files or {})) {} (lib.attrValues selectedPacks);
+
 in
   allFiles
 EOF
 
     # Evaluate expected files and check them
-    TEMP_RESULTS=$(mktemp)
-    nix eval --no-warn-dirty --impure --file "$TEMP_NIX" --json | jq -r 'to_entries[] | @base64' | while IFS= read -r entry; do
-      decoded=$(echo "$entry" | base64 -d)
-      file=$(echo "$decoded" | jq -r '.key')
-      expected=$(echo "$decoded" | jq -r '.value')
 
-      if [[ ! -f "$file" ]]; then
-        echo "[-] Missing $file"
-        echo "FAILED" >> "$TEMP_RESULTS"
-      elif ! diff -q "$file" <(echo "$expected") >/dev/null 2>&1; then
-        echo "[-] Out of sync $file"
-        echo "FAILED" >> "$TEMP_RESULTS"
-      else
-        echo "[+] $file"
-      fi
-    done
+        TEMP_RESULTS=$(mktemp)
 
-    rm "$TEMP_NIX"
+        nix eval --no-warn-dirty --impure --file "$TEMP_NIX" --json | jq -r 'to_entries[] | @base64' | while IFS= read -r entry; do
 
-    echo ""
+          decoded=$(echo "$entry" | base64 -d)
 
-    if [[ -f "$TEMP_RESULTS" ]] && grep -q "FAILED" "$TEMP_RESULTS" 2>/dev/null; then
-      rm -f "$TEMP_RESULTS"
-      echo "FAILED: Validation failed"
-      echo ""
-      echo "Run 'nix run .#sync' to fix"
-      exit 1
-    else
-      rm -f "$TEMP_RESULTS"
-      echo "All checks passed"
-    fi
+          file=$(echo "$decoded" | jq -r '.key')
+
+          expected=$(echo "$decoded" | jq -r '.value')
+
+
+
+          if [[ ! -f "$file" ]]; then
+
+            echo "[-] Missing $file"
+
+            echo "FAILED" >> "$TEMP_RESULTS"
+
+          elif ! diff -q "$file" <(echo "$expected") >/dev/null 2>&1; then
+
+            echo "[-] Out of sync $file"
+
+            echo "FAILED" >> "$TEMP_RESULTS"
+
+          else
+
+            echo "[+] $file"
+
+          fi
+
+        done
+
+    
+
+        rm "$TEMP_NIX"
+
+    
+
+        echo ""
+
+    
+
+        if [[ -f "$TEMP_RESULTS" ]] && grep -q "FAILED" "$TEMP_RESULTS" 2>/dev/null; then
+
+          rm -f "$TEMP_RESULTS"
+
+          echo "FAILED: Validation failed"
+
+          echo ""
+
+          echo "Run 'nix run .#sync' to fix"
+
+          exit 1
+
+        else
+
+          rm -f "$TEMP_RESULTS"
+
+          echo "All checks passed"
+
+        fi
   '';
 }

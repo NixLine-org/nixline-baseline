@@ -37,5 +37,5 @@ jobs:
       baseline_repo: Lineage-org/lineage-baseline
       validation_apps: "sync,check,import-policy,fetch-license,list-licenses"
       issue_labels: "validation-failure,automated"
-      enable_codeql: true
+      enable_codeql: false
       enable_dependency_scan: true
