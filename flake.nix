@@ -1,5 +1,5 @@
 {
-  description = "NixLine baseline - organization-wide CI governance and policy enforcement";
+  description = "Lineage baseline - organization-wide CI governance and policy enforcement";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/050e09e091117c3d7328c7b2b7b577492c43c134";
 
@@ -17,11 +17,11 @@
       templates = {
         consumer = {
           path = ./templates/consumer;
-          description = "NixLine consumer repository template with flake inputs";
+          description = "Lineage consumer repository template with flake inputs";
         };
         default = {
           path = ./templates/consumer;
-          description = "NixLine consumer repository template with flake inputs";
+          description = "Lineage consumer repository template with flake inputs";
         };
       };
 
@@ -36,8 +36,9 @@
           # Individual pack modules
           packs = packsLib.packModules;
 
-          # Helper functions
-          inherit (packsLib) selectPacks mergePackFiles mergePackChecks getFiles getChecks;
+          # App factories
+          mkSyncApp = import ./lib/mk-sync-app.nix;
+          mkCheckApp = import ./lib/mk-check-app.nix;
         }
       );
 
