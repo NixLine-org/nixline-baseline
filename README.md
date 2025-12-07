@@ -447,8 +447,8 @@ graph TD
 
         subgraph "GitHub Actions Marketplace"
             C[Actions]
-            C1["actions/checkout@v4"]
-            C2["cachix/install-nix-action@v31"]
+            C1["actions/checkout@v5"]
+            C2["DeterminateSystems/nix-installer-action@v21"]
             C3["github-script@v7"]
             C --> C1
             C --> C2
@@ -503,8 +503,8 @@ jobs:
 [-] **Avoid Direct Action Calls:**
 ```yaml
 steps:
-  - uses: actions/checkout@v4
-  - uses: cachix/install-nix-action@v31
+  - uses: actions/checkout@v5
+  - uses: DeterminateSystems/nix-installer-action@v21
 ```
 
 Organizations forking Lineage should maintain this pattern by:
@@ -543,6 +543,23 @@ nix run github:Lineage-org/lineage-baseline#sync -- --override org.email=securit
 
 # Combine options
 nix run github:Lineage-org/lineage-baseline#sync -- --config .lineage.toml --override org.name=TestCorp --dry-run
+```
+
+### GitHub Actions
+
+You can use the Lineage GitHub Action to easily integrate governance checks into your workflows:
+
+```yaml
+jobs:
+  lineage-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Lineage-org/lineage-baseline@stable
+        with:
+          command: check
+          # Optional: select specific packs
+          packs: editorconfig,license
 ```
 
 **Other Apps:**
@@ -631,7 +648,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: cachix/install-nix-action@v31
+      - uses: DeterminateSystems/nix-installer-action@v21
       - name: Validate flake integrity
         run: nix flake check
       - name: Test apps (dry-run only)
@@ -1905,8 +1922,8 @@ jobs:
   policy-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
+      - uses: actions/checkout@v5
+      - uses: DeterminateSystems/nix-installer-action@v21
       - name: Verify policies are in sync
         run: nix run github:Lineage-org/lineage-baseline#check
 ```
