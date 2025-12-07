@@ -1,0 +1,52 @@
+name: 'Lineage Baseline'
+description: 'Policy governance and enforcement via Nix'
+author: 'Lineage-org'
+branding:
+  icon: 'shield'
+  color: 'green'
+inputs:
+  command:
+    description: 'Command to run (sync, check)'
+    required: true
+    default: 'check'
+  packs:
+    description: 'Comma-separated list of packs to enable'
+    required: false
+  config:
+    description: 'Path to configuration file'
+    required: false
+  dry_run:
+    description: 'Run in dry-run mode'
+    required: false
+    default: 'false'
+  backup:
+    description: 'Create backups when syncing (default: true)'
+    required: false
+    default: 'true'
+runs:
+  using: "composite"
+  steps:
+    - uses: DeterminateSystems/nix-installer-action@v21
+
+    - name: Run Lineage Command
+      shell: bash
+      run: |
+        # Construct arguments
+        ARGS=""
+        if [[ -n "${{ inputs.packs }}" ]]; then
+          ARGS="$ARGS --packs ${{ inputs.packs }}"
+        fi
+        if [[ -n "${{ inputs.config }}" ]]; then
+          ARGS="$ARGS --config ${{ inputs.config }}"
+        fi
+        if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+          ARGS="$ARGS --dry-run"
+        fi
+        if [[ "${{ inputs.backup }}" == "false" ]]; then
+          ARGS="$ARGS --no-backup"
+        fi
+
+        echo "Running: nix run lineage-baseline#${{ inputs.command }} -- $ARGS"
+        
+        # Use the action path as the flake reference
+        nix run "${{ github.action_path }}#${{ inputs.command }}" -- $ARGS
