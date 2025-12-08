@@ -264,7 +264,8 @@ EOF
             return
         fi
         
-        local temp_new=$(mktemp)
+        local temp_new
+        temp_new=$(mktemp)
         echo "$content" > "$temp_new"
         
         if git merge-file -L "current" -L "base" -L "new" "$file" "$state_file" "$temp_new"; then
@@ -353,7 +354,7 @@ EOF
                   fi
               else
                   # Unchanged content, but ensure state is up to date
-                  local state_file="$STATE_DIR/$file"
+                  state_file="$STATE_DIR/$file"
                   mkdir -p "$(dirname "$state_file")"
                   echo "$content" > "$state_file"
                   echo "[UNCHANGED] $file"
