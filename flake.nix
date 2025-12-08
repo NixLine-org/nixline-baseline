@@ -42,6 +42,39 @@
         }
       );
 
+      packages = forAllSystems (system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+          lib = nixpkgs.lib;
+
+          # Import helper libraries
+          helpers = import ./lib/default.nix { inherit pkgs; };
+          packsLib = import ./lib/packs.nix { inherit pkgs lib; };
+          configLib = import ./lib/config.nix { inherit pkgs lib; };
+
+          # Import apps
+          syncApp = import ./apps/sync.nix { inherit pkgs lib helpers packsLib; };
+          checkApp = import ./apps/check.nix { inherit pkgs lib helpers packsLib; };
+          importPolicyApp = import ./apps/import-policy.nix { inherit pkgs lib; };
+          fetchLicenseApp = import ./apps/fetch-license.nix { inherit pkgs lib; };
+          createPackApp = import ./apps/create-pack.nix { inherit pkgs lib; };
+          listLicensesApp = import ./apps/list-licenses.nix { inherit pkgs; };
+          extractConfigApp = import ./apps/extract-config.nix { inherit pkgs lib; };
+          migrateGovernanceApp = import ./apps/migrate-governance.nix { inherit pkgs lib; };
+        in
+        {
+          default = syncApp;
+          sync = syncApp;
+          check = checkApp;
+          import-policy = importPolicyApp;
+          fetch-license = fetchLicenseApp;
+          create-pack = createPackApp;
+          list-licenses = listLicensesApp;
+          extract-config = extractConfigApp;
+          migrate-governance = migrateGovernanceApp;
+        }
+      );
+
       apps = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
