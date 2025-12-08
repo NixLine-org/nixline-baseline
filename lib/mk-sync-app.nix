@@ -3,14 +3,8 @@
 pkgs.writeShellApplication {
   inherit name;
 
-  runtimeInputs = with pkgs; [
-    coreutils
-    diffutils
-    gnused
-    remarshal
-    jq
-    nix
-  ];
+  runtimeInputs = with pkgs;
+    [ coreutils diffutils gnused remarshal jq nix git ];
 
   text = ''
     set -euo pipefail
@@ -32,12 +26,14 @@ Options:
   --config <file>      Load configuration from TOML file (default: .lineage.toml)
   --override <key=val> Override configuration values (e.g., org.name=MyCompany)
   --dry-run           Show what would be done without making changes
+  --interactive       Ask for confirmation before overwriting changed files
   --backup            Create .bak copies of files before overwriting (default: true)
   --no-backup         Disable backup creation
   --help              Show this help message
 
 Examples:
   ${name}
+  ${name} --interactive
   ${name} --config my-config.toml
   ${name} --packs editorconfig,license --override org.name=TestCorp
   ${name} --dry-run
@@ -54,6 +50,7 @@ USAGE_EOF
     CONFIG_FILE=".lineage.toml"
     OVERRIDES=()
     DRY_RUN=false
+    INTERACTIVE=false
     BACKUP=true
 
     while [[ $# -gt 0 ]]; do
@@ -100,6 +97,10 @@ USAGE_EOF
           ;; 
         --dry-run)
           DRY_RUN=true
+          shift
+          ;; 
+        --interactive)
+          INTERACTIVE=true
           shift
           ;; 
         --backup)
@@ -180,7 +181,7 @@ USAGE_EOF
       # Apply exclusions to default packs
       LINEAGE_PACKS="$DEFAULT_PACKS"
       for exclude in $(echo "$EXCLUDE_ARG" | tr ',' ' '); do
-        LINEAGE_PACKS=$(echo "$LINEAGE_PACKS" | sed "s/\b$exclude\b,\?//g" | sed 's/,,/,/g' | sed 's/^,\|,$//g')
+        LINEAGE_PACKS=$(echo "$LINEAGE_PACKS" | sed "s/\\b$exclude\\b,\?//g" | sed 's/,,/,/g' | sed 's/^,\|,$//g')
       done
     else
       # Check for config file pack list (backwards compatible)
@@ -229,51 +230,78 @@ in
   allFiles
 EOF
 
-        if [[ "$DRY_RUN" == "true" ]]; then
+    STATE_DIR=".lineage/state"
 
-          echo "DRY RUN: Checking for changes..."
+    # Function to perform overwrite (and update state)
+    do_overwrite() {
+        local file="$1"
+        local content="$2"
+        
+        if [[ -f "$file" && "$BACKUP" == "true" ]]; then
+           cp "$file" "$file.bak"
+           echo "[Backup] Created $file.bak"
+        fi
 
-          nix eval --no-warn-dirty --impure --file "$TEMP_NIX" --json | jq -r 'to_entries[] | @base64' | while IFS= read -r entry; do
+        mkdir -p "$(dirname "$file")"
+        echo "$content" > "$file"
+        echo "[+] $file"
+        
+        # Update state
+        local state_file="$STATE_DIR/$file"
+        mkdir -p "$(dirname "$state_file")"
+        echo "$content" > "$state_file"
+    }
 
-            decoded=$(echo "$entry" | base64 -d)
-
-            file=$(echo "$decoded" | jq -r '.key')
-
-            content=$(echo "$decoded" | jq -r '.value')
-
-    
-
-            if [[ -f "$file" ]]; then
-
-                # Check if content differs
-
-                if ! echo "$content" | diff -u "$file" - >/dev/null 2>&1; then
-
-                    echo "--- $file (current)"
-
-                    echo "+++ $file (new)"
-
-                    echo "$content" | diff -u "$file" - || true
-
-                else
-
-                    echo "[UNCHANGED] $file"
-
-                fi
-
-            else
-
-                echo "[NEW] $file"
-
-                echo "Note: New file content not shown in full to save space, use normal sync to create."
-
-            fi
-
-          done
-
+    # Function to perform merge
+    do_merge() {
+        local file="$1"
+        local content="$2"
+        local state_file="$STATE_DIR/$file"
+        
+        if [[ ! -f "$state_file" ]]; then
+            echo "Warning: No state found for $file, cannot 3-way merge. Falling back to overwrite."
+            do_overwrite "$file" "$content"
+            return
+        fi
+        
+        local temp_new=$(mktemp)
+        echo "$content" > "$temp_new"
+        
+        if git merge-file -L "current" -L "base" -L "new" "$file" "$state_file" "$temp_new"; then
+            echo "[MERGED] $file"
         else
+            echo "[CONFLICT] $file - conflict markers added"
+        fi
+        rm "$temp_new"
+        
+        # Update state to the NEW baseline content (base for next time)
+        mkdir -p "$(dirname "$state_file")"
+        echo "$content" > "$state_file"
+    }
 
-    
+    if [[ "$DRY_RUN" == "true" ]]; then
+      echo "DRY RUN: Checking for changes..."
+      nix eval --no-warn-dirty --impure --file "$TEMP_NIX" --json | jq -r 'to_entries[] | @base64' | while IFS= read -r entry;
+        do
+          decoded=$(echo "$entry" | base64 -d)
+          file=$(echo "$decoded" | jq -r '.key')
+          content=$(echo "$decoded" | jq -r '.value')
+
+          if [[ -f "$file" ]]; then
+              # Check if content differs
+              if ! echo "$content" | diff -u "$file" - >/dev/null 2>&1; then
+                  echo "--- $file (current)"
+                  echo "+++ $file (new)"
+                  echo "$content" | diff -u "$file" - || true
+              else
+                  echo "[UNCHANGED] $file"
+              fi
+          else
+              echo "[NEW] $file"
+              echo "Note: New file content not shown in full to save space."
+          fi
+        done
+    else
       echo "Generating files..."
       nix eval --no-warn-dirty --impure --file "$TEMP_NIX" --json | jq -r 'to_entries[] | @base64' | while IFS= read -r entry;
         do
@@ -281,14 +309,81 @@ EOF
           file=$(echo "$decoded" | jq -r '.key')
           content=$(echo "$decoded" | jq -r '.value')
 
-          if [[ -f "$file" && "$BACKUP" == "true" ]]; then
-             cp "$file" "$file.bak"
-             echo "[Backup] Created $file.bak"
+          if [[ -f "$file" ]]; then
+              # Check if content differs
+              if ! echo "$content" | diff -u "$file" - >/dev/null 2>&1;
+              then
+                  if [[ "$INTERACTIVE" == "true" ]]; then
+                      echo ""
+                      echo "File $file has changed."
+                      echo "$content" | diff -u "$file" - || true
+                      
+                      while true; do
+                          echo -n "Overwrite? [y]es/[n]o/[s]kip/[m]erge: "
+                          read -r choice < /dev/tty
+                          case "$choice" in
+                              y|Y|yes) 
+                                  do_overwrite "$file" "$content"
+                                  break 
+                                  ;;
+                              n|N|no|s|S|skip) 
+                                  echo "Skipping $file"
+                                  break 
+                                  ;;
+                              m|M|merge)
+                                  do_merge "$file" "$content"
+                                  break
+                                  ;;
+                              *)
+                                  echo "Invalid choice"
+                                  ;;
+                          esac
+                      done
+                  else
+                      # Standard behavior:
+                      # If we have state, try to merge? Or stick to overwrite?
+                      # "Sync" usually means "make it like source".
+                      # But 3-way merge is safer.
+                      # Let's use 3-way merge if state exists, otherwise overwrite.
+                      if [[ -f "$STATE_DIR/$file" ]]; then
+                          do_merge "$file" "$content"
+                      else
+                          do_overwrite "$file" "$content"
+                      fi
+                  fi
+              else
+                  # Unchanged content, but ensure state is up to date
+                  local state_file="$STATE_DIR/$file"
+                  mkdir -p "$(dirname "$state_file")"
+                  echo "$content" > "$state_file"
+                  echo "[UNCHANGED] $file"
+              fi
+          else
+              # New file
+              if [[ "$INTERACTIVE" == "true" ]]; then
+                  echo ""
+                  echo "New file: $file"
+                  while true; do
+                      echo -n "Create? [y]es/[n]o: "
+                      read -r choice < /dev/tty
+                      case "$choice" in
+                          y|Y|yes) 
+                              do_overwrite "$file" "$content"
+                              break 
+                              ;;
+                          n|N|no) 
+                              echo "Skipping $file"
+                              break 
+                              ;;
+                          *)
+                              echo "Invalid choice"
+                              ;;
+                      esac
+                  done
+              else
+                  do_overwrite "$file" "$content"
+              fi
           fi
-
-          mkdir -p "$(dirname "$file")"
-          echo "$content" > "$file"
-          echo "[+] $file"
         done
     fi
     
